@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f9fafb;
+  --foreground: #111827;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #f9fafb;
+    --foreground: #111827;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Custom scrollbar for better aesthetics */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* HTML content styling */
+.note-content {
+  line-height: 1.6;
+}
+
+.note-content h1 {
+  font-size: 1.875rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.note-content h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+}
+
+.note-content h3 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.note-content p {
+  margin-bottom: 1rem;
+}
+
+.note-content ul, .note-content ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.note-content li {
+  margin-bottom: 0.25rem;
+}
+
+.note-content strong {
+  font-weight: bold;
+}
+
+.note-content em {
+  font-style: italic;
+}
+
+.note-content code {
+  background-color: #f1f5f9;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+}
+
+.note-content pre {
+  background-color: #f1f5f9;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.note-content blockquote {
+  border-left: 4px solid #e2e8f0;
+  padding-left: 1rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+/* Rich Editor Specific Styles */
+.rich-editor {
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+.rich-editor:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+/* Make sure editor elements are styled the same as preview */
+.rich-editor h1 {
+  font-size: 1.875rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+.rich-editor h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.rich-editor h3 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.rich-editor p {
+  margin-bottom: 1rem;
+}
+
+.rich-editor ul, .rich-editor ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.rich-editor li {
+  margin-bottom: 0.25rem;
+}
+
+.rich-editor strong {
+  font-weight: bold;
+}
+
+.rich-editor em {
+  font-style: italic;
+}
+
+.rich-editor code {
+  background-color: #f1f5f9;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+}
+
+.rich-editor pre {
+  background-color: #f1f5f9;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.rich-editor blockquote {
+  border-left: 4px solid #e2e8f0;
+  padding-left: 1rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
