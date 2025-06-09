@@ -58,7 +58,7 @@ export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
                 </svg>
               </div>
               <h3 className="text-base sm:text-lg font-medium text-gray-600 mb-2">This note is empty</h3>
-              <p className="text-sm sm:text-base text-gray-500 mb-4">Click "Edit Note" to add some content</p>
+              <p className="text-sm sm:text-base text-gray-500 mb-4">Click &quot;Edit Note&quot; to add some content</p>
               <button
                 onClick={onEdit}
                 className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm touch-manipulation w-full sm:w-auto"
