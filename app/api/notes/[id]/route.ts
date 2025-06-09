@@ -4,10 +4,10 @@ import { getNoteById, updateNote, deleteNote } from '@/lib/notes'
 // GET /api/notes/[id] - Get a specific note
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const note = await getNoteById(id)
     
     if (!note) {
@@ -24,10 +24,10 @@ export async function GET(
 // PUT /api/notes/[id] - Update a specific note
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const { title, content } = await request.json()
     
     if (!title?.trim()) {
@@ -50,10 +50,10 @@ export async function PUT(
 // DELETE /api/notes/[id] - Delete a specific note
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const success = await deleteNote(id)
     
     if (!success) {
