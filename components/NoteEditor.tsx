@@ -182,26 +182,25 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
     // Update content state
     handleContentChange()
   }
-
   return (
     <div className="flex-1 flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border-b border-gray-200 gap-3 sm:gap-0">
+        <div className="flex items-center space-x-3 flex-1">
           <input
             ref={titleInputRef}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Note title..."
-            className="text-xl font-semibold text-gray-800 bg-transparent border-none outline-none placeholder-gray-400"
+            className="text-lg sm:text-xl font-semibold text-gray-800 bg-transparent border-none outline-none placeholder-gray-400 w-full"
           />
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-end space-x-2">
           <button
             onClick={() => setIsPreview(!isPreview)}
-            className={`px-3 py-1 rounded text-sm transition-colors ${
+            className={`px-3 py-2 rounded text-sm transition-colors touch-manipulation ${
               isPreview 
                 ? 'bg-gray-800 text-white' 
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -212,14 +211,14 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
           
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-3 sm:px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors touch-manipulation"
           >
             Cancel
           </button>
           
           <button
             onClick={handleSave}
-            className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+            className="bg-gray-800 text-white px-3 sm:px-4 py-2 rounded hover:bg-gray-700 transition-colors touch-manipulation"
           >
             Save
           </button>
@@ -228,39 +227,39 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
 
       {!isPreview && (
         /* Formatting Toolbar */
-        <div className="flex items-center space-x-1 p-2 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center space-x-1 p-2 border-b border-gray-200 bg-gray-50 overflow-x-auto">
           <button
             onClick={() => insertFormatting('bold')}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+            className="p-2 sm:p-2 text-gray-600 hover:bg-gray-200 rounded touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Bold (Ctrl+B)"
           >
-            <strong>B</strong>
+            <strong className="text-sm">B</strong>
           </button>
           <button
             onClick={() => insertFormatting('italic')}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+            className="p-2 sm:p-2 text-gray-600 hover:bg-gray-200 rounded touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Italic (Ctrl+I)"
           >
-            <em>I</em>
+            <em className="text-sm">I</em>
           </button>
           <div className="w-px h-6 bg-gray-300 mx-1"></div>
           <button
             onClick={() => insertFormatting('h1')}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded text-sm"
+            className="p-2 text-gray-600 hover:bg-gray-200 rounded text-xs touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Heading 1"
           >
             H1
           </button>
           <button
             onClick={() => insertFormatting('h2')}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded text-sm"
+            className="p-2 text-gray-600 hover:bg-gray-200 rounded text-xs touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Heading 2"
           >
             H2
           </button>
           <button
             onClick={() => insertFormatting('h3')}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded text-sm"
+            className="p-2 text-gray-600 hover:bg-gray-200 rounded text-xs touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Heading 3"
           >
             H3
@@ -268,7 +267,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
           <div className="w-px h-6 bg-gray-300 mx-1"></div>
           <button
             onClick={() => insertFormatting('ul')}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+            className="p-2 text-gray-600 hover:bg-gray-200 rounded touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Bullet List"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,7 +276,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
           </button>
           <button
             onClick={() => insertFormatting('ol')}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded text-sm"
+            className="p-2 text-gray-600 hover:bg-gray-200 rounded text-xs touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Numbered List"
           >
             1.
@@ -285,14 +284,14 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
           <div className="w-px h-6 bg-gray-300 mx-1"></div>
           <button
             onClick={() => insertFormatting('code')}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+            className="p-2 text-gray-600 hover:bg-gray-200 rounded touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Inline Code"
           >
-            &lt;/&gt;
+            <span className="text-xs">&lt;/&gt;</span>
           </button>
           <button
             onClick={() => insertFormatting('pre')}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded text-sm"
+            className="p-2 text-gray-600 hover:bg-gray-200 rounded text-xs touch-manipulation min-w-[50px] min-h-[36px] flex items-center justify-center"
             title="Code Block"
           >
             Code
@@ -301,10 +300,10 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       )}
 
       {/* Content Area */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
         {isPreview ? (
           <div 
-            className="note-content prose max-w-none"
+            className="note-content prose max-w-none text-sm sm:text-base"
             dangerouslySetInnerHTML={{ __html: content }}
           />
         ) : (
@@ -313,7 +312,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
             contentEditable
             onInput={handleContentChange}
             onKeyDown={handleKeyDown}
-            className="w-full h-full outline-none text-gray-700 leading-relaxed note-content rich-editor"
+            className="w-full h-full outline-none text-gray-700 leading-relaxed note-content rich-editor text-sm sm:text-base"
             style={{ 
               fontFamily: 'system-ui, -apple-system, sans-serif',
               minHeight: '200px'
