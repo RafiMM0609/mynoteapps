@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import NoteList from '@/components/NoteList'
 import NoteEditor from '@/components/NoteEditor'
 import NoteViewer from '@/components/NoteViewer'
+import LoginForm from '@/components/LoginForm'
 import AuthenticatedHome from '@/components/AuthenticatedHome'
 
 export interface Note {
@@ -24,7 +24,6 @@ export default function HomePage() {
   const [authToken, setAuthToken] = useState<string | null>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [showNotes, setShowNotes] = useState(false)
-  const router = useRouter()
 
   useEffect(() => {
     checkAuthStatus()
@@ -83,9 +82,7 @@ export default function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleCreateNote = () => {
+  }  const handleCreateNote = () => {
     setSelectedNote(null)
     setIsEditing(true)
     setIsSidebarOpen(false)
@@ -155,11 +152,17 @@ export default function HomePage() {
       console.error('Error deleting note:', error)
     }
   }
+
   const handleCancelEdit = () => {
     setIsEditing(false)
     if (!selectedNote) {
       setSelectedNote(null)
     }
+  }
+
+  const handleLoginSuccess = (token: string) => {
+    setAuthToken(token)
+    setShowNotes(false) // Show the "Go to Notes" screen first
   }
 
   const handleGoToNotes = () => {
@@ -194,16 +197,12 @@ export default function HomePage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
       </div>
-    )  }
-
-  // Redirect to login if not authenticated
-  if (!authToken) {
-    router.push('/login')
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-green-900 to-black">
-        <div className="text-white">Redirecting to login...</div>
-      </div>
     )
+  }
+
+  // Show login form if not authenticated
+  if (!authToken) {
+    return <LoginForm onLoginSuccess={handleLoginSuccess} />
   }
 
   // Show "Go to Notes" screen if authenticated but not viewing notes yet
@@ -215,8 +214,16 @@ export default function HomePage() {
       />
     )
   }
+      console.error('Error deleting note:', error)
+    }
+  }
 
-  // Show the main notes application
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    if (!selectedNote) {
+      setSelectedNote(null)
+    }
+  }
   return (
     <div className="flex h-screen bg-gray-50 relative">
       {/* Mobile Header */}
@@ -231,25 +238,14 @@ export default function HomePage() {
             </svg>
           </button>
           <h1 className="text-lg font-semibold text-gray-800">MyNotes</h1>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleCreateNote}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-            <button
-              onClick={handleLogout}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
-              title="Logout"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
-          </div>
+          <button
+            onClick={handleCreateNote}
+            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -276,23 +272,12 @@ export default function HomePage() {
         <div className="p-4 border-b border-gray-200 mt-16 md:mt-0">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-semibold text-gray-800 hidden md:block">MyNotes</h1>
-            <div className="flex items-center space-x-2 w-full md:w-auto">
-              <button
-                onClick={handleCreateNote}
-                className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm flex-1 md:flex-none"
-              >
-                New Note
-              </button>
-              <button
-                onClick={handleLogout}
-                className="hidden md:block p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
-                title="Logout"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
+            <button
+              onClick={handleCreateNote}
+              className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm w-full md:w-auto"
+            >
+              New Note
+            </button>
           </div>
         </div>
         

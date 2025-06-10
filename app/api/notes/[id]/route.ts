@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getNoteById, updateNote, deleteNote } from '@/lib/notes'
+import { verifyAuth, createAuthResponse } from '@/lib/auth'
+import { createClient } from '@/lib/supabase'
 
 // GET /api/notes/[id] - Get a specific note
 export async function GET(
@@ -7,10 +8,22 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await verifyAuth(request)
+    if (!user) {
+      return createAuthResponse()
+    }
+
     const { id } = await params
-    const note = await getNoteById(id)
+    const supabase = createClient()
     
-    if (!note) {
+    const { data: note, error } = await supabase
+      .from('notes')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single()
+    
+    if (error || !note) {
       return NextResponse.json({ error: 'Note not found' }, { status: 404 })
     }
     
@@ -27,6 +40,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await verifyAuth(request)
+    if (!user) {
+      return createAuthResponse()
+    }
+
     const { id } = await params
     const { title, content } = await request.json()
     
@@ -34,9 +52,20 @@ export async function PUT(
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
     }
 
-    const updatedNote = await updateNote(id, title, content)
+    const supabase = createClient()
+    const { data: updatedNote, error } = await supabase
+      .from('notes')
+      .update({
+        title: title.trim(),
+        content: content || '',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select()
+      .single()
     
-    if (!updatedNote) {
+    if (error || !updatedNote) {
       return NextResponse.json({ error: 'Note not found' }, { status: 404 })
     }
 
@@ -53,10 +82,21 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await verifyAuth(request)
+    if (!user) {
+      return createAuthResponse()
+    }
+
     const { id } = await params
-    const success = await deleteNote(id)
+    const supabase = createClient()
     
-    if (!success) {
+    const { error } = await supabase
+      .from('notes')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id)
+    
+    if (error) {
       return NextResponse.json({ error: 'Note not found' }, { status: 404 })
     }
 

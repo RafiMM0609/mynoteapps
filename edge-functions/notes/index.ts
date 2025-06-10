@@ -1,5 +1,5 @@
-// Supabase Edge Function for Notes CRUD operations
-// This will be used when we integrate with Supabase later
+// Supabase Edge Function for Notes CRUD operations with Authentication
+// Deploy this manually to your Supabase project
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -9,6 +9,58 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Authentication helper function
+async function verifyAuth(req: Request, supabaseClient: any) {
+  try {
+    const authHeader = req.headers.get('authorization')
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null
+    }
+
+    const token = authHeader.substring(7)
+
+    // Verify token and get user
+    const { data: tokenData, error: tokenError } = await supabaseClient
+      .from('auth_tokens')
+      .select(`
+        id,
+        user_id,
+        expires_at,
+        users (
+          id,
+          email
+        )
+      `)
+      .eq('token', token)
+      .single()
+
+    if (tokenError || !tokenData) {
+      return null
+    }
+
+    // Check if token is expired
+    const now = new Date()
+    const expiresAt = new Date(tokenData.expires_at)
+
+    if (now > expiresAt) {
+      // Delete expired token
+      await supabaseClient
+        .from('auth_tokens')
+        .delete()
+        .eq('id', tokenData.id)
+
+      return null
+    }
+
+    return tokenData.users
+
+  } catch (error) {
+    console.error('Auth verification error:', error)
+    return null
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -16,11 +68,20 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
+    // Initialize Supabase client with service role key for admin operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // Verify authentication
+    const user = await verifyAuth(req, supabaseClient)
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     const { method } = req
     const url = new URL(req.url)

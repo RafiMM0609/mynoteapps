@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import NoteList from '@/components/NoteList'
 import NoteEditor from '@/components/NoteEditor'
 import NoteViewer from '@/components/NoteViewer'
+import LoginForm from '@/components/LoginForm'
 import AuthenticatedHome from '@/components/AuthenticatedHome'
 
 export interface Note {
@@ -24,7 +24,6 @@ export default function HomePage() {
   const [authToken, setAuthToken] = useState<string | null>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [showNotes, setShowNotes] = useState(false)
-  const router = useRouter()
 
   useEffect(() => {
     checkAuthStatus()
@@ -155,11 +154,17 @@ export default function HomePage() {
       console.error('Error deleting note:', error)
     }
   }
+
   const handleCancelEdit = () => {
     setIsEditing(false)
     if (!selectedNote) {
       setSelectedNote(null)
     }
+  }
+
+  const handleLoginSuccess = (token: string) => {
+    setAuthToken(token)
+    setShowNotes(false) // Show the "Go to Notes" screen first
   }
 
   const handleGoToNotes = () => {
@@ -194,16 +199,12 @@ export default function HomePage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
       </div>
-    )  }
-
-  // Redirect to login if not authenticated
-  if (!authToken) {
-    router.push('/login')
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-green-900 to-black">
-        <div className="text-white">Redirecting to login...</div>
-      </div>
     )
+  }
+
+  // Show login form if not authenticated
+  if (!authToken) {
+    return <LoginForm onLoginSuccess={handleLoginSuccess} />
   }
 
   // Show "Go to Notes" screen if authenticated but not viewing notes yet
@@ -289,7 +290,7 @@ export default function HomePage() {
                 title="Logout"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" />
                 </svg>
               </button>
             </div>
