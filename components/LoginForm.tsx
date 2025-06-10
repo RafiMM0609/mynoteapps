@@ -48,15 +48,14 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
       if (response.ok) {
         localStorage.setItem('auth_token', data.token)
-        onLoginSuccess(data.token)
-      } else {
+        onLoginSuccess(data.token)      } else {
         setError(data.error || 'Login failed')
         // If user doesn't exist, register them
         if (data.error === 'User not found') {
           await handleRegister()
         }
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.')
     } finally {
       setIsLoading(false)
@@ -77,11 +76,10 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
       if (response.ok) {
         localStorage.setItem('auth_token', data.token)
-        onLoginSuccess(data.token)
-      } else {
+        onLoginSuccess(data.token)      } else {
         setError(data.error || 'Registration failed')
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.')
     }
   }
@@ -189,9 +187,8 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 </button>
               </div>
             </form>          )}          {/* Register Link */}
-          <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              Don't have an account?{' '}
+          <div className="mt-6 text-center">            <p className="text-gray-400 text-sm">
+              Don&apos;t have an account?{' '}
               <Link 
                 href="/register" 
                 className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors"
@@ -220,9 +217,8 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
         </div>
 
         {/* Bottom text */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-400 text-xs">
-            If you've used your email with one of our services, please enter the same password you've used before.
+        <div className="mt-6 text-center">          <p className="text-gray-400 text-xs">
+            If you&apos;ve used your email with one of our services, please enter the same password you&apos;ve used before.
           </p>
         </div>
       </div>

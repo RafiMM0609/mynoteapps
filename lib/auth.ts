@@ -15,9 +15,7 @@ export async function verifyAuth(request: NextRequest): Promise<AuthUser | null>
     }
 
     const token = authHeader.substring(7)
-    const supabase = createClient()
-
-    // Verify token and get user
+    const supabase = createClient()    // Verify token and get user
     const { data: tokenData, error: tokenError } = await supabase
       .from('auth_tokens')
       .select(`
@@ -50,7 +48,17 @@ export async function verifyAuth(request: NextRequest): Promise<AuthUser | null>
       return null
     }
 
-    return tokenData.users as AuthUser
+    // Handle the case where users might be an array or single object
+    const user = Array.isArray(tokenData.users) ? tokenData.users[0] : tokenData.users
+    
+    if (!user) {
+      return null
+    }
+
+    return {
+      id: user.id,
+      email: user.email
+    } as AuthUser
 
   } catch (error) {
     console.error('Auth verification error:', error)

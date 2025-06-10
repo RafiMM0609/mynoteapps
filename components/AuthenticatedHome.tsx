@@ -30,9 +30,8 @@ export default function AuthenticatedHome({ onGoToNotes, onLogout }: Authenticat
           <h2 className="text-white text-2xl font-light mb-2 text-center">
             Welcome back!
           </h2>
-          
-          <p className="text-gray-300 text-sm text-center mb-8">
-            You're already signed in. Ready to continue with your notes?
+            <p className="text-gray-300 text-sm text-center mb-8">
+            You&apos;re already signed in. Ready to continue with your notes?
           </p>
 
           <div className="space-y-4">

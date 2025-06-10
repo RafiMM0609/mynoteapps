@@ -35,8 +35,8 @@ export default function RegisterPage() {
       setIsLoading(false)
     }
   }, [router])
-
   const handleRegisterSuccess = (token: string) => {
+    localStorage.setItem('auth_token', token)
     setIsAuthenticated(true)
     router.push('/')
   }

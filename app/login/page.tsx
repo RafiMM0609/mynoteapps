@@ -35,8 +35,8 @@ export default function LoginPage() {
       setIsLoading(false)
     }
   }, [router])
-
   const handleLoginSuccess = (token: string) => {
+    localStorage.setItem('auth_token', token)
     setIsAuthenticated(true)
     router.push('/')
   }

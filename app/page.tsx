@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import NoteList from '@/components/NoteList'
 import NoteEditor from '@/components/NoteEditor'
@@ -26,15 +26,36 @@ export default function HomePage() {
   const [showNotes, setShowNotes] = useState(false)
   const router = useRouter()
 
+  const fetchNotes = useCallback(async () => {
+    if (!authToken) return
+    
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/notes', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setNotes(data)
+      }
+    } catch (error) {
+      console.error('Error fetching notes:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [authToken])
+
   useEffect(() => {
     checkAuthStatus()
   }, [])
-
+  
   useEffect(() => {
     if (authToken && showNotes) {
       fetchNotes()
     }
-  }, [authToken, showNotes])
+  }, [authToken, showNotes, fetchNotes])
 
   const checkAuthStatus = async () => {
     try {
@@ -58,30 +79,8 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Error checking auth status:', error)
-      localStorage.removeItem('auth_token')
-    } finally {
+      localStorage.removeItem('auth_token')    } finally {
       setIsCheckingAuth(false)
-    }
-  }
-
-  const fetchNotes = async () => {
-    if (!authToken) return
-    
-    try {
-      setIsLoading(true)
-      const response = await fetch('/api/notes', {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setNotes(data)
-      }
-    } catch (error) {
-      console.error('Error fetching notes:', error)
-    } finally {
-      setIsLoading(false)
     }
   }
 

@@ -53,11 +53,10 @@ export default function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
 
       if (response.ok) {
         localStorage.setItem('auth_token', data.token)
-        onRegisterSuccess(data.token)
-      } else {
+        onRegisterSuccess(data.token)      } else {
         setError(data.error || 'Registration failed')
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.')
     } finally {
       setIsLoading(false)

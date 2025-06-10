@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import NoteList from '@/components/NoteList'
 import NoteEditor from '@/components/NoteEditor'
 import NoteViewer from '@/components/NoteViewer'
@@ -25,6 +25,27 @@ export default function HomePage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [showNotes, setShowNotes] = useState(false)
 
+  const fetchNotes = useCallback(async () => {
+    if (!authToken) return
+    
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/notes', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setNotes(data)
+      }
+    } catch (error) {
+      console.error('Error fetching notes:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [authToken])
+
   useEffect(() => {
     checkAuthStatus()
   }, [])
@@ -33,7 +54,7 @@ export default function HomePage() {
     if (authToken && showNotes) {
       fetchNotes()
     }
-  }, [authToken, showNotes])
+  }, [authToken, showNotes, fetchNotes])
 
   const checkAuthStatus = async () => {
     try {
@@ -57,30 +78,8 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Error checking auth status:', error)
-      localStorage.removeItem('auth_token')
-    } finally {
+      localStorage.removeItem('auth_token')    } finally {
       setIsCheckingAuth(false)
-    }
-  }
-
-  const fetchNotes = async () => {
-    if (!authToken) return
-    
-    try {
-      setIsLoading(true)
-      const response = await fetch('/api/notes', {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setNotes(data)
-      }
-    } catch (error) {
-      console.error('Error fetching notes:', error)
-    } finally {
-      setIsLoading(false)
     }
   }
 
