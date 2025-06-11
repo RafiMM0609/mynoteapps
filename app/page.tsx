@@ -6,6 +6,8 @@ import NoteList from '@/components/NoteList'
 import NoteEditor from '@/components/NoteEditor'
 import NoteViewer from '@/components/NoteViewer'
 import AuthenticatedHome from '@/components/AuthenticatedHome'
+import Toast from '@/components/Toast'
+import { useToast } from '@/hooks/useToast'
 
 export interface Note {
   id: string
@@ -24,6 +26,7 @@ export default function HomePage() {
   const [authToken, setAuthToken] = useState<string | null>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [showNotes, setShowNotes] = useState(false)
+  const { toast, showToast, hideToast } = useToast()
   const router = useRouter()
 
   const fetchNotes = useCallback(async () => {
@@ -50,12 +53,30 @@ export default function HomePage() {
   useEffect(() => {
     checkAuthStatus()
   }, [])
-  
-  useEffect(() => {
+    useEffect(() => {
     if (authToken && showNotes) {
       fetchNotes()
     }
   }, [authToken, showNotes, fetchNotes])
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && showNotes && !isEditing) {
+        switch (e.key) {
+          case 'n':
+            e.preventDefault()
+            handleCreateNote()
+            break
+        }
+      }
+    }
+
+    if (showNotes) {
+      document.addEventListener('keydown', handleGlobalKeyDown)
+      return () => document.removeEventListener('keydown', handleGlobalKeyDown)
+    }
+  }, [showNotes, isEditing])
 
   const checkAuthStatus = async () => {
     try {
@@ -99,7 +120,6 @@ export default function HomePage() {
   const handleEditNote = () => {
     setIsEditing(true)
   }
-
   const handleSaveNote = async (title: string, content: string) => {
     if (!authToken) return
 
@@ -121,19 +141,32 @@ export default function HomePage() {
         if (selectedNote) {
           setNotes(notes.map(note => note.id === savedNote.id ? savedNote : note))
           setSelectedNote(savedNote)
+          showToast(
+            `Note updated successfully`, 
+            'success'
+          )
         } else {
           setNotes([savedNote, ...notes])
           setSelectedNote(savedNote)
+          showToast(
+            `Note "${title}" created successfully`, 
+            'success'
+          )
         }
         setIsEditing(false)
+      } else {
+        showToast('Failed to save note. Please try again.', 'error')
       }
     } catch (error) {
       console.error('Error saving note:', error)
+      showToast('Network error. Please check your connection.', 'error')
     }
   }
-
   const handleDeleteNote = async (noteId: string) => {
     if (!authToken) return
+
+    const noteToDelete = notes.find(note => note.id === noteId)
+    const noteTitle = noteToDelete?.title || 'Untitled'
 
     try {
       const response = await fetch(`/api/notes/${noteId}`, {
@@ -149,9 +182,13 @@ export default function HomePage() {
           setSelectedNote(null)
           setIsEditing(false)
         }
+        showToast(`Note "${noteTitle}" deleted successfully`, 'info')
+      } else {
+        showToast('Failed to delete note. Please try again.', 'error')
       }
     } catch (error) {
       console.error('Error deleting note:', error)
+      showToast('Network error. Please check your connection.', 'error')
     }
   }
   const handleCancelEdit = () => {
@@ -336,9 +373,16 @@ export default function HomePage() {
                 Create Your First Note
               </button>
             </div>
-          </div>
-        )}
+          </div>        )}
       </div>
+
+      {/* Toast Notifications */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
     </div>
   )
 }

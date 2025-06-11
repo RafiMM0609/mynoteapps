@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Note } from '@/app/page'
 
 interface NoteViewerProps {
@@ -8,7 +9,8 @@ interface NoteViewerProps {
 }
 
 export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
-  const formatDate = (dateString: string) => {
+  const [isFullscreen, setIsFullscreen] = useState(false)
+    const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -17,8 +19,20 @@ export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
       minute: '2-digit'
     })
   }
+
+  const getWordCount = (content: string) => {
+    const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    return textContent ? textContent.split(' ').length : 0
+  }
+  const getReadingTime = (content: string) => {
+    const wordCount = getWordCount(content)
+    const wordsPerMinute = 200
+    const minutes = Math.ceil(wordCount / wordsPerMinute)
+    return minutes === 1 ? '1 min read' : `${minutes} min read`
+  }
+
   return (
-    <div className="flex-1 flex flex-col bg-white">
+    <div className={`flex-1 flex flex-col bg-white ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
       {/* Header */}
       <div className="border-b border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0">
@@ -31,23 +45,51 @@ export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
               {note.updated_at !== note.created_at && (
                 <span>Updated: {formatDate(note.updated_at)}</span>
               )}
+              {note.content && (
+                <>
+                  <span>•</span>
+                  <span>{getWordCount(note.content)} words</span>
+                  <span>•</span>
+                  <span>{getReadingTime(note.content)}</span>
+                </>
+              )}
             </div>
           </div>
-          <button
-            onClick={onEdit}
-            className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium touch-manipulation w-full sm:w-auto"
-          >
-            Edit Note
-          </button>
+          
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+            >
+              {isFullscreen ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+              )}
+            </button>
+            
+            <button
+              onClick={onEdit}
+              className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium touch-manipulation w-full sm:w-auto flex items-center space-x-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span>Edit Note</span>
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Content */}
+      </div>      {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto p-4 sm:p-6">
+        <div className={`mx-auto p-4 sm:p-6 ${isFullscreen ? 'max-w-4xl' : 'max-w-4xl'}`}>
           {note.content ? (
             <div 
-              className="prose prose-gray max-w-none note-content text-sm sm:text-base"
+              className="prose prose-gray max-w-none note-content text-sm sm:text-base prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900"
               dangerouslySetInnerHTML={{ __html: note.content }}
             />
           ) : (
@@ -61,9 +103,12 @@ export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
               <p className="text-sm sm:text-base text-gray-500 mb-4">Click &quot;Edit Note&quot; to add some content</p>
               <button
                 onClick={onEdit}
-                className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm touch-manipulation w-full sm:w-auto"
+                className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm touch-manipulation w-full sm:w-auto flex items-center space-x-2 mx-auto"
               >
-                Start Writing
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span>Start Writing</span>
               </button>
             </div>
           )}
