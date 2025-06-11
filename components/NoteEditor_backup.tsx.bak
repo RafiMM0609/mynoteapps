@@ -22,7 +22,6 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
   const [showCleanPasteToast, setShowCleanPasteToast] = useState(false)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const editorRef = useRef<HTMLDivElement>(null)
-
   useEffect(() => {
     if (note) {
       setTitle(note.title)
@@ -44,16 +43,6 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       titleInputRef.current.focus()
     }
   }, [note])
-
-  // Auto-hide toast after 3 seconds
-  useEffect(() => {
-    if (showCleanPasteToast) {
-      const timer = setTimeout(() => {
-        setShowCleanPasteToast(false)
-      }, 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [showCleanPasteToast])
 
   // Update content state when editor content changes
   const handleContentChange = () => {
@@ -116,9 +105,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
     }
     
     setActiveFormats(formats)
-  }
-
-  // Handle keyboard shortcuts
+  }  // Handle keyboard shortcuts
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey) {
       switch (e.key) {
@@ -129,8 +116,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
         case 'i':
           e.preventDefault()
           toggleFormatting('italic')
-          break
-        case 's':
+          break        case 's':
           e.preventDefault()
           handleSave()
           break
@@ -186,14 +172,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
 
     if (!pastedText) return
 
-    // Show clean paste feedback
-    setShowCleanPasteToast(true)
-
     // Insert the cleaned text
-    insertCleanText(pastedText)
-  }
-  // Helper function to insert clean text
-  const insertCleanText = (cleanText: string) => {
     const selection = window.getSelection()
     if (!selection || !editorRef.current) return
 
@@ -202,21 +181,18 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       range.deleteContents()
       
       // Split text by line breaks and create proper paragraph structure
-      const lines = cleanText.split('\n')
+      const lines = pastedText.split('\n')
       
       if (lines.length === 1) {
         // Single line - insert as text node
-        const textNode = document.createTextNode(cleanText)
+        const textNode = document.createTextNode(pastedText)
         range.insertNode(textNode)
         
-        // Check if textNode has a parent before positioning cursor
-        if (textNode.parentNode) {
-          // Position cursor after inserted text
-          range.setStartAfter(textNode)
-          range.collapse(true)
-          selection.removeAllRanges()
-          selection.addRange(range)
-        }
+        // Position cursor after inserted text
+        range.setStartAfter(textNode)
+        range.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(range)
       } else {
         // Multiple lines - create paragraphs
         const fragment = document.createDocumentFragment()
@@ -235,24 +211,11 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
         
         range.insertNode(fragment)
         
-        // Position cursor at the end - check if fragment has children
-        const lastChild = fragment.lastChild
-        if (lastChild && lastChild.parentNode) {
-          try {
-            range.setStartAfter(lastChild)
-            range.collapse(true)
-            selection.removeAllRanges()
-            selection.addRange(range)
-          } catch (error) {
-            console.warn('Could not position cursor after fragment:', error)
-            // Fallback: position at end of editor
-            const fallbackRange = document.createRange()
-            fallbackRange.selectNodeContents(editorRef.current)
-            fallbackRange.collapse(false)
-            selection.removeAllRanges()
-            selection.addRange(fallbackRange)
-          }
-        }
+        // Position cursor at the end
+        range.setStartAfter(fragment.lastChild || fragment)
+        range.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(range)
       }
       
       // Update content state
@@ -277,17 +240,61 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
         .replace(/\t/g, '    ')  // Convert tabs to spaces
         .trim()
 
+      // Insert the cleaned text
+      const selection = window.getSelection()
+      if (!selection) return
+
       editorRef.current.focus()
 
-      // Show clean paste feedback
-      setShowCleanPasteToast(true)
-
-      // Insert the cleaned text
-      insertCleanText(cleanText)
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0)
+        range.deleteContents()
+        
+        // Split text by line breaks and create proper paragraph structure
+        const lines = cleanText.split('\n')
+        
+        if (lines.length === 1) {
+          // Single line - insert as text node
+          const textNode = document.createTextNode(cleanText)
+          range.insertNode(textNode)
+          
+          // Position cursor after inserted text
+          range.setStartAfter(textNode)
+          range.collapse(true)
+          selection.removeAllRanges()
+          selection.addRange(range)
+        } else {
+          // Multiple lines - create paragraphs
+          const fragment = document.createDocumentFragment()
+          
+          lines.forEach((line, index) => {
+            if (line.trim()) {
+              const p = document.createElement('p')
+              p.textContent = line.trim()
+              fragment.appendChild(p)
+            } else if (index < lines.length - 1) {
+              // Empty line becomes a break
+              const br = document.createElement('br')
+              fragment.appendChild(br)
+            }
+          })
+          
+          range.insertNode(fragment)
+          
+          // Position cursor at the end
+          range.setStartAfter(fragment.lastChild || fragment)
+          range.collapse(true)
+          selection.removeAllRanges()
+          selection.addRange(range)
+        }
+        
+        // Update content state
+        handleContentChange()
+      }
     } catch (error) {
       console.error('Failed to read from clipboard:', error)
       // Fallback: show instruction to user
-      alert('Unable to access clipboard. Please use regular paste (Ctrl+V), the text will be automatically cleaned.')
+      alert('Unable to access clipboard. Please use Ctrl+V to paste, the text will be automatically cleaned.')
     }
   }
 
@@ -412,35 +419,25 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
         break
       default:
         return
-    }    try {
+    }
+
+    try {
       // Delete selected content and insert new element
       range.deleteContents()
       range.insertNode(element)
       
-      // Ensure the element is properly inserted into the DOM
-      if (!element.parentNode) {
-        console.warn('Element was not properly inserted into DOM')
-        return
-      }
-      
       // Add some spacing after block elements
       if (['h1', 'h2', 'h3', 'p', 'ul', 'ol', 'pre'].includes(tag)) {
         const br = document.createElement('br')
+        range.setStartAfter(element)
+        range.insertNode(br)
         
-        // Create a new range positioned after the element
+        // Position cursor after the break
         const newRange = document.createRange()
-        newRange.setStartAfter(element)
-        newRange.insertNode(br)
-        
-        // Check if br element has a parent before positioning cursor
-        if (br.parentNode) {
-          // Position cursor after the break
-          const cursorRange = document.createRange()
-          cursorRange.setStartAfter(br)
-          cursorRange.collapse(true)
-          selection.removeAllRanges()
-          selection.addRange(cursorRange)
-        }
+        newRange.setStartAfter(br)
+        newRange.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(newRange)
       } else {
         // For inline elements, position cursor after the element
         const newRange = document.createRange()
@@ -451,20 +448,11 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       }
     } catch (error) {
       console.error('Error inserting element:', error)
-      // Fallback: try to position cursor at the end of the editor
-      if (editorRef.current) {
-        const range = document.createRange()
-        range.selectNodeContents(editorRef.current)
-        range.collapse(false)
-        selection.removeAllRanges()
-        selection.addRange(range)
-      }
     }
     
     // Update content state
     handleContentChange()
   }
-
   return (
     <div className="flex-1 flex flex-col bg-white">
       {/* Header */}
@@ -478,8 +466,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
             placeholder="Note title..."
             className="text-lg sm:text-xl font-semibold text-gray-800 bg-transparent border-none outline-none placeholder-gray-400 w-full"
           />
-        </div>
-        <div className="flex items-center justify-end space-x-2">
+        </div>        <div className="flex items-center justify-end space-x-2">
           <div className="flex items-center space-x-1">
             <Tooltip content="Toggle Preview (Ctrl+Enter)">
               <button
@@ -542,9 +529,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
             )}
           </button>
         </div>
-      </div>
-
-      {(!isPreview || isSplitView) && (
+      </div>      {(!isPreview || isSplitView) && (
         /* Formatting Toolbar */
         <div className="flex items-center space-x-1 p-2 border-b border-gray-200 bg-gray-50 overflow-x-auto">
           <div className="flex items-center space-x-1">
@@ -697,9 +682,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
             Press Ctrl+/ for shortcuts
           </div>
         </div>
-      )}
-
-      {/* Content Area */}
+      )}{/* Content Area */}
       <div className="flex-1 overflow-hidden">
         {isSplitView ? (
           <div className="flex h-full">
@@ -707,8 +690,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
             <div className="flex-1 border-r border-gray-200 flex flex-col">
               <div className="bg-gray-100 px-3 py-2 text-xs font-medium text-gray-600">
                 Editor
-              </div>
-              <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
+              </div>              <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
                 <div
                   ref={editorRef}
                   contentEditable
@@ -748,8 +730,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
               dangerouslySetInnerHTML={{ __html: content }}
             />
           </div>
-        ) : (
-          <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
+        ) : (          <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
             <div
               ref={editorRef}
               contentEditable
@@ -765,17 +746,9 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
               }}
               suppressContentEditableWarning={true}
               data-placeholder="Start writing your note... Use the toolbar above for formatting."
-            />
-          </div>
+            />          </div>
         )}
       </div>
-
-      {/* Clean Paste Toast Notification */}
-      {showCleanPasteToast && (
-        <div className="clean-paste-feedback show">
-          ✅ Text pasted without formatting
-        </div>
-      )}
 
       {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcuts 

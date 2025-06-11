@@ -28,16 +28,14 @@ export default function KeyboardShortcuts({ isVisible, onClose }: KeyboardShortc
   }, [isVisible, onClose])
 
   if (!isVisible) return null
-
   const cmdKey = isMac ? '⌘' : 'Ctrl'
-  const altKey = isMac ? '⌥' : 'Alt'
-
   const shortcuts = [
     { keys: `${cmdKey} + S`, description: 'Save note' },
     { keys: `${cmdKey} + B`, description: 'Bold text' },
     { keys: `${cmdKey} + I`, description: 'Italic text' },
     { keys: `${cmdKey} + Enter`, description: 'Toggle preview' },
     { keys: `${cmdKey} + Shift + Enter`, description: 'Toggle split view' },
+    { keys: `${cmdKey} + Shift + V`, description: 'Paste as plain text' },
     { keys: `${cmdKey} + N`, description: 'New note' },
     { keys: `${cmdKey} + /`, description: 'Show shortcuts' },
     { keys: 'Escape', description: 'Close dialogs' }
