@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { Note } from '@/app/page'
 import Tooltip from './Tooltip'
 import KeyboardShortcuts from './KeyboardShortcuts'
+import SlashCommandDropdown from './SlashCommandDropdown'
 
 interface NoteEditorProps {
   note: Note | null
@@ -20,8 +21,11 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
   const [isSaving, setIsSaving] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showCleanPasteToast, setShowCleanPasteToast] = useState(false)
+  const [showSlashCommand, setShowSlashCommand] = useState(false)
+  const [slashCommandPosition, setSlashCommandPosition] = useState({ x: 0, y: 0 })
   const titleInputRef = useRef<HTMLInputElement>(null)
   const editorRef = useRef<HTMLDivElement>(null)
+  const slashRangeRef = useRef<Range | null>(null)
 
   useEffect(() => {
     if (note) {
@@ -117,9 +121,45 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
     
     setActiveFormats(formats)
   }
-
   // Handle keyboard shortcuts
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Handle slash command when not holding Ctrl/Cmd
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey && !showSlashCommand) {
+      const selection = window.getSelection()
+      if (selection && selection.rangeCount > 0 && editorRef.current) {
+        const range = selection.getRangeAt(0)
+        
+        e.preventDefault()
+        
+        // Insert the slash character
+        const textNode = document.createTextNode('/')
+        range.insertNode(textNode)
+        
+        // Position cursor after the slash
+        range.setStartAfter(textNode)
+        range.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(range)
+        
+        // Store the range for later deletion
+        slashRangeRef.current = range.cloneRange()
+        slashRangeRef.current.setStartBefore(textNode)
+        
+        // Get cursor position for dropdown
+        const rect = range.getBoundingClientRect()
+        
+        // Position dropdown above the slash character for better UX
+        setSlashCommandPosition({
+          x: rect.left,
+          y: rect.top + window.scrollY // Use exact cursor position
+        })
+        setShowSlashCommand(true)
+        
+        return
+      }
+    }
+
+    // Handle existing keyboard shortcuts
     if (e.ctrlKey || e.metaKey) {
       switch (e.key) {
         case 'b':
@@ -153,6 +193,12 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
           }
           break
       }
+    }
+
+    // Close slash command on Escape
+    if (e.key === 'Escape' && showSlashCommand) {
+      setShowSlashCommand(false)
+      slashRangeRef.current = null
     }
   }
 
@@ -289,6 +335,30 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       // Fallback: show instruction to user
       alert('Unable to access clipboard. Please use regular paste (Ctrl+V), the text will be automatically cleaned.')
     }
+  }
+
+  // Handle slash command selection
+  const handleSlashCommand = (commandType: string) => {
+    if (!editorRef.current) return
+
+    // Remove the slash character using the stored range
+    if (slashRangeRef.current) {
+      slashRangeRef.current.deleteContents()
+      
+      // Position cursor where the slash was
+      const selection = window.getSelection()
+      if (selection) {
+        selection.removeAllRanges()
+        selection.addRange(slashRangeRef.current)
+      }
+    }
+
+    // Close the dropdown
+    setShowSlashCommand(false)
+    slashRangeRef.current = null
+
+    // Apply the formatting
+    toggleFormatting(commandType)
   }
 
   const handleSave = async () => {
@@ -768,14 +838,23 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
             />
           </div>
         )}
-      </div>
-
-      {/* Clean Paste Toast Notification */}
+      </div>      {/* Clean Paste Toast Notification */}
       {showCleanPasteToast && (
         <div className="clean-paste-feedback show">
           ✅ Text pasted without formatting
         </div>
       )}
+
+      {/* Slash Command Dropdown */}
+      <SlashCommandDropdown
+        isVisible={showSlashCommand}
+        position={slashCommandPosition}
+        onClose={() => {
+          setShowSlashCommand(false)
+          slashRangeRef.current = null
+        }}
+        onSelectCommand={handleSlashCommand}
+      />
 
       {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcuts 

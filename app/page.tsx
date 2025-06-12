@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import NoteList from '@/components/NoteList'
-import NoteEditor from '@/components/NoteEditor'
+import NoteEditor from '@/components/NoteEditor_new'
 import NoteViewer from '@/components/NoteViewer'
 import AuthenticatedHome from '@/components/AuthenticatedHome'
 import Toast from '@/components/Toast'
@@ -254,31 +254,30 @@ export default function HomePage() {
 
   // Show the main notes application
   return (
-    <div className="flex h-screen bg-gray-50 relative">
-      {/* Mobile Header */}
+    <div className="flex h-screen bg-gray-50 relative">      {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-30 px-4 py-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 min-w-0">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
+            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg flex-shrink-0"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="text-lg font-semibold text-gray-800">MyNotes</h1>
-          <div className="flex items-center space-x-2">
+          <h1 className="text-lg font-semibold text-gray-800 truncate min-w-0 flex-1 text-center">MyNotes</h1>
+          <div className="flex items-center space-x-1 flex-shrink-0">
             <button
               onClick={handleCreateNote}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
+              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg flex-shrink-0"
+              title="New Note"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-            </button>
-            <button
+            </button>            <button
               onClick={handleLogout}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
+              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg flex-shrink-0"
               title="Logout"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,9 +294,7 @@ export default function HomePage() {
           className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20"
           onClick={() => setIsSidebarOpen(false)}
         />
-      )}
-
-      {/* Sidebar */}
+      )}      {/* Sidebar */}
       <div className={`
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0 
@@ -307,21 +304,20 @@ export default function HomePage() {
         flex flex-col 
         z-30 md:z-auto
         transition-transform duration-300 ease-in-out
-        h-full
-      `}>
-        <div className="p-4 border-b border-gray-200 mt-16 md:mt-0">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-semibold text-gray-800 hidden md:block">MyNotes</h1>
-            <div className="flex items-center space-x-2 w-full md:w-auto">
+        h-full mobile-safe-height sidebar-safe-area
+      `}><div className="p-4 border-b border-gray-200 mt-16 md:mt-0">
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <h1 className="text-xl font-semibold text-gray-800 hidden md:block truncate">MyNotes</h1>
+            <div className="flex items-center space-x-2 w-full md:w-auto min-w-0">
               <button
                 onClick={handleCreateNote}
-                className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm flex-1 md:flex-none"
+                className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm flex-1 md:flex-none min-w-0 truncate"
               >
                 New Note
               </button>
               <button
                 onClick={handleLogout}
-                className="hidden md:block p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
+                className="hidden md:block p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg flex-shrink-0"
                 title="Logout"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -329,10 +325,9 @@ export default function HomePage() {
                 </svg>
               </button>
             </div>
-          </div>
-        </div>
+          </div>        </div>
         
-        <div className="flex-1 overflow-y-auto">
+        <div className="sidebar-content-wrapper">
           <NoteList
             notes={notes}
             selectedNote={selectedNote}
@@ -356,10 +351,9 @@ export default function HomePage() {
             note={selectedNote}
             onEdit={handleEditNote}
           />
-        ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50 p-4">
-            <div className="text-center max-w-md">
-              <div className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
+        ) : (          <div className="flex-1 flex items-center justify-center bg-gray-50 p-4">
+            <div className="text-center max-w-md w-full">
+              <div className="sidebar-avatar mx-auto mb-4" style={{ width: '4rem', height: '4rem' }}>
                 <svg className="w-8 h-8 md:w-12 md:h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
