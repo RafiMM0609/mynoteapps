@@ -140,20 +140,28 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
         range.collapse(true)
         selection.removeAllRanges()
         selection.addRange(range)
-        
-        // Store the range for later deletion
+          // Store the range for later deletion
         slashRangeRef.current = range.cloneRange()
         slashRangeRef.current.setStartBefore(textNode)
         
-        // Get cursor position for dropdown
+        // Get cursor position for dropdown with better positioning
         const rect = range.getBoundingClientRect()
         
-        // Position dropdown above the slash character for better UX
-        setSlashCommandPosition({
-          x: rect.left,
-          y: rect.top + window.scrollY // Use exact cursor position
-        })
-        setShowSlashCommand(true)
+        // Ensure we have valid coordinates
+        if (rect.left >= 0 && rect.top >= 0) {
+          setSlashCommandPosition({
+            x: rect.left,
+            y: rect.top // Use rect.top directly for fixed positioning
+          })
+          setShowSlashCommand(true)
+        } else {
+          // Fallback positioning if getBoundingClientRect fails
+          setSlashCommandPosition({
+            x: 100,
+            y: 100
+          })
+          setShowSlashCommand(true)
+        }
         
         return
       }

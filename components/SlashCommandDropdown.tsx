@@ -89,7 +89,6 @@ export default function SlashCommandDropdown({
       icon: '🖥️',
       action: () => onSelectCommand('pre')    }
   ], [onSelectCommand])
-
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -122,6 +121,20 @@ export default function SlashCommandDropdown({
     }
   }, [isVisible, selectedIndex, commands, onClose])
 
+  // Auto-scroll to keep selected item visible
+  useEffect(() => {
+    if (!isVisible || !dropdownRef.current) return
+
+    const selectedElement = dropdownRef.current.querySelector(`[data-index="${selectedIndex}"]`) as HTMLElement
+    if (selectedElement) {
+      selectedElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest'
+      })
+    }
+  }, [selectedIndex, isVisible])
+
   // Reset selected index when dropdown opens
   useEffect(() => {
     if (isVisible) {
@@ -143,44 +156,62 @@ export default function SlashCommandDropdown({
     }  }, [isVisible, onClose])
   
   if (!isVisible) return null
-  
   // Calculate the best position for the dropdown
   const calculatePosition = () => {
     const dropdownHeight = 360 // Approximate height of the dropdown
-    const dropdownWidth = 280 // Increased width for better readability
+    const dropdownWidth = 320 // Match the actual width set in style
     
     let x = position.x
     let y = position.y
     
+    // Debug logging
+    console.log('Original position:', { x, y })
+    console.log('Viewport dimensions:', { width: window.innerWidth, height: window.innerHeight })
+    
+    // Get viewport dimensions
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    
     // Adjust horizontal position if dropdown would go off screen
-    if (x + dropdownWidth > window.innerWidth) {
-      x = window.innerWidth - dropdownWidth - 20
+    if (x + dropdownWidth > viewportWidth) {
+      x = Math.max(20, viewportWidth - dropdownWidth - 20)
     }
     if (x < 20) {
       x = 20
     }
     
-    // Always try to position above the cursor first for better UX
+    // Calculate available space above and below cursor position
     const spaceAbove = y - 20 // Space available above cursor
-    const spaceBelow = window.innerHeight - y - 50 // Space available below cursor
+    const spaceBelow = viewportHeight - y - 50 // Space available below cursor
     
-    if (spaceAbove >= 200 || spaceAbove > spaceBelow) {
-      // Position above the cursor - prefer above even with limited space
-      y = Math.max(20, y - dropdownHeight - 20)
+    console.log('Available space:', { spaceAbove, spaceBelow })
+    
+    // Position dropdown based on available space
+    if (spaceAbove >= 200 && spaceAbove >= spaceBelow) {
+      // Position above the cursor if there's enough space
+      y = Math.max(20, y - dropdownHeight - 10)
+    } else if (spaceBelow >= 200) {
+      // Position below the cursor if there's enough space
+      y = Math.min(y + 30, viewportHeight - dropdownHeight - 20)
     } else {
-      // Only position below if there's significantly more space below
-      y = position.y + 40
+      // If neither position has enough space, choose the one with more space
+      if (spaceAbove > spaceBelow) {
+        y = Math.max(20, y - dropdownHeight - 10)
+      } else {
+        y = Math.min(y + 30, viewportHeight - dropdownHeight - 20)
+      }
     }
+    
+    console.log('Final position:', { x, y })
     
     return { x, y }
   }
 
   const finalPosition = calculatePosition()
 
-  return (
-    <div
+  return (    <div
       ref={dropdownRef}
-      className="fixed bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto backdrop-blur-sm"
+      className="fixed bg-white border border-gray-200 rounded-xl shadow-xl z-[9999] max-h-96 overflow-y-auto backdrop-blur-sm"
       style={{
         left: finalPosition.x,
         top: finalPosition.y,
@@ -196,11 +227,11 @@ export default function SlashCommandDropdown({
             Quick Actions
           </span>
           <span className="ml-2 text-gray-400">↑↓ navigate • Enter select • Esc close</span>
-        </div>
-        <div className="space-y-1">
+        </div>        <div className="space-y-1">
           {commands.map((command, index) => (
             <div
               key={command.id}
+              data-index={index}
               className={`flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200 ${
                 index === selectedIndex
                   ? 'bg-blue-50 text-blue-900 border border-blue-200 shadow-sm transform scale-[1.02]'
