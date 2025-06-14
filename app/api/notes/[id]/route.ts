@@ -42,21 +42,20 @@ export async function PUT(
   try {
     const user = await verifyAuth(request)
     if (!user) {
-      return createAuthResponse()
-    }    const { id } = await params
-    const { title, content, format } = await request.json()
+      return createAuthResponse()    }    const { id } = await params
+    const { title, content } = await request.json()
     
     if (!title?.trim()) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
     }
 
-    const supabase = createClient()
+    const supabase = createClient();
     const { data: updatedNote, error } = await supabase
       .from('notes')
       .update({
         title: title.trim(),
         content: content || '',
-        format: format || 'markdown',
+        // format: format || 'markdown',
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

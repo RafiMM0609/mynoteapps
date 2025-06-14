@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import NoteList from '@/components/NoteList'
-import MarkdownEditor from '@/components/MarkdownEditor'
+import RichTextEditor from '@/components/RichTextEditor'
 import NoteViewer from '@/components/NoteViewer'
 import AuthenticatedHome from '@/components/AuthenticatedHome'
 import Toast from '@/components/Toast'
@@ -343,9 +343,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col mt-16 md:mt-0">        {isEditing ? (
-          <MarkdownEditor
+      {/* Main Content */}      <div className="flex-1 flex flex-col mt-16 md:mt-0">        {isEditing ? (
+          <RichTextEditor
             note={selectedNote}
             onSave={handleSaveNote}
             onCancel={handleCancelEdit}

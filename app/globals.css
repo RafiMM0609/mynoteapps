@@ -1015,5 +1015,342 @@ body {
 
 .markdown-preview th {
   background-color: #f9fafb;
-  font-weight: bold;
+  font-weight: 600;
+}
+
+/* Markdown Editor Live Preview Styles */
+.live-preview-editor {
+  position: relative;
+}
+
+.live-preview-textarea {
+  background: transparent !important;
+  color: transparent !important;
+  caret-color: #000 !important;
+  z-index: 10;
+  resize: none;
+}
+
+.live-preview-textarea:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+.live-preview-overlay {
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Ensure markdown preview matches textarea font metrics */
+.markdown-preview {
+  font-family: inherit;
+  line-height: inherit;
+  font-size: inherit;
+  padding: inherit;
+  margin: 0;
+}
+
+/* Better markdown preview styling */
+.markdown-preview h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 0.67em 0;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.3em;
+}
+
+.markdown-preview h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0.75em 0 0.5em 0;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.3em;
+}
+
+.markdown-preview h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.75em 0 0.5em 0;
+}
+
+.markdown-preview h4 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0.75em 0 0.5em 0;
+}
+
+.markdown-preview h5 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0.75em 0 0.5em 0;
+}
+
+.markdown-preview h6 {
+  font-size: 0.9em;
+  font-weight: 600;
+  margin: 0.75em 0 0.5em 0;
+  color: #6b7280;
+}
+
+.markdown-preview p {
+  margin: 0.5em 0;
+  line-height: 1.6;
+}
+
+.markdown-preview code {
+  background-color: #f3f4f6;
+  padding: 0.125em 0.25em;
+  border-radius: 0.25rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875em;
+}
+
+.markdown-preview pre {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.markdown-preview pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-preview blockquote {
+  border-left: 4px solid #d1d5db;
+  padding-left: 1rem;
+  margin: 1em 0;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.markdown-preview ul, .markdown-preview ol {
+  margin: 0.5em 0;
+  padding-left: 2em;
+}
+
+.markdown-preview li {
+  margin: 0.25em 0;
+}
+
+.markdown-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.markdown-preview th, .markdown-preview td {
+  border: 1px solid #d1d5db;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.markdown-preview th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.markdown-preview a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.markdown-preview a:hover {
+  color: #1d4ed8;
+}
+
+.markdown-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  margin: 0.5em 0;
+}
+
+.markdown-preview hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 2em 0;
+}
+
+/* Slash command dropdown animation */
+.slash-dropdown-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.slash-dropdown-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms, transform 200ms;
+}
+
+.slash-dropdown-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slash-dropdown-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 200ms, transform 200ms;
+}
+
+/* Rich Text Editor Styles */
+.rich-text-editor {
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.rich-text-editor h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 0.67em 0;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.3em;
+  color: #111827;
+}
+
+.rich-text-editor h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0.75em 0 0.5em 0;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.3em;
+  color: #111827;
+}
+
+.rich-text-editor h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.75em 0 0.5em 0;
+  color: #111827;
+}
+
+.rich-text-editor h4 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0.75em 0 0.5em 0;
+  color: #111827;
+}
+
+.rich-text-editor h5 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0.75em 0 0.5em 0;
+  color: #111827;
+}
+
+.rich-text-editor h6 {
+  font-size: 0.9em;
+  font-weight: 600;
+  margin: 0.75em 0 0.5em 0;
+  color: #6b7280;
+}
+
+.rich-text-editor p {
+  margin: 0.5em 0;
+  line-height: 1.6;
+}
+
+.rich-text-editor strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.rich-text-editor em {
+  font-style: italic;
+}
+
+.rich-text-editor code {
+  background-color: #f3f4f6;
+  padding: 0.125em 0.25em;
+  border-radius: 0.25rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875em;
+  color: #dc2626;
+}
+
+.rich-text-editor pre {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.rich-text-editor pre code {
+  background: none;
+  padding: 0;
+  color: #374151;
+}
+
+.rich-text-editor blockquote {
+  border-left: 4px solid #d1d5db;
+  padding-left: 1rem;
+  margin: 1em 0;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.rich-text-editor ul, .rich-text-editor ol {
+  margin: 0.5em 0;
+  padding-left: 2em;
+}
+
+.rich-text-editor li {
+  margin: 0.25em 0;
+}
+
+.rich-text-editor ul li {
+  list-style-type: disc;
+}
+
+.rich-text-editor ol li {
+  list-style-type: decimal;
+}
+
+.rich-text-editor a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.rich-text-editor a:hover {
+  color: #1d4ed8;
+}
+
+.rich-text-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  margin: 0.5em 0;
+}
+
+.rich-text-editor hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 2em 0;
+}
+
+/* Empty content placeholder */
+.rich-text-editor:empty:before {
+  content: "Start typing your note here... Type / for quick commands";
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Focus styles */
+.rich-text-editor:focus {
+  outline: none;
+}
+
+/* Selection styles */
+.rich-text-editor ::selection {
+  background-color: #dbeafe;
+  color: #1e40af;
 }

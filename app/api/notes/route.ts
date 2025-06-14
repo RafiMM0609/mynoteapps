@@ -31,11 +31,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/notes - Create a new note
 export async function POST(request: NextRequest) {
-  try {
-    const user = await verifyAuth(request)
+  try {    const user = await verifyAuth(request)
     if (!user) {
       return createAuthResponse()
-    }    const { title, content, format } = await request.json()
+    }    const { title, content } = await request.json()
     
     if (!title?.trim()) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
@@ -47,8 +46,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         title: title.trim(),
-        content: content || '',
-        format: format || 'markdown'
+        content: content || ''
       })
       .select()
       .single()
