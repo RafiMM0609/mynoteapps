@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Note } from '@/app/page'
+import { detectContentFormat, markdownToHtml } from '@/lib/markdown-converter'
 
 interface NoteViewerProps {
   note: Note
@@ -10,6 +11,25 @@ interface NoteViewerProps {
 
 export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [renderedContent, setRenderedContent] = useState('')
+  
+  useEffect(() => {
+    const renderContent = async () => {
+      if (note.content) {
+        const format = detectContentFormat(note.content)
+        if (format === 'markdown') {
+          const html = await markdownToHtml(note.content)
+          setRenderedContent(html)
+        } else {
+          setRenderedContent(note.content)
+        }
+      } else {
+        setRenderedContent('')
+      }
+    }
+    
+    renderContent()
+  }, [note.content])
     const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -84,13 +104,12 @@ export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
             </button>
           </div>
         </div>
-      </div>      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className={`mx-auto p-4 sm:p-6 ${isFullscreen ? 'max-w-4xl' : 'max-w-4xl'}`}>
-          {note.content ? (
+      </div>      {/* Content */}      <div className="flex-1 overflow-y-auto">
+        <div className={`mx-auto p-4 sm:p-6 ${isFullscreen ? 'max-w-4xl' : 'max-w-4xl'} overflow-x-hidden`}>
+          {renderedContent ? (
             <div 
               className="prose prose-gray max-w-none note-content text-sm sm:text-base prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900"
-              dangerouslySetInnerHTML={{ __html: note.content }}
+              dangerouslySetInnerHTML={{ __html: renderedContent }}
             />
           ) : (
             <div className="text-center py-8 sm:py-12">

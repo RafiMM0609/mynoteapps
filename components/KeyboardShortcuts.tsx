@@ -29,6 +29,7 @@ export default function KeyboardShortcuts({ isVisible, onClose }: KeyboardShortc
 
   if (!isVisible) return null
   const cmdKey = isMac ? '⌘' : 'Ctrl'
+  
   const shortcuts = [
     { keys: `${cmdKey} + S`, description: 'Save note' },
     { keys: `${cmdKey} + B`, description: 'Bold text' },
@@ -38,7 +39,8 @@ export default function KeyboardShortcuts({ isVisible, onClose }: KeyboardShortc
     { keys: `${cmdKey} + Shift + V`, description: 'Paste as plain text' },
     { keys: `${cmdKey} + N`, description: 'New note' },
     { keys: `${cmdKey} + /`, description: 'Show shortcuts' },
-    { keys: 'Escape', description: 'Close dialogs' }
+    { keys: 'F11', description: 'Toggle fullscreen' },
+    { keys: 'Escape', description: 'Close dialogs/Exit fullscreen' }
   ]
 
   return (

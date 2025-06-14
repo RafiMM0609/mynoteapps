@@ -43,10 +43,8 @@ export async function PUT(
     const user = await verifyAuth(request)
     if (!user) {
       return createAuthResponse()
-    }
-
-    const { id } = await params
-    const { title, content } = await request.json()
+    }    const { id } = await params
+    const { title, content, format } = await request.json()
     
     if (!title?.trim()) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
@@ -58,6 +56,7 @@ export async function PUT(
       .update({
         title: title.trim(),
         content: content || '',
+        format: format || 'markdown',
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

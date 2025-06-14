@@ -35,9 +35,7 @@ export async function POST(request: NextRequest) {
     const user = await verifyAuth(request)
     if (!user) {
       return createAuthResponse()
-    }
-
-    const { title, content } = await request.json()
+    }    const { title, content, format } = await request.json()
     
     if (!title?.trim()) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
@@ -49,7 +47,8 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         title: title.trim(),
-        content: content || ''
+        content: content || '',
+        format: format || 'markdown'
       })
       .select()
       .single()

@@ -544,25 +544,55 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border-b border-gray-200 gap-3 sm:gap-0">
-        <div className="flex items-center space-x-3 flex-1">
-          <input
-            ref={titleInputRef}
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Note title..."
-            className="text-lg sm:text-xl font-semibold text-gray-800 bg-transparent border-none outline-none placeholder-gray-400 w-full"
-          />
+    <div className="flex-1 flex flex-col bg-white">      {/* Header */}
+      <div className="flex flex-col border-b border-gray-200">
+        {/* Title Row */}
+        <div className="flex items-center justify-between p-3 sm:p-4 gap-2">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Note title..."
+              className="text-base sm:text-lg lg:text-xl font-semibold text-gray-800 bg-transparent border-none outline-none placeholder-gray-400 w-full min-w-0"
+            />
+          </div>
+          
+          {/* Action Buttons - Always visible */}
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            <button
+              onClick={onCancel}
+              className="px-2 sm:px-3 py-1.5 sm:py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors touch-manipulation"
+              disabled={isSaving}
+            >
+              Cancel
+            </button>
+            
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-gray-800 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded text-sm hover:bg-gray-700 transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="hidden xs:inline">Saving...</span>
+                </>
+              ) : (
+                <span>Save</span>
+              )}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center justify-end space-x-2">
-          <div className="flex items-center space-x-1">
+        
+        {/* Control Buttons Row */}
+        <div className="flex items-center justify-between px-3 sm:px-4 pb-2 sm:pb-3">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <Tooltip content="Toggle Preview (Ctrl+Enter)">
               <button
                 onClick={() => setIsPreview(!isPreview)}
-                className={`px-3 py-2 rounded text-sm transition-colors touch-manipulation ${
+                className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm transition-colors touch-manipulation ${
                   isPreview 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -575,7 +605,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
             <Tooltip content="Split View (Ctrl+Shift+Enter)">
               <button
                 onClick={() => setIsSplitView(!isSplitView)}
-                className={`px-3 py-2 rounded text-sm transition-colors touch-manipulation ${
+                className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm transition-colors touch-manipulation ${
                   isSplitView 
                     ? 'bg-green-600 text-white' 
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -584,209 +614,197 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
                 Split
               </button>
             </Tooltip>
-            
-            <Tooltip content="Keyboard Shortcuts (Ctrl+/)">
-              <button
-                onClick={() => setShowShortcuts(true)}
-                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-            </Tooltip>
           </div>
           
-          <button
-            onClick={onCancel}
-            className="px-3 sm:px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors touch-manipulation"
-            disabled={isSaving}
-          >
-            Cancel
-          </button>
-          
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-gray-800 text-white px-3 sm:px-4 py-2 rounded hover:bg-gray-700 transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-          >
-            {isSaving ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Saving...</span>
-              </>
-            ) : (
-              <span>Save</span>
-            )}
-          </button>
+          <Tooltip content="Keyboard Shortcuts (Ctrl+/)">
+            <button
+              onClick={() => setShowShortcuts(true)}
+              className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+            >
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </Tooltip>
         </div>
-      </div>
-
-      {(!isPreview || isSplitView) && (
+      </div>{(!isPreview || isSplitView) && (
         /* Formatting Toolbar */
-        <div className="flex items-center space-x-1 p-2 border-b border-gray-200 bg-gray-50 overflow-x-auto">
-          <div className="flex items-center space-x-1">
-            <Tooltip content="Bold (Ctrl+B)">
-              <button
-                onClick={() => toggleFormatting('bold')}
-                className={`p-2 sm:p-2 rounded touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors ${
-                  activeFormats.has('bold')
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <strong className="text-sm">B</strong>
-              </button>
-            </Tooltip>
-            <Tooltip content="Italic (Ctrl+I)">
-              <button
-                onClick={() => toggleFormatting('italic')}
-                className={`p-2 sm:p-2 rounded touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors ${
-                  activeFormats.has('italic')
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <em className="text-sm">I</em>
-              </button>
-            </Tooltip>
-          </div>
-          
-          <div className="w-px h-6 bg-gray-300 mx-1"></div>
-          
-          <div className="flex items-center space-x-1">
-            <Tooltip content="Heading 1">
-              <button
-                onClick={() => toggleFormatting('h1')}
-                className={`p-2 rounded text-xs touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors ${
-                  activeFormats.has('h1')
-                    ? 'bg-green-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                H1
-              </button>
-            </Tooltip>
-            <Tooltip content="Heading 2">
-              <button
-                onClick={() => toggleFormatting('h2')}
-                className={`p-2 rounded text-xs touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors ${
-                  activeFormats.has('h2')
-                    ? 'bg-green-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                H2
-              </button>
-            </Tooltip>
-            <Tooltip content="Heading 3">
-              <button
-                onClick={() => toggleFormatting('h3')}
-                className={`p-2 rounded text-xs touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors ${
-                  activeFormats.has('h3')
-                    ? 'bg-green-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                H3
-              </button>
-            </Tooltip>
-          </div>
-          
-          <div className="w-px h-6 bg-gray-300 mx-1"></div>
-          
-          <div className="flex items-center space-x-1">
-            <Tooltip content="Bullet List">
-              <button
-                onClick={() => toggleFormatting('ul')}
-                className={`p-2 rounded touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors ${
-                  activeFormats.has('ul')
-                    ? 'bg-purple-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-              </button>
-            </Tooltip>
-            <Tooltip content="Numbered List">
-              <button
-                onClick={() => toggleFormatting('ol')}
-                className={`p-2 rounded text-xs touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors ${
-                  activeFormats.has('ol')
-                    ? 'bg-purple-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                1.
-              </button>
-            </Tooltip>
-          </div>
-          
-          <div className="w-px h-6 bg-gray-300 mx-1"></div>
-          
-          <div className="flex items-center space-x-1">
-            <Tooltip content="Inline Code">
-              <button
-                onClick={() => toggleFormatting('code')}
-                className={`p-2 rounded touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors ${
-                  activeFormats.has('code')
-                    ? 'bg-orange-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <span className="text-xs">&lt;/&gt;</span>
-              </button>
-            </Tooltip>
-            <Tooltip content="Code Block">
-              <button
-                onClick={() => toggleFormatting('pre')}
-                className={`p-2 rounded text-xs touch-manipulation min-w-[50px] min-h-[36px] flex items-center justify-center transition-colors ${
-                  activeFormats.has('pre')
-                    ? 'bg-orange-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                Code
-              </button>
-            </Tooltip>
-          </div>
-          
-          <div className="w-px h-6 bg-gray-300 mx-1"></div>
-          
-          <div className="flex items-center space-x-1">
-            <Tooltip content="Paste as Plain Text (Ctrl+Shift+V)">
-              <button
-                onClick={pasteAsPlainText}
-                className="p-2 rounded touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors text-gray-600 hover:bg-gray-200"
-                title="Clean paste without formatting"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </button>
-            </Tooltip>
-          </div>
-          
-          <div className="flex-1"></div>
-          
-          <div className="hidden sm:block text-xs text-gray-500 px-2">
-            Press Ctrl+/ for shortcuts
+        <div className="border-b border-gray-200 bg-gray-50">
+          {/* First Row - Basic Formatting & Text Styles */}
+          <div className="flex flex-wrap items-center gap-1 p-2">
+            {/* Basic Formatting Group */}
+            <div className="flex items-center gap-1">
+              <Tooltip content="Bold (Ctrl+B)">
+                <button
+                  onClick={() => toggleFormatting('bold')}
+                  className={`p-1.5 sm:p-2 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
+                    activeFormats.has('bold')
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <strong className="text-xs sm:text-sm">B</strong>
+                </button>
+              </Tooltip>
+              <Tooltip content="Italic (Ctrl+I)">
+                <button
+                  onClick={() => toggleFormatting('italic')}
+                  className={`p-1.5 sm:p-2 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
+                    activeFormats.has('italic')
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <em className="text-xs sm:text-sm">I</em>
+                </button>
+              </Tooltip>
+            </div>
+            
+            {/* Separator */}
+            <div className="w-px h-4 sm:h-6 bg-gray-300 mx-1"></div>
+            
+            {/* Headings Group */}
+            <div className="flex items-center gap-1">
+              <Tooltip content="Heading 1">
+                <button
+                  onClick={() => toggleFormatting('h1')}
+                  className={`p-1.5 sm:p-2 rounded text-xs touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
+                    activeFormats.has('h1')
+                      ? 'bg-green-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  H1
+                </button>
+              </Tooltip>
+              <Tooltip content="Heading 2">
+                <button
+                  onClick={() => toggleFormatting('h2')}
+                  className={`p-1.5 sm:p-2 rounded text-xs touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
+                    activeFormats.has('h2')
+                      ? 'bg-green-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  H2
+                </button>
+              </Tooltip>
+              <Tooltip content="Heading 3">
+                <button
+                  onClick={() => toggleFormatting('h3')}
+                  className={`p-1.5 sm:p-2 rounded text-xs touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
+                    activeFormats.has('h3')
+                      ? 'bg-green-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  H3
+                </button>
+              </Tooltip>
+            </div>
+            
+            {/* Separator */}
+            <div className="w-px h-4 sm:h-6 bg-gray-300 mx-1"></div>
+            
+            {/* Lists Group */}
+            <div className="flex items-center gap-1">
+              <Tooltip content="Bullet List">
+                <button
+                  onClick={() => toggleFormatting('ul')}
+                  className={`p-1.5 sm:p-2 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
+                    activeFormats.has('ul')
+                      ? 'bg-purple-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                </button>
+              </Tooltip>
+              <Tooltip content="Numbered List">
+                <button
+                  onClick={() => toggleFormatting('ol')}
+                  className={`p-1.5 sm:p-2 rounded text-xs touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
+                    activeFormats.has('ol')
+                      ? 'bg-purple-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  1.
+                </button>
+              </Tooltip>
+            </div>
+            
+            {/* Separator */}
+            <div className="w-px h-4 sm:h-6 bg-gray-300 mx-1"></div>
+            
+            {/* Code Group */}
+            <div className="flex items-center gap-1">
+              <Tooltip content="Inline Code">
+                <button
+                  onClick={() => toggleFormatting('code')}
+                  className={`p-1.5 sm:p-2 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
+                    activeFormats.has('code')
+                      ? 'bg-orange-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <span className="text-xs">&lt;/&gt;</span>
+                </button>
+              </Tooltip>
+              <Tooltip content="Code Block">
+                <button
+                  onClick={() => toggleFormatting('pre')}
+                  className={`p-1.5 sm:p-2 rounded text-xs touch-manipulation min-w-[40px] min-h-[32px] sm:min-w-[50px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
+                    activeFormats.has('pre')
+                      ? 'bg-orange-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  Code
+                </button>
+              </Tooltip>
+            </div>
+            
+            {/* Separator */}
+            <div className="w-px h-4 sm:h-6 bg-gray-300 mx-1"></div>
+            
+            {/* Paste Tools */}
+            <div className="flex items-center gap-1">
+              <Tooltip content="Paste as Plain Text (Ctrl+Shift+V)">
+                <button
+                  onClick={pasteAsPlainText}
+                  className="p-1.5 sm:p-2 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors text-gray-600 hover:bg-gray-200"
+                  title="Clean paste without formatting"
+                >
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
+              </Tooltip>
+            </div>
+            
+            {/* Flexible space */}
+            <div className="flex-1 min-w-[8px]"></div>
+            
+            {/* Shortcuts hint - hidden on very small screens */}
+            <div className="hidden md:block text-xs text-gray-500 px-2 whitespace-nowrap">
+              Press Ctrl+/ for shortcuts
+            </div>
           </div>
         </div>
       )}
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden">
-        {isSplitView ? (
-          <div className="flex h-full">
+      <div className="flex-1 overflow-hidden">        {isSplitView ? (
+          <div className="flex flex-col sm:flex-row h-full">
             {/* Editor Side */}
-            <div className="flex-1 border-r border-gray-200 flex flex-col">
-              <div className="bg-gray-100 px-3 py-2 text-xs font-medium text-gray-600">
+            <div className="flex-1 sm:border-r border-gray-200 flex flex-col">
+              <div className="bg-gray-100 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-gray-600 border-b sm:border-b-0">
                 Editor
               </div>
-              <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
+              <div className="flex-1 p-2 sm:p-3 lg:p-4 overflow-y-auto">
                 <div
                   ref={editorRef}
                   contentEditable
@@ -798,7 +816,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
                   className="w-full h-full outline-none text-gray-700 leading-relaxed note-content rich-editor text-sm sm:text-base"
                   style={{ 
                     fontFamily: 'system-ui, -apple-system, sans-serif',
-                    minHeight: '300px'
+                    minHeight: '200px'
                   }}
                   suppressContentEditableWarning={true}
                   data-placeholder="Start writing your note... Use the toolbar above for formatting."
@@ -807,11 +825,11 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
             </div>
             
             {/* Preview Side */}
-            <div className="flex-1 flex flex-col">
-              <div className="bg-gray-100 px-3 py-2 text-xs font-medium text-gray-600">
+            <div className="flex-1 flex flex-col border-t sm:border-t-0">
+              <div className="bg-gray-100 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-gray-600 border-b sm:border-b-0">
                 Preview
               </div>
-              <div className="flex-1 p-3 sm:p-4 overflow-y-auto bg-white">
+              <div className="flex-1 p-2 sm:p-3 lg:p-4 overflow-y-auto bg-white">
                 <div 
                   className="note-content prose max-w-none text-sm sm:text-base"
                   dangerouslySetInnerHTML={{ __html: content || '<p class="text-gray-400">Start typing to see preview...</p>' }}
@@ -820,14 +838,14 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
             </div>
           </div>
         ) : isPreview ? (
-          <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
+          <div className="flex-1 p-2 sm:p-3 lg:p-4 overflow-y-auto">
             <div 
               className="note-content prose max-w-none text-sm sm:text-base"
               dangerouslySetInnerHTML={{ __html: content }}
             />
           </div>
         ) : (
-          <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
+          <div className="flex-1 p-2 sm:p-3 lg:p-4 overflow-y-auto">
             <div
               ref={editorRef}
               contentEditable

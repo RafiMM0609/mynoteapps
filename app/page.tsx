@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import NoteList from '@/components/NoteList'
-import NoteEditor from '@/components/NoteEditor_new'
+import MarkdownEditor from '@/components/MarkdownEditor'
 import NoteViewer from '@/components/NoteViewer'
 import AuthenticatedHome from '@/components/AuthenticatedHome'
 import Toast from '@/components/Toast'
@@ -13,6 +13,7 @@ export interface Note {
   id: string
   title: string
   content: string
+  format?: 'html' | 'markdown'
   created_at: string
   updated_at: string
 }
@@ -116,10 +117,10 @@ export default function HomePage() {
     setIsEditing(false)
     setIsSidebarOpen(false)
   }
-
   const handleEditNote = () => {
     setIsEditing(true)
   }
+
   const handleSaveNote = async (title: string, content: string) => {
     if (!authToken) return
 
@@ -133,7 +134,11 @@ export default function HomePage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`
         },
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ 
+          title, 
+          content, 
+          format: 'markdown' 
+        }),
       })
 
       if (response.ok) {
@@ -339,9 +344,8 @@ export default function HomePage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col mt-16 md:mt-0">
-        {isEditing ? (
-          <NoteEditor
+      <div className="flex-1 flex flex-col mt-16 md:mt-0">        {isEditing ? (
+          <MarkdownEditor
             note={selectedNote}
             onSave={handleSaveNote}
             onCancel={handleCancelEdit}

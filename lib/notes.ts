@@ -4,6 +4,7 @@ export interface Note {
   id: string
   title: string
   content: string
+  format?: 'html' | 'markdown'
   created_at: string
   updated_at: string
 }
@@ -37,10 +38,11 @@ export async function getNoteById(id: string): Promise<Note | null> {
   return data
 }
 
-export async function createNote(title: string, content: string): Promise<Note> {
+export async function createNote(title: string, content: string, format: 'html' | 'markdown' = 'markdown'): Promise<Note> {
   const newNote = {
     title: title.trim(),
     content: content || '',
+    format: format,
   }
 
   const { data, error } = await supabase
@@ -57,10 +59,11 @@ export async function createNote(title: string, content: string): Promise<Note> 
   return data
 }
 
-export async function updateNote(id: string, title: string, content: string): Promise<Note | null> {
+export async function updateNote(id: string, title: string, content: string, format: 'html' | 'markdown' = 'markdown'): Promise<Note | null> {
   const updatedNote = {
     title: title.trim(),
     content: content || '',
+    format: format,
     updated_at: new Date().toISOString(),
   }
 
