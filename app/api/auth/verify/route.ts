@@ -1,63 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { getUserFromToken, removeToken, verifyTokenInDatabase } from '../../../../lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const { token } = await request.json()
+
+    if (!token) {
       return NextResponse.json(
-        { error: 'No token provided' },
+        { error: 'Token is required' },
+        { status: 400 }
+      )
+    }
+
+    // Verify token exists in database and is not expired
+    const isValidToken = await verifyTokenInDatabase(token)
+    if (!isValidToken) {
+      return NextResponse.json(
+        { error: 'Invalid or expired token' },
         { status: 401 }
       )
     }
 
-    const token = authHeader.substring(7) // Remove 'Bearer ' prefix
-    const supabase = createClient()
-
-    // Verify token and get user
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('auth_tokens')
-      .select(`
-        id,
-        user_id,
-        expires_at,
-        users (
-          id,
-          email
-        )
-      `)
-      .eq('token', token)
-      .single()
-
-    if (tokenError || !tokenData) {
+    // Get user from token
+    const user = await getUserFromToken(token)
+    if (!user) {
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 401 }
       )
     }
 
-    // Check if token is expired
-    const now = new Date()
-    const expiresAt = new Date(tokenData.expires_at)
-
-    if (now > expiresAt) {
-      // Delete expired token
-      await supabase
-        .from('auth_tokens')
-        .delete()
-        .eq('id', tokenData.id)
-
-      return NextResponse.json(
-        { error: 'Token expired' },
-        { status: 401 }
-      )
-    }
-
-    return NextResponse.json({
-      valid: true,
-      user: tokenData.users
-    })
+    return NextResponse.json({ user })
 
   } catch (error) {
     console.error('Token verification error:', error)
@@ -70,30 +43,17 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const { token } = await request.json()
+
+    if (!token) {
       return NextResponse.json(
-        { error: 'No token provided' },
-        { status: 401 }
+        { error: 'Token is required' },
+        { status: 400 }
       )
     }
 
-    const token = authHeader.substring(7)
-    const supabase = createClient()
-
-    // Delete token (logout)
-    const { error } = await supabase
-      .from('auth_tokens')
-      .delete()
-      .eq('token', token)
-
-    if (error) {
-      return NextResponse.json(
-        { error: 'Failed to logout' },
-        { status: 500 }
-      )
-    }
+    // Remove token from database
+    await removeToken(token)
 
     return NextResponse.json({ message: 'Logged out successfully' })
 

@@ -1,64 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAuth, createAuthResponse } from '@/lib/auth'
-import { createClient } from '@/lib/supabase'
+import { getUserFromToken } from '../../../lib/auth'
+import { getUserNotes, createNote } from '../../../lib/notes'
 
-// GET /api/notes - Get user's notes
+async function getAuthenticatedUser(request: NextRequest) {
+  const authHeader = request.headers.get('authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null
+  }
+
+  const token = authHeader.substring(7)
+  return await getUserFromToken(token)
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyAuth(request)
+    const user = await getAuthenticatedUser(request)
     if (!user) {
-      return createAuthResponse()
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    const supabase = createClient()
-    const { data: notes, error } = await supabase
-      .from('notes')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
+    const notes = await getUserNotes(user.id)
+    return NextResponse.json(notes)
 
-    if (error) {
-      console.error('Error fetching notes:', error)
-      return NextResponse.json({ error: 'Failed to fetch notes' }, { status: 500 })
-    }
-
-    return NextResponse.json(notes || [])
   } catch (error) {
-    console.error('Error fetching notes:', error)
-    return NextResponse.json({ error: 'Failed to fetch notes' }, { status: 500 })
+    console.error('Get notes error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 
-// POST /api/notes - Create a new note
 export async function POST(request: NextRequest) {
-  try {    const user = await verifyAuth(request)
+  try {
+    const user = await getAuthenticatedUser(request)
     if (!user) {
-      return createAuthResponse()
-    }    const { title, content } = await request.json()
-    
-    if (!title?.trim()) {
-      return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    const supabase = createClient()
-    const { data: newNote, error } = await supabase
-      .from('notes')
-      .insert({
-        user_id: user.id,
-        title: title.trim(),
-        content: content || ''
-      })
-      .select()
-      .single()
+    const { title, content } = await request.json()
 
-    if (error) {
-      console.error('Error creating note:', error)
-      return NextResponse.json({ error: 'Failed to create note' }, { status: 500 })
+    if (!title) {
+      return NextResponse.json(
+        { error: 'Title is required' },
+        { status: 400 }
+      )
     }
 
-    return NextResponse.json(newNote, { status: 201 })
+    const note = await createNote(user.id, { title, content })
+    if (!note) {
+      return NextResponse.json(
+        { error: 'Failed to create note' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(note, { status: 201 })
+
   } catch (error) {
-    console.error('Error creating note:', error)
-    return NextResponse.json({ error: 'Failed to create note' }, { status: 500 })
+    console.error('Create note error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }

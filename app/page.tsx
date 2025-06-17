@@ -1,385 +1,163 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import NoteList from '@/components/NoteList'
-import RichTextEditor from '@/components/RichTextEditor'
-import NoteViewer from '@/components/NoteViewer'
-import AuthenticatedHome from '@/components/AuthenticatedHome'
-import Toast from '@/components/Toast'
-import { useToast } from '@/hooks/useToast'
-
-export interface Note {
-  id: string
-  title: string
-  content: string
-  format?: 'html' | 'markdown'
-  created_at: string
-  updated_at: string
-}
+import { useState, useEffect } from 'react'
+import { useToast } from '../hooks/useToast'
+import { ToastContainer } from '../components/Toast'
+import LoginForm from '../components/LoginForm'
+import RegisterForm from '../components/RegisterForm'
+import AuthenticatedHome from '../components/AuthenticatedHome'
+import type { AuthUser } from '../lib/auth'
 
 export default function HomePage() {
-  const [notes, setNotes] = useState<Note[]>([])
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [authToken, setAuthToken] = useState<string | null>(null)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-  const [showNotes, setShowNotes] = useState(false)
-  const { toast, showToast, hideToast } = useToast()
-  const router = useRouter()
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
+  const [authLoading, setAuthLoading] = useState(false)
+  const { toasts, showToast, removeToast } = useToast()
 
-  const fetchNotes = useCallback(async () => {
-    if (!authToken) return
-    
-    try {
-      setIsLoading(true)
-      const response = await fetch('/api/notes', {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setNotes(data)
-      }
-    } catch (error) {
-      console.error('Error fetching notes:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [authToken])
-
+  // Check for existing auth token on mount
   useEffect(() => {
-    checkAuthStatus()
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('auth_token')
+        if (token) {
+          const response = await fetch('/api/auth/verify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token }),
+          })
+
+          if (response.ok) {
+            const userData = await response.json()
+            setUser(userData.user)
+          } else {
+            localStorage.removeItem('auth_token')
+          }
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        localStorage.removeItem('auth_token')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkAuth()
   }, [])
-    useEffect(() => {
-    if (authToken && showNotes) {
-      fetchNotes()
-    }
-  }, [authToken, showNotes, fetchNotes])
 
-  // Global keyboard shortcuts
-  useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && showNotes && !isEditing) {
-        switch (e.key) {
-          case 'n':
-            e.preventDefault()
-            handleCreateNote()
-            break
-        }
-      }
-    }
-
-    if (showNotes) {
-      document.addEventListener('keydown', handleGlobalKeyDown)
-      return () => document.removeEventListener('keydown', handleGlobalKeyDown)
-    }
-  }, [showNotes, isEditing])
-
-  const checkAuthStatus = async () => {
+  const handleLogin = async (email: string, password: string) => {
+    setAuthLoading(true)
     try {
-      const token = localStorage.getItem('auth_token')
-      if (!token) {
-        setIsCheckingAuth(false)
-        return
-      }
-
-      const response = await fetch('/api/auth/verify', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       })
 
+      const data = await response.json()
+
       if (response.ok) {
-        setAuthToken(token)
+        localStorage.setItem('auth_token', data.token)
+        setUser(data.user)
+        showToast('Login successful!', 'success')
       } else {
-        localStorage.removeItem('auth_token')
+        showToast(data.error || 'Login failed', 'error')
       }
     } catch (error) {
-      console.error('Error checking auth status:', error)
-      localStorage.removeItem('auth_token')    } finally {
-      setIsCheckingAuth(false)
+      showToast('Login failed. Please try again.', 'error')
+    } finally {
+      setAuthLoading(false)
     }
   }
 
-  const handleCreateNote = () => {
-    setSelectedNote(null)
-    setIsEditing(true)
-    setIsSidebarOpen(false)
-  }
-
-  const handleSelectNote = (note: Note) => {
-    setSelectedNote(note)
-    setIsEditing(false)
-    setIsSidebarOpen(false)
-  }
-  const handleEditNote = () => {
-    setIsEditing(true)
-  }
-
-  const handleSaveNote = async (title: string, content: string) => {
-    if (!authToken) return
-
+  const handleRegister = async (email: string, password: string) => {
+    setAuthLoading(true)
     try {
-      const method = selectedNote ? 'PUT' : 'POST'
-      const url = selectedNote ? `/api/notes/${selectedNote.id}` : '/api/notes'
-      
-      const response = await fetch(url, {
-        method,
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
         },
-        body: JSON.stringify({ 
-          title, 
-          content, 
-          format: 'markdown' 
-        }),
+        body: JSON.stringify({ email, password }),
       })
 
-      if (response.ok) {
-        const savedNote = await response.json()
-        if (selectedNote) {
-          setNotes(notes.map(note => note.id === savedNote.id ? savedNote : note))
-          setSelectedNote(savedNote)
-          showToast(
-            `Note updated successfully`, 
-            'success'
-          )
-        } else {
-          setNotes([savedNote, ...notes])
-          setSelectedNote(savedNote)
-          showToast(
-            `Note "${title}" created successfully`, 
-            'success'
-          )
-        }
-        setIsEditing(false)
-      } else {
-        showToast('Failed to save note. Please try again.', 'error')
-      }
-    } catch (error) {
-      console.error('Error saving note:', error)
-      showToast('Network error. Please check your connection.', 'error')
-    }
-  }
-  const handleDeleteNote = async (noteId: string) => {
-    if (!authToken) return
-
-    const noteToDelete = notes.find(note => note.id === noteId)
-    const noteTitle = noteToDelete?.title || 'Untitled'
-
-    try {
-      const response = await fetch(`/api/notes/${noteId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
-      })
+      const data = await response.json()
 
       if (response.ok) {
-        setNotes(notes.filter(note => note.id !== noteId))
-        if (selectedNote?.id === noteId) {
-          setSelectedNote(null)
-          setIsEditing(false)
-        }
-        showToast(`Note "${noteTitle}" deleted successfully`, 'info')
+        localStorage.setItem('auth_token', data.token)
+        setUser(data.user)
+        showToast('Account created successfully!', 'success')
       } else {
-        showToast('Failed to delete note. Please try again.', 'error')
+        showToast(data.error || 'Registration failed', 'error')
       }
     } catch (error) {
-      console.error('Error deleting note:', error)
-      showToast('Network error. Please check your connection.', 'error')
+      showToast('Registration failed. Please try again.', 'error')
+    } finally {
+      setAuthLoading(false)
     }
-  }
-  const handleCancelEdit = () => {
-    setIsEditing(false)
-    if (!selectedNote) {
-      setSelectedNote(null)
-    }
-  }
-
-  const handleGoToNotes = () => {
-    setShowNotes(true)
   }
 
   const handleLogout = async () => {
-    if (authToken) {
-      try {
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (token) {
         await fetch('/api/auth/verify', {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${authToken}`
-          }
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
         })
-      } catch (error) {
-        console.error('Error during logout:', error)
       }
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      localStorage.removeItem('auth_token')
+      setUser(null)
+      showToast('Logged out successfully', 'info')
     }
-    
-    localStorage.removeItem('auth_token')
-    setAuthToken(null)
-    setShowNotes(false)
-    setNotes([])
-    setSelectedNote(null)
-    setIsEditing(false)
   }
 
-  // Show loading spinner while checking authentication
-  if (isCheckingAuth) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
-      </div>
-    )  }
-
-  // Redirect to login if not authenticated
-  if (!authToken) {
-    router.push('/login')
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-green-900 to-black">
-        <div className="text-white">Redirecting to login...</div>
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="text-gray-600">Loading...</span>
+        </div>
       </div>
     )
   }
 
-  // Show "Go to Notes" screen if authenticated but not viewing notes yet
-  if (!showNotes) {
+  if (!user) {
     return (
-      <AuthenticatedHome 
-        onGoToNotes={handleGoToNotes}
-        onLogout={handleLogout}
-      />
+      <>
+        {authMode === 'login' ? (
+          <LoginForm
+            onLogin={handleLogin}
+            onSwitchToRegister={() => setAuthMode('register')}
+            isLoading={authLoading}
+          />
+        ) : (
+          <RegisterForm
+            onRegister={handleRegister}
+            onSwitchToLogin={() => setAuthMode('login')}
+            isLoading={authLoading}
+          />
+        )}
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
+      </>
     )
   }
 
-  // Show the main notes application
   return (
-    <div className="flex h-screen bg-gray-50 relative">      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-30 px-4 py-3">
-        <div className="flex items-center justify-between gap-2 min-w-0">
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg flex-shrink-0"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <h1 className="text-lg font-semibold text-gray-800 truncate min-w-0 flex-1 text-center">MyNotes</h1>
-          <div className="flex items-center space-x-1 flex-shrink-0">
-            <button
-              onClick={handleCreateNote}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg flex-shrink-0"
-              title="New Note"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>            <button
-              onClick={handleLogout}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg flex-shrink-0"
-              title="Logout"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}      {/* Sidebar */}
-      <div className={`
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:translate-x-0 
-        fixed md:relative 
-        w-80 md:w-80 
-        bg-white border-r border-gray-200 
-        flex flex-col 
-        z-30 md:z-auto
-        transition-transform duration-300 ease-in-out
-        h-full mobile-safe-height sidebar-safe-area
-      `}><div className="p-4 border-b border-gray-200 mt-16 md:mt-0">
-          <div className="flex items-center justify-between mb-4 gap-2">
-            <h1 className="text-xl font-semibold text-gray-800 hidden md:block truncate">MyNotes</h1>
-            <div className="flex items-center space-x-2 w-full md:w-auto min-w-0">
-              <button
-                onClick={handleCreateNote}
-                className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm flex-1 md:flex-none min-w-0 truncate"
-              >
-                New Note
-              </button>
-              <button
-                onClick={handleLogout}
-                className="hidden md:block p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg flex-shrink-0"
-                title="Logout"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
-          </div>        </div>
-        
-        <div className="sidebar-content-wrapper">
-          <NoteList
-            notes={notes}
-            selectedNote={selectedNote}
-            onSelectNote={handleSelectNote}
-            onDeleteNote={handleDeleteNote}
-            isLoading={isLoading}
-          />
-        </div>
-      </div>
-
-      {/* Main Content */}      <div className="flex-1 flex flex-col mt-16 md:mt-0">        {isEditing ? (
-          <RichTextEditor
-            note={selectedNote}
-            onSave={handleSaveNote}
-            onCancel={handleCancelEdit}
-          />
-        ) : selectedNote ? (
-          <NoteViewer
-            note={selectedNote}
-            onEdit={handleEditNote}
-          />
-        ) : (          <div className="flex-1 flex items-center justify-center bg-gray-50 p-4">
-            <div className="text-center max-w-md w-full">
-              <div className="sidebar-avatar mx-auto mb-4" style={{ width: '4rem', height: '4rem' }}>
-                <svg className="w-8 h-8 md:w-12 md:h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h2 className="text-lg md:text-xl font-medium text-gray-600 mb-2">Welcome to MyNotes</h2>
-              <p className="text-sm md:text-base text-gray-500 mb-4">Create a new note or select an existing one to get started</p>
-              <button
-                onClick={handleCreateNote}
-                className="bg-gray-800 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors w-full md:w-auto"
-              >
-                Create Your First Note
-              </button>
-            </div>
-          </div>        )}
-      </div>
-
-      {/* Toast Notifications */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={hideToast}
-      />
-    </div>
+    <>
+      <AuthenticatedHome user={user} onLogout={handleLogout} showToast={showToast} />
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+    </>
   )
 }

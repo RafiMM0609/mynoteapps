@@ -1,52 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // App Router is enabled by default in Next.js 13+
-  
-  // Security headers for production
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains',
-          },
-        ],
-      },
-    ]
-  },
-
-  // Environment variable validation
   env: {
-    CUSTOM_BUILD_ID: process.env.NODE_ENV,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GEMINI_API_KEY,
   },
-
-  // Disable powered-by header
-  poweredByHeader: false,
-  // Compress responses
-  compress: true,
-
-  // Remove experimental features that might cause build issues
-  // experimental: {
-  //   optimizeCss: true,
-  // },
 }
 
 module.exports = nextConfig

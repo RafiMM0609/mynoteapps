@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { supabase } from '../../../../lib/supabase'
+import { hashPassword, generateToken, storeToken } from '../../../../lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,9 +13,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createClient()
-
-    // Check if user exists
+    // Find user by email
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('id, email, password_hash')
@@ -23,49 +22,31 @@ export async function POST(request: NextRequest) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
+        { error: 'Invalid email or password' },
+        { status: 401 }
       )
     }
 
-    // Verify password
-    const { data: passwordValid, error: passwordError } = await supabase
+    // Verify password using Supabase function
+    const { data: isValidPassword, error: passwordError } = await supabase
       .rpc('verify_password', {
         password: password,
         hash: user.password_hash
       })
 
-    if (passwordError || !passwordValid) {
+    if (passwordError || !isValidPassword) {
       return NextResponse.json(
-        { error: 'Invalid password' },
+        { error: 'Invalid email or password' },
         { status: 401 }
       )
     }
 
-    // Generate token
-    const { data: tokenData, error: tokenError } = await supabase
-      .rpc('generate_token')
+    // Generate JWT token
+    const token = generateToken(user.id)
 
-    if (tokenError || !tokenData) {
-      return NextResponse.json(
-        { error: 'Failed to generate token' },
-        { status: 500 }
-      )
-    }
-
-    // Store token in database with 7 days expiration
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 7)
-
-    const { error: insertTokenError } = await supabase
-      .from('auth_tokens')
-      .insert({
-        user_id: user.id,
-        token: tokenData,
-        expires_at: expiresAt.toISOString()
-      })
-
-    if (insertTokenError) {
+    // Store token in database
+    const tokenStored = await storeToken(user.id, token)
+    if (!tokenStored) {
       return NextResponse.json(
         { error: 'Failed to create session' },
         { status: 500 }
@@ -73,11 +54,11 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      token: tokenData,
       user: {
         id: user.id,
         email: user.email
-      }
+      },
+      token
     })
 
   } catch (error) {

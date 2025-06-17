@@ -1,892 +1,392 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import type { Note } from '@/app/page'
-import Tooltip from './Tooltip'
-import KeyboardShortcuts from './KeyboardShortcuts'
+import { useState, useRef, useEffect } from 'react'
+import { CheckIcon, XMarkIcon, EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
+import type { Note } from '../lib/supabase'
 import SlashCommandDropdown from './SlashCommandDropdown'
 
 interface NoteEditorProps {
-  note: Note | null
-  onSave: (title: string, content: string) => void
+  note: Note
+  onSave: (noteId: string, title: string, content: string) => void
   onCancel: () => void
 }
 
 export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [isPreview, setIsPreview] = useState(false)
-  const [isSplitView, setIsSplitView] = useState(false)
-  const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set())
-  const [isSaving, setIsSaving] = useState(false)
-  const [showShortcuts, setShowShortcuts] = useState(false)
-  const [showCleanPasteToast, setShowCleanPasteToast] = useState(false)
-  const [showSlashCommand, setShowSlashCommand] = useState(false)
-  const [slashCommandPosition, setSlashCommandPosition] = useState({ x: 0, y: 0 })
-  const titleInputRef = useRef<HTMLInputElement>(null)
-  const editorRef = useRef<HTMLDivElement>(null)
-  const slashRangeRef = useRef<Range | null>(null)
-
+  const [title, setTitle] = useState(note.title)
+  const [content, setContent] = useState(note.content)
+  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('edit')
+  const [hasChanges, setHasChanges] = useState(false)
+  const contentRef = useRef<HTMLTextAreaElement>(null)
+  
+  // Slash command states
+  const [showSlashDropdown, setShowSlashDropdown] = useState(false)
+  const [slashPosition, setSlashPosition] = useState({ top: 0, left: 0 })
+  const [slashQuery, setSlashQuery] = useState('')
+  const [slashStartPos, setSlashStartPos] = useState(0)
   useEffect(() => {
-    if (note) {
-      setTitle(note.title)
-      setContent(note.content)
-      // Update editor content when note changes
-      if (editorRef.current) {
-        editorRef.current.innerHTML = note.content
-      }
-    } else {
-      setTitle('')
-      setContent('')
-      if (editorRef.current) {
-        editorRef.current.innerHTML = ''
-      }
-    }
-    
-    // Focus on title input when creating new note
-    if (!note && titleInputRef.current) {
-      titleInputRef.current.focus()
-    }
-  }, [note])
+    const hasAnyChanges = title !== note.title || content !== note.content
+    setHasChanges(hasAnyChanges)
+  }, [title, content, note.title, note.content])
 
-  // Auto-hide toast after 3 seconds
+  // Close slash dropdown when clicking outside
   useEffect(() => {
-    if (showCleanPasteToast) {
-      const timer = setTimeout(() => {
-        setShowCleanPasteToast(false)
-      }, 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [showCleanPasteToast])
-
-  // Update content state when editor content changes
-  const handleContentChange = () => {
-    if (editorRef.current) {
-      const htmlContent = editorRef.current.innerHTML
-      setContent(htmlContent)
-      updateActiveFormats()
-    }
-  }
-
-  // Check current formatting and update active formats state
-  const updateActiveFormats = () => {
-    const selection = window.getSelection()
-    if (!selection || !editorRef.current) return
-
-    const formats = new Set<string>()
-    
-    if (selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0)
-      let element = range.startContainer as Node
-      
-      // Traverse up the DOM tree to find formatting elements
-      while (element && element !== editorRef.current) {
-        if (element.nodeType === Node.ELEMENT_NODE) {
-          const tagName = (element as Element).tagName.toLowerCase()
-          switch (tagName) {
-            case 'strong':
-            case 'b':
-              formats.add('bold')
-              break
-            case 'em':
-            case 'i':
-              formats.add('italic')
-              break
-            case 'h1':
-              formats.add('h1')
-              break
-            case 'h2':
-              formats.add('h2')
-              break
-            case 'h3':
-              formats.add('h3')
-              break
-            case 'code':
-              formats.add('code')
-              break
-            case 'pre':
-              formats.add('pre')
-              break
-            case 'ul':
-              formats.add('ul')
-              break
-            case 'ol':
-              formats.add('ol')
-              break
-          }
-        }
-        element = element.parentNode!
-      }
-    }
-    
-    setActiveFormats(formats)
-  }
-  // Handle keyboard shortcuts
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Handle slash command when not holding Ctrl/Cmd
-    if (e.key === '/' && !e.ctrlKey && !e.metaKey && !showSlashCommand) {
-      const selection = window.getSelection()
-      if (selection && selection.rangeCount > 0 && editorRef.current) {
-        const range = selection.getRangeAt(0)
-        
-        e.preventDefault()
-        
-        // Insert the slash character
-        const textNode = document.createTextNode('/')
-        range.insertNode(textNode)
-        
-        // Position cursor after the slash
-        range.setStartAfter(textNode)
-        range.collapse(true)
-        selection.removeAllRanges()
-        selection.addRange(range)
-          // Store the range for later deletion
-        slashRangeRef.current = range.cloneRange()
-        slashRangeRef.current.setStartBefore(textNode)
-        
-        // Get cursor position for dropdown with better positioning
-        const rect = range.getBoundingClientRect()
-        
-        // Ensure we have valid coordinates
-        if (rect.left >= 0 && rect.top >= 0) {
-          setSlashCommandPosition({
-            x: rect.left,
-            y: rect.top // Use rect.top directly for fixed positioning
-          })
-          setShowSlashCommand(true)
-        } else {
-          // Fallback positioning if getBoundingClientRect fails
-          setSlashCommandPosition({
-            x: 100,
-            y: 100
-          })
-          setShowSlashCommand(true)
-        }
-        
-        return
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showSlashDropdown && contentRef.current && !contentRef.current.contains(event.target as Node)) {
+        setShowSlashDropdown(false)
       }
     }
 
-    // Handle existing keyboard shortcuts
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key) {
-        case 'b':
-          e.preventDefault()
-          toggleFormatting('bold')
-          break
-        case 'i':
-          e.preventDefault()
-          toggleFormatting('italic')
-          break
-        case 's':
-          e.preventDefault()
-          handleSave()
-          break
-        case '/':
-          e.preventDefault()
-          setShowShortcuts(true)
-          break
-        case 'Enter':
-          e.preventDefault()
-          if (e.shiftKey) {
-            setIsSplitView(!isSplitView)
-          } else {
-            setIsPreview(!isPreview)
-          }
-          break
-        case 'v':
-          if (e.shiftKey) {
-            e.preventDefault()
-            pasteAsPlainText()
-          }
-          break
-      }
-    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showSlashDropdown])
 
-    // Close slash command on Escape
-    if (e.key === 'Escape' && showSlashCommand) {
-      setShowSlashCommand(false)
-      slashRangeRef.current = null
-    }
+  const handleSave = () => {
+    onSave(note.id, title, content)
+    setHasChanges(false)
   }
 
-  // Handle paste events to clean external formatting
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault()
-    
-    const clipboardData = e.clipboardData
-    if (!clipboardData) return
-
-    // Get plain text from clipboard
-    let pastedText = clipboardData.getData('text/plain')
-    
-    // If no plain text, try to get HTML and strip tags
-    if (!pastedText) {
-      const htmlText = clipboardData.getData('text/html')
-      if (htmlText) {
-        // Create a temporary div to strip HTML tags
-        const tempDiv = document.createElement('div')
-        tempDiv.innerHTML = htmlText
-        pastedText = tempDiv.textContent || tempDiv.innerText || ''
-      }
+  const handleCancel = () => {
+    if (hasChanges && !confirm('Are you sure you want to discard your changes?')) {
+      return
     }
-
-    // Clean the text further (remove extra whitespace, normalize line breaks)
-    pastedText = pastedText
-      .replace(/\r\n/g, '\n')  // Normalize Windows line endings
-      .replace(/\r/g, '\n')    // Normalize Mac line endings
-      .replace(/\t/g, '    ')  // Convert tabs to spaces
-      .trim()
-
-    if (!pastedText) return
-
-    // Show clean paste feedback
-    setShowCleanPasteToast(true)
-
-    // Insert the cleaned text
-    insertCleanText(pastedText)
-  }
-  // Helper function to insert clean text
-  const insertCleanText = (cleanText: string) => {
-    const selection = window.getSelection()
-    if (!selection || !editorRef.current) return
-
-    if (selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0)
-      range.deleteContents()
-      
-      // Split text by line breaks and create proper paragraph structure
-      const lines = cleanText.split('\n')
-      
-      if (lines.length === 1) {
-        // Single line - insert as text node
-        const textNode = document.createTextNode(cleanText)
-        range.insertNode(textNode)
-        
-        // Check if textNode has a parent before positioning cursor
-        if (textNode.parentNode) {
-          // Position cursor after inserted text
-          range.setStartAfter(textNode)
-          range.collapse(true)
-          selection.removeAllRanges()
-          selection.addRange(range)
-        }
-      } else {
-        // Multiple lines - create paragraphs
-        const fragment = document.createDocumentFragment()
-        
-        lines.forEach((line, index) => {
-          if (line.trim()) {
-            const p = document.createElement('p')
-            p.textContent = line.trim()
-            fragment.appendChild(p)
-          } else if (index < lines.length - 1) {
-            // Empty line becomes a break
-            const br = document.createElement('br')
-            fragment.appendChild(br)
-          }
-        })
-        
-        range.insertNode(fragment)
-        
-        // Position cursor at the end - check if fragment has children
-        const lastChild = fragment.lastChild
-        if (lastChild && lastChild.parentNode) {
-          try {
-            range.setStartAfter(lastChild)
-            range.collapse(true)
-            selection.removeAllRanges()
-            selection.addRange(range)
-          } catch (error) {
-            console.warn('Could not position cursor after fragment:', error)
-            // Fallback: position at end of editor
-            const fallbackRange = document.createRange()
-            fallbackRange.selectNodeContents(editorRef.current)
-            fallbackRange.collapse(false)
-            selection.removeAllRanges()
-            selection.addRange(fallbackRange)
-          }
-        }
-      }
-      
-      // Update content state
-      handleContentChange()
-    }
+    onCancel()
   }
 
-  // Manual paste as plain text function
-  const pasteAsPlainText = async () => {
-    if (!editorRef.current) return
-
+  const renderMarkdown = (text: string) => {
     try {
-      // Read from clipboard
-      const clipboardText = await navigator.clipboard.readText()
-      
-      if (!clipboardText) return
-
-      // Clean the text
-      const cleanText = clipboardText
-        .replace(/\r\n/g, '\n')  // Normalize Windows line endings
-        .replace(/\r/g, '\n')    // Normalize Mac line endings
-        .replace(/\t/g, '    ')  // Convert tabs to spaces
-        .trim()
-
-      editorRef.current.focus()
-
-      // Show clean paste feedback
-      setShowCleanPasteToast(true)
-
-      // Insert the cleaned text
-      insertCleanText(cleanText)
+      const rawHtml = marked(text) as string
+      return DOMPurify.sanitize(rawHtml)
     } catch (error) {
-      console.error('Failed to read from clipboard:', error)
-      // Fallback: show instruction to user
-      alert('Unable to access clipboard. Please use regular paste (Ctrl+V), the text will be automatically cleaned.')
+      console.error('Error rendering markdown:', error)
+      return text
+    }
+  }
+  const insertMarkdown = (before: string, after: string = '') => {
+    const textarea = contentRef.current
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selectedText = content.substring(start, end)
+    
+    const newContent = 
+      content.substring(0, start) + 
+      before + selectedText + after + 
+      content.substring(end)
+    
+    setContent(newContent)
+    
+    // Set cursor position after the inserted text
+    setTimeout(() => {
+      textarea.focus()
+      const newCursorPos = start + before.length + selectedText.length
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+  }
+  // Calculate dropdown position based on cursor
+  const calculateDropdownPosition = (textarea: HTMLTextAreaElement, cursorPos: number) => {
+    const textBeforeCursor = content.substring(0, cursorPos)
+    const lines = textBeforeCursor.split('\n')
+    const currentLine = lines.length - 1
+    const currentColumn = lines[lines.length - 1].length
+
+    const rect = textarea.getBoundingClientRect()
+    const lineHeight = 20 // Approximate line height
+    const charWidth = 8 // Approximate character width
+
+    // Get scroll position
+    const scrollTop = textarea.scrollTop
+    const scrollLeft = textarea.scrollLeft
+
+    return {
+      top: rect.top + (currentLine * lineHeight) + lineHeight + 25 - scrollTop,
+      left: Math.min(rect.left + (currentColumn * charWidth) + 10 - scrollLeft, window.innerWidth - 320) // Prevent overflow
+    }
+  }
+
+  // Handle slash command detection
+  const handleSlashCommand = (value: string, cursorPos: number) => {
+    const textBeforeCursor = value.substring(0, cursorPos)
+    const lastSlashIndex = textBeforeCursor.lastIndexOf('/')
+    
+    if (lastSlashIndex === -1) {
+      setShowSlashDropdown(false)
+      return
+    }
+
+    // Check if the slash is at the beginning of a line or after whitespace
+    const charBeforeSlash = lastSlashIndex > 0 ? textBeforeCursor[lastSlashIndex - 1] : '\n'
+    const isValidSlashPosition = charBeforeSlash === '\n' || charBeforeSlash === ' ' || charBeforeSlash === '\t'
+
+    if (!isValidSlashPosition) {
+      setShowSlashDropdown(false)
+      return
+    }
+
+    const queryAfterSlash = textBeforeCursor.substring(lastSlashIndex + 1)
+    
+    // Don't show dropdown if there's a space after the slash query
+    if (queryAfterSlash.includes(' ')) {
+      setShowSlashDropdown(false)
+      return
+    }
+
+    setSlashQuery(queryAfterSlash)
+    setSlashStartPos(lastSlashIndex)
+    
+    if (contentRef.current) {
+      const position = calculateDropdownPosition(contentRef.current, cursorPos)
+      setSlashPosition(position)
+      setShowSlashDropdown(true)
     }
   }
 
   // Handle slash command selection
-  const handleSlashCommand = (commandType: string) => {
-    if (!editorRef.current) return
+  const handleSlashCommandSelect = (command: any) => {
+    const textarea = contentRef.current
+    if (!textarea) return
 
-    // Remove the slash character using the stored range
-    if (slashRangeRef.current) {
-      slashRangeRef.current.deleteContents()
-      
-      // Position cursor where the slash was
-      const selection = window.getSelection()
-      if (selection) {
-        selection.removeAllRanges()
-        selection.addRange(slashRangeRef.current)
+    const { before, after } = command.action()
+    
+    // Remove the slash and query text
+    const beforeSlash = content.substring(0, slashStartPos)
+    const afterCursor = content.substring(textarea.selectionStart)
+    
+    const newContent = beforeSlash + before + after + afterCursor
+    setContent(newContent)
+    
+    // Position cursor
+    setTimeout(() => {
+      textarea.focus()
+      const newCursorPos = slashStartPos + before.length
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+    
+    setShowSlashDropdown(false)
+    setSlashQuery('')
+  }
+
+  // Handle content change with slash command detection
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value
+    const cursorPos = e.target.selectionStart
+    
+    setContent(newValue)
+    handleSlashCommand(newValue, cursorPos)
+  }
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // If slash dropdown is open, let it handle navigation keys
+    if (showSlashDropdown && ['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
+      return // Let SlashCommandDropdown handle these keys
+    }
+
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key) {
+        case 's':
+          e.preventDefault()
+          handleSave()
+          break
+        case 'b':
+          e.preventDefault()
+          insertMarkdown('**', '**')
+          break
+        case 'i':
+          e.preventDefault()
+          insertMarkdown('*', '*')
+          break
       }
     }
 
-    // Close the dropdown
-    setShowSlashCommand(false)
-    slashRangeRef.current = null
-
-    // Apply the formatting
-    toggleFormatting(commandType)
-  }
-
-  const handleSave = async () => {
-    if (!title.trim()) {
-      alert('Please enter a title for your note')
-      return
-    }
-    
-    setIsSaving(true)
-    try {
-      await onSave(title, content)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-  
-  // Toggle formatting with active state management
-  const toggleFormatting = (format: string) => {
-    if (!editorRef.current) return
-
-    editorRef.current.focus()
-    
-    // Check if format is currently active
-    const isActive = activeFormats.has(format)
-    
-    if (format === 'bold' || format === 'italic') {
-      // Use execCommand for better support with toggle
-      if (format === 'bold') {
-        document.execCommand('bold', false, '')
-      } else {
-        document.execCommand('italic', false, '')
-      }
-      handleContentChange()
-      return
-    }
-
-    // For block elements, remove if active, add if not
-    if (isActive && ['h1', 'h2', 'h3', 'pre'].includes(format)) {
-      // Convert back to paragraph
-      document.execCommand('formatBlock', false, 'p')
-      handleContentChange()
-      return
-    }
-
-    // Apply new formatting
-    insertFormatting(format)
-  }
-  
-  const insertFormatting = (tag: string) => {
-    if (!editorRef.current) return
-
-    editorRef.current.focus()
-    
-    const selection = window.getSelection()
-    if (!selection) return
-
-    // For bold and italic, use execCommand for better browser support
-    if (tag === 'bold') {
-      document.execCommand('bold', false, '')
-      handleContentChange()
-      return
-    }
-    
-    if (tag === 'italic') {
-      document.execCommand('italic', false, '')
-      handleContentChange()
-      return
-    }
-
-    // For other elements, create them manually
-    let range: Range
-    if (selection.rangeCount > 0) {
-      range = selection.getRangeAt(0)
-    } else {
-      range = document.createRange()
-      range.selectNodeContents(editorRef.current)
-      range.collapse(false)
-    }
-
-    const selectedText = range.toString()
-    let element: HTMLElement
-    
-    switch (tag) {
-      case 'h1':
-        element = document.createElement('h1')
-        element.textContent = selectedText || 'Heading 1'
-        break
-      case 'h2':
-        element = document.createElement('h2')
-        element.textContent = selectedText || 'Heading 2'
-        break
-      case 'h3':
-        element = document.createElement('h3')
-        element.textContent = selectedText || 'Heading 3'
-        break
-      case 'p':
-        element = document.createElement('p')
-        element.innerHTML = selectedText || 'Paragraph text'
-        break
-      case 'ul':
-        element = document.createElement('ul')
-        const li = document.createElement('li')
-        li.textContent = selectedText || 'List item'
-        element.appendChild(li)
-        break
-      case 'ol':
-        element = document.createElement('ol')
-        const liOl = document.createElement('li')
-        liOl.textContent = selectedText || 'List item'
-        element.appendChild(liOl)
-        break
-      case 'code':
-        element = document.createElement('code')
-        element.textContent = selectedText || 'code'
-        break
-      case 'pre':
-        element = document.createElement('pre')
-        const codeEl = document.createElement('code')
-        codeEl.textContent = selectedText || 'code block'
-        element.appendChild(codeEl)
-        break
-      default:
-        return
-    }    try {
-      // Delete selected content and insert new element
-      range.deleteContents()
-      range.insertNode(element)
-      
-      // Ensure the element is properly inserted into the DOM
-      if (!element.parentNode) {
-        console.warn('Element was not properly inserted into DOM')
-        return
-      }
-      
-      // Add some spacing after block elements
-      if (['h1', 'h2', 'h3', 'p', 'ul', 'ol', 'pre'].includes(tag)) {
-        const br = document.createElement('br')
-        
-        // Create a new range positioned after the element
-        const newRange = document.createRange()
-        newRange.setStartAfter(element)
-        newRange.insertNode(br)
-        
-        // Check if br element has a parent before positioning cursor
-        if (br.parentNode) {
-          // Position cursor after the break
-          const cursorRange = document.createRange()
-          cursorRange.setStartAfter(br)
-          cursorRange.collapse(true)
-          selection.removeAllRanges()
-          selection.addRange(cursorRange)
+    // Close slash dropdown on other keys
+    if (showSlashDropdown && !['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
+      if (e.key === 'Backspace') {
+        // Handle backspace - might need to close dropdown
+        const textarea = e.target as HTMLTextAreaElement
+        const cursorPos = textarea.selectionStart
+        if (cursorPos <= slashStartPos) {
+          setShowSlashDropdown(false)
         }
-      } else {
-        // For inline elements, position cursor after the element
-        const newRange = document.createRange()
-        newRange.setStartAfter(element)
-        newRange.collapse(true)
-        selection.removeAllRanges()
-        selection.addRange(newRange)
-      }
-    } catch (error) {
-      console.error('Error inserting element:', error)
-      // Fallback: try to position cursor at the end of the editor
-      if (editorRef.current) {
-        const range = document.createRange()
-        range.selectNodeContents(editorRef.current)
-        range.collapse(false)
-        selection.removeAllRanges()
-        selection.addRange(range)
       }
     }
-    
-    // Update content state
-    handleContentChange()
   }
-
   return (
-    <div className="flex-1 flex flex-col bg-white">      {/* Header */}
-      <div className="flex flex-col border-b border-gray-200">
-        {/* Title Row */}
-        <div className="flex items-center justify-between p-3 sm:p-4 gap-2">
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
-            <input
-              ref={titleInputRef}
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Note title..."
-              className="text-base sm:text-lg lg:text-xl font-semibold text-gray-800 bg-transparent border-none outline-none placeholder-gray-400 w-full min-w-0"
-            />
-          </div>
-          
-          {/* Action Buttons - Always visible */}
-          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            <button
-              onClick={onCancel}
-              className="px-2 sm:px-3 py-1.5 sm:py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors touch-manipulation"
-              disabled={isSaving}
-            >
-              Cancel
-            </button>
-            
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-gray-800 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded text-sm hover:bg-gray-700 transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span className="hidden xs:inline">Saving...</span>
-                </>
-              ) : (
-                <span>Save</span>
-              )}
-            </button>
-          </div>
+    <div className="h-full flex flex-col bg-white">
+      {/* Slash Command Dropdown */}
+      <SlashCommandDropdown
+        isVisible={showSlashDropdown}
+        position={slashPosition}
+        onSelect={handleSlashCommandSelect}
+        onClose={() => setShowSlashDropdown(false)}
+        searchQuery={slashQuery}
+      />
+
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex-1 min-w-0 mr-4">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full text-xl font-semibold text-gray-900 border-none focus:outline-none bg-transparent"
+            placeholder="Note title..."
+          />
         </div>
         
-        {/* Control Buttons Row */}
-        <div className="flex items-center justify-between px-3 sm:px-4 pb-2 sm:pb-3">
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            <Tooltip content="Toggle Preview (Ctrl+Enter)">
-              <button
-                onClick={() => setIsPreview(!isPreview)}
-                className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm transition-colors touch-manipulation ${
-                  isPreview 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {isPreview ? 'Edit' : 'Preview'}
-              </button>
-            </Tooltip>
-            
-            <Tooltip content="Split View (Ctrl+Shift+Enter)">
-              <button
-                onClick={() => setIsSplitView(!isSplitView)}
-                className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm transition-colors touch-manipulation ${
-                  isSplitView 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                Split
-              </button>
-            </Tooltip>
-          </div>
-          
-          <Tooltip content="Keyboard Shortcuts (Ctrl+/)">
+        <div className="flex items-center space-x-2">
+          {/* View mode toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <button
-              onClick={() => setShowShortcuts(true)}
-              className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+              onClick={() => setViewMode('edit')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                viewMode === 'edit'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
-              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <PencilSquareIcon className="h-4 w-4 mr-1 inline" />
+              Edit
             </button>
-          </Tooltip>
-        </div>
-      </div>{(!isPreview || isSplitView) && (
-        /* Formatting Toolbar */
-        <div className="border-b border-gray-200 bg-gray-50">
-          {/* First Row - Basic Formatting & Text Styles */}
-          <div className="flex flex-wrap items-center gap-1 p-2">
-            {/* Basic Formatting Group */}
-            <div className="flex items-center gap-1">
-              <Tooltip content="Bold (Ctrl+B)">
-                <button
-                  onClick={() => toggleFormatting('bold')}
-                  className={`p-1.5 sm:p-2 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
-                    activeFormats.has('bold')
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <strong className="text-xs sm:text-sm">B</strong>
-                </button>
-              </Tooltip>
-              <Tooltip content="Italic (Ctrl+I)">
-                <button
-                  onClick={() => toggleFormatting('italic')}
-                  className={`p-1.5 sm:p-2 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
-                    activeFormats.has('italic')
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <em className="text-xs sm:text-sm">I</em>
-                </button>
-              </Tooltip>
-            </div>
-            
-            {/* Separator */}
-            <div className="w-px h-4 sm:h-6 bg-gray-300 mx-1"></div>
-            
-            {/* Headings Group */}
-            <div className="flex items-center gap-1">
-              <Tooltip content="Heading 1">
-                <button
-                  onClick={() => toggleFormatting('h1')}
-                  className={`p-1.5 sm:p-2 rounded text-xs touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
-                    activeFormats.has('h1')
-                      ? 'bg-green-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  H1
-                </button>
-              </Tooltip>
-              <Tooltip content="Heading 2">
-                <button
-                  onClick={() => toggleFormatting('h2')}
-                  className={`p-1.5 sm:p-2 rounded text-xs touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
-                    activeFormats.has('h2')
-                      ? 'bg-green-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  H2
-                </button>
-              </Tooltip>
-              <Tooltip content="Heading 3">
-                <button
-                  onClick={() => toggleFormatting('h3')}
-                  className={`p-1.5 sm:p-2 rounded text-xs touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
-                    activeFormats.has('h3')
-                      ? 'bg-green-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  H3
-                </button>
-              </Tooltip>
-            </div>
-            
-            {/* Separator */}
-            <div className="w-px h-4 sm:h-6 bg-gray-300 mx-1"></div>
-            
-            {/* Lists Group */}
-            <div className="flex items-center gap-1">
-              <Tooltip content="Bullet List">
-                <button
-                  onClick={() => toggleFormatting('ul')}
-                  className={`p-1.5 sm:p-2 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
-                    activeFormats.has('ul')
-                      ? 'bg-purple-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                </button>
-              </Tooltip>
-              <Tooltip content="Numbered List">
-                <button
-                  onClick={() => toggleFormatting('ol')}
-                  className={`p-1.5 sm:p-2 rounded text-xs touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
-                    activeFormats.has('ol')
-                      ? 'bg-purple-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  1.
-                </button>
-              </Tooltip>
-            </div>
-            
-            {/* Separator */}
-            <div className="w-px h-4 sm:h-6 bg-gray-300 mx-1"></div>
-            
-            {/* Code Group */}
-            <div className="flex items-center gap-1">
-              <Tooltip content="Inline Code">
-                <button
-                  onClick={() => toggleFormatting('code')}
-                  className={`p-1.5 sm:p-2 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
-                    activeFormats.has('code')
-                      ? 'bg-orange-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <span className="text-xs">&lt;/&gt;</span>
-                </button>
-              </Tooltip>
-              <Tooltip content="Code Block">
-                <button
-                  onClick={() => toggleFormatting('pre')}
-                  className={`p-1.5 sm:p-2 rounded text-xs touch-manipulation min-w-[40px] min-h-[32px] sm:min-w-[50px] sm:min-h-[36px] flex items-center justify-center transition-colors ${
-                    activeFormats.has('pre')
-                      ? 'bg-orange-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  Code
-                </button>
-              </Tooltip>
-            </div>
-            
-            {/* Separator */}
-            <div className="w-px h-4 sm:h-6 bg-gray-300 mx-1"></div>
-            
-            {/* Paste Tools */}
-            <div className="flex items-center gap-1">
-              <Tooltip content="Paste as Plain Text (Ctrl+Shift+V)">
-                <button
-                  onClick={pasteAsPlainText}
-                  className="p-1.5 sm:p-2 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center transition-colors text-gray-600 hover:bg-gray-200"
-                  title="Clean paste without formatting"
-                >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </button>
-              </Tooltip>
-            </div>
-            
-            {/* Flexible space */}
-            <div className="flex-1 min-w-[8px]"></div>
-            
-            {/* Shortcuts hint - hidden on very small screens */}
-            <div className="hidden md:block text-xs text-gray-500 px-2 whitespace-nowrap">
-              Press Ctrl+/ for shortcuts
-            </div>
+            <button
+              onClick={() => setViewMode('preview')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                viewMode === 'preview'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <EyeIcon className="h-4 w-4 mr-1 inline" />
+              Preview
+            </button>
+            <button
+              onClick={() => setViewMode('split')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                viewMode === 'split'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Split
+            </button>
           </div>
+
+          {/* Action buttons */}
+          <button
+            onClick={handleCancel}
+            className="btn-secondary"
+          >
+            <XMarkIcon className="h-4 w-4 mr-1" />
+            Cancel
+          </button>
+          
+          <button
+            onClick={handleSave}
+            disabled={!hasChanges}
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <CheckIcon className="h-4 w-4 mr-1" />
+            Save
+          </button>
         </div>
-      )}
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex items-center space-x-1 p-2 border-b border-gray-200 bg-gray-50">
+        <button
+          onClick={() => insertMarkdown('**', '**')}
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+          title="Bold (Ctrl+B)"
+        >
+          <strong>B</strong>
+        </button>
+        <button
+          onClick={() => insertMarkdown('*', '*')}
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors italic"
+          title="Italic (Ctrl+I)"
+        >
+          I
+        </button>
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+        <button
+          onClick={() => insertMarkdown('# ')}
+          className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+          title="Heading 1"
+        >
+          H1
+        </button>
+        <button
+          onClick={() => insertMarkdown('## ')}
+          className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+          title="Heading 2"
+        >
+          H2
+        </button>
+        <button
+          onClick={() => insertMarkdown('- ')}
+          className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+          title="Bullet List"
+        >
+          •
+        </button>
+        <button
+          onClick={() => insertMarkdown('`', '`')}
+          className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors font-mono"
+          title="Inline Code"
+        >
+          {'</>'}
+        </button>
+        <button
+          onClick={() => insertMarkdown('```\n', '\n```')}
+          className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+          title="Code Block"
+        >
+          Code
+        </button>
+      </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden">        {isSplitView ? (
-          <div className="flex flex-col sm:flex-row h-full">
-            {/* Editor Side */}
-            <div className="flex-1 sm:border-r border-gray-200 flex flex-col">
-              <div className="bg-gray-100 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-gray-600 border-b sm:border-b-0">
-                Editor
-              </div>
-              <div className="flex-1 p-2 sm:p-3 lg:p-4 overflow-y-auto">
-                <div
-                  ref={editorRef}
-                  contentEditable
-                  onInput={handleContentChange}
-                  onKeyDown={handleKeyDown}
-                  onPaste={handlePaste}
-                  onMouseUp={updateActiveFormats}
-                  onKeyUp={updateActiveFormats}
-                  className="w-full h-full outline-none text-gray-700 leading-relaxed note-content rich-editor text-sm sm:text-base"
-                  style={{ 
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                    minHeight: '200px'
-                  }}
-                  suppressContentEditableWarning={true}
-                  data-placeholder="Start writing your note... Use the toolbar above for formatting."
-                />
-              </div>
-            </div>
-            
-            {/* Preview Side */}
-            <div className="flex-1 flex flex-col border-t sm:border-t-0">
-              <div className="bg-gray-100 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-gray-600 border-b sm:border-b-0">
-                Preview
-              </div>
-              <div className="flex-1 p-2 sm:p-3 lg:p-4 overflow-y-auto bg-white">
-                <div 
-                  className="note-content prose max-w-none text-sm sm:text-base"
-                  dangerouslySetInnerHTML={{ __html: content || '<p class="text-gray-400">Start typing to see preview...</p>' }}
-                />
-              </div>
-            </div>
-          </div>
-        ) : isPreview ? (
-          <div className="flex-1 p-2 sm:p-3 lg:p-4 overflow-y-auto">
-            <div 
-              className="note-content prose max-w-none text-sm sm:text-base"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
-          </div>
-        ) : (
-          <div className="flex-1 p-2 sm:p-3 lg:p-4 overflow-y-auto">
-            <div
-              ref={editorRef}
-              contentEditable
-              onInput={handleContentChange}
+      <div className="flex-1 flex">
+        {/* Editor */}
+        {(viewMode === 'edit' || viewMode === 'split') && (
+          <div className={`${viewMode === 'split' ? 'w-1/2 border-r border-gray-200' : 'w-full'}`}>            <textarea
+              ref={contentRef}
+              value={content}
+              onChange={handleContentChange}
               onKeyDown={handleKeyDown}
-              onPaste={handlePaste}
-              onMouseUp={updateActiveFormats}
-              onKeyUp={updateActiveFormats}
-              className="w-full h-full outline-none text-gray-700 leading-relaxed note-content rich-editor text-sm sm:text-base"
-              style={{ 
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                minHeight: '200px'
-              }}
-              suppressContentEditableWarning={true}
-              data-placeholder="Start writing your note... Use the toolbar above for formatting."
+              className="editor-textarea h-full resize-none"
+              placeholder="Start writing your note... (Type '/' for commands)"
             />
           </div>
         )}
-      </div>      {/* Clean Paste Toast Notification */}
-      {showCleanPasteToast && (
-        <div className="clean-paste-feedback show">
-          ✅ Text pasted without formatting
+
+        {/* Preview */}
+        {(viewMode === 'preview' || viewMode === 'split') && (
+          <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} overflow-auto`}>
+            <div className="p-6">
+              {content ? (
+                <div 
+                  className="prose max-w-none"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+                />
+              ) : (
+                <p className="text-gray-500 italic">Nothing to preview yet...</p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>      {/* Status bar */}
+      <div className="flex items-center justify-between p-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-600">
+        <div className="flex items-center space-x-4">
+          <span>{content.length} characters</span>
+          <span>{content.split(/\s+/).filter(word => word.length > 0).length} words</span>
+          <span className="text-blue-600">• Type "/" for commands</span>
         </div>
-      )}
-
-      {/* Slash Command Dropdown */}
-      <SlashCommandDropdown
-        isVisible={showSlashCommand}
-        position={slashCommandPosition}
-        onClose={() => {
-          setShowSlashCommand(false)
-          slashRangeRef.current = null
-        }}
-        onSelectCommand={handleSlashCommand}
-      />
-
-      {/* Keyboard Shortcuts Modal */}
-      <KeyboardShortcuts 
-        isVisible={showShortcuts}
-        onClose={() => setShowShortcuts(false)}
-      />
+        <div className="flex items-center space-x-2">
+          {hasChanges && <span className="text-orange-600">• Unsaved changes</span>}
+          <span>Ctrl+S to save</span>
+        </div>
+      </div>
     </div>
   )
 }

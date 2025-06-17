@@ -1,23 +1,20 @@
+import type { Metadata } from 'next'
 import './globals.css'
-import type { Metadata, Viewport } from 'next'
 
 export const metadata: Metadata = {
-  title: 'MyNote App',
-  description: 'A simple note-taking application with HTML support',
-}
-
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
+  title: 'MyNotes - Modern Notes Application',
+  description: 'A modern note-taking application built with Next.js, TypeScript, and Supabase',
+  viewport: 'width=device-width, initial-scale=1',
 }
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
-}) {  return (
+}) {
+  return (
     <html lang="en">
-      <body className="bg-gray-50 text-gray-900 min-h-screen">
+      <body className="bg-gray-50 min-h-screen">
         {children}
       </body>
     </html>

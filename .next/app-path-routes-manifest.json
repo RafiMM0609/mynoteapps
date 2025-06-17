@@ -1,0 +1,9 @@
+{
+  "/api/auth/login/route": "/api/auth/login",
+  "/_not-found/page": "/_not-found",
+  "/api/notes/[id]/route": "/api/notes/[id]",
+  "/api/notes/route": "/api/notes",
+  "/api/auth/verify/route": "/api/auth/verify",
+  "/api/auth/register/route": "/api/auth/register",
+  "/page": "/"
+}

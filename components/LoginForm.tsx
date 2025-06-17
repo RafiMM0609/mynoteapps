@@ -1,226 +1,143 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 interface LoginFormProps {
-  onLoginSuccess: (token: string) => void
+  onLogin: (email: string, password: string) => Promise<void>
+  onSwitchToRegister: () => void
+  isLoading: boolean
 }
 
-export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
-  const [step, setStep] = useState<'email' | 'password'>('email')
+export default function LoginForm({ onLogin, onSwitchToRegister, isLoading }: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email.trim()) {
-      setError('Please enter your email')
-      return
-    }
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {}
     
-    setError('')
-    setStep('password')
+    if (!email) {
+      newErrors.email = 'Email is required'
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email is invalid'
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required'
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!password.trim()) {
-      setError('Please enter your password')
-      return
-    }
-
-    setIsLoading(true)
-    setError('')
+    
+    if (!validateForm()) return
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        localStorage.setItem('auth_token', data.token)
-        onLoginSuccess(data.token)      } else {
-        setError(data.error || 'Login failed')
-        // If user doesn't exist, register them
-        if (data.error === 'User not found') {
-          await handleRegister()
-        }
-      }
-    } catch {
-      setError('Network error. Please try again.')
-    } finally {
-      setIsLoading(false)
+      await onLogin(email, password)
+    } catch (error) {
+      console.error('Login failed:', error)
     }
-  }
-
-  const handleRegister = async () => {
-    try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        localStorage.setItem('auth_token', data.token)
-        onLoginSuccess(data.token)      } else {
-        setError(data.error || 'Registration failed')
-      }
-    } catch {
-      setError('Network error. Please try again.')
-    }
-  }
-
-  const handleBack = () => {
-    setStep('email')
-    setPassword('')
-    setError('')
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Background Image - Aurora Borealis inspired */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-green-900 to-black">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-400/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-purple-400/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
-      </div>
-
-      {/* Login Form Container */}
-      <div className="relative z-10 w-full max-w-md mx-4">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-8 bg-yellow-400 text-black font-bold text-sm tracking-wider mb-6">
-            Anton
-          </div>
-        </div>
-
-        {/* Login Form */}
-        <div className="bg-gray-800/90 backdrop-blur-sm rounded-lg p-8 shadow-2xl border border-gray-700">
-          <h2 className="text-white text-2xl font-light mb-2 text-center">
-            {step === 'email' ? 'Enter your email' : 'Enter your password'}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
           </h2>
-          
-          <p className="text-gray-300 text-sm text-center mb-8">
-            {step === 'email' 
-              ? "Log into your MyNotes account. If you don't have one, we'll help you create one."
-              : `Welcome back! Please enter your password for ${email}`
-            }
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Or{' '}
+            <button
+              type="button"
+              onClick={onSwitchToRegister}
+              className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+            >
+              create a new account
+            </button>
           </p>
-
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg mb-6 text-sm">
-              {error}
+        </div>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`mt-1 input-field ${errors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}`}
+                placeholder="Enter your email"
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
-          )}
 
-          {step === 'email' ? (
-            <form onSubmit={handleEmailSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-white text-sm font-medium mb-2">
-                  Email
-                </label>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="mt-1 relative">
                 <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-                  placeholder="Enter your email address"
-                  required
-                />
-              </div>
-              
-              <button
-                type="submit"
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 px-4 rounded-lg transition-colors duration-200 text-sm tracking-wide"
-              >
-                Continue
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handlePasswordSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="password" className="block text-white text-sm font-medium mb-2">
-                  Password
-                </label>
-                <input
-                  type="password"
                   id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                  className={`input-field pr-10 ${errors.password ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}`}
                   placeholder="Enter your password"
-                  required
-                  autoFocus
                 />
-              </div>
-              
-              <div className="flex space-x-3">
                 <button
                   type="button"
-                  onClick={handleBack}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-600 disabled:cursor-not-allowed text-black font-semibold py-3 px-4 rounded-lg transition-colors duration-200 text-sm tracking-wide"
-                >
-                  {isLoading ? 'Signing In...' : 'Sign In'}
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 text-gray-400" />
+                  )}
                 </button>
               </div>
-            </form>          )}          {/* Register Link */}
-          <div className="mt-6 text-center">            <p className="text-gray-400 text-sm">
-              Don&apos;t have an account?{' '}
-              <Link 
-                href="/register" 
-                className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors"
-              >
-                Create one
-              </Link>
-            </p>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-gray-700">
-            <p className="text-gray-400 text-xs text-center">
-              MyNotes is part of the productivity suite.
-            </p>
-            
-            <div className="flex justify-center space-x-4 mt-4">
-              <div className="flex items-center space-x-2 opacity-60">
-                <div className="w-4 h-2 bg-gray-600 rounded"></div>
-                <div className="w-4 h-2 bg-gray-600 rounded"></div>
-                <div className="w-4 h-2 bg-gray-600 rounded"></div>
-                <div className="w-4 h-2 bg-gray-600 rounded"></div>
-                <div className="w-4 h-2 bg-gray-600 rounded"></div>
-              </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Bottom text */}
-        <div className="mt-6 text-center">          <p className="text-gray-400 text-xs">
-            If you&apos;ve used your email with one of our services, please enter the same password you&apos;ve used before.
-          </p>
-        </div>
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Signing in...
+                </div>
+              ) : (
+                'Sign in'
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )

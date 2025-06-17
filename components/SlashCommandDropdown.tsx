@@ -1,94 +1,171 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { 
+  BoldIcon, 
+  ItalicIcon, 
+  ListBulletIcon, 
+  CodeBracketIcon,
+  HashtagIcon,
+  LinkIcon,
+  TableCellsIcon,
+  ChatBubbleLeftIcon,
+  CheckIcon,
+  PhotoIcon
+} from '@heroicons/react/24/outline'
 
 interface SlashCommand {
   id: string
   label: string
   description: string
-  icon: string
-  action: () => void
+  icon: React.ComponentType<{ className?: string }>
+  shortcut?: string
+  action: () => { before: string; after: string }
 }
 
 interface SlashCommandDropdownProps {
   isVisible: boolean
-  position: { x: number; y: number }
+  position: { top: number; left: number }
+  onSelect: (command: SlashCommand) => void
   onClose: () => void
-  onSelectCommand: (command: string) => void
+  searchQuery: string
 }
 
 export default function SlashCommandDropdown({ 
   isVisible, 
   position, 
+  onSelect, 
   onClose, 
-  onSelectCommand 
-}: SlashCommandDropdownProps) {  const [selectedIndex, setSelectedIndex] = useState(0)
+  searchQuery 
+}: SlashCommandDropdownProps) {
+  const [selectedIndex, setSelectedIndex] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  
-  const commands: SlashCommand[] = useMemo(() => [
+
+  const allCommands: SlashCommand[] = [
     {
-      id: 'h1',
+      id: 'heading1',
       label: 'Heading 1',
-      description: 'Big section heading',
-      icon: '📝',
-      action: () => onSelectCommand('h1')
+      description: 'Large section heading',
+      icon: HashtagIcon,
+      shortcut: 'H1',
+      action: () => ({ before: '# ', after: '' })
     },
     {
-      id: 'h2',
+      id: 'heading2',
       label: 'Heading 2',
       description: 'Medium section heading',
-      icon: '📄',
-      action: () => onSelectCommand('h2')
+      icon: HashtagIcon,
+      shortcut: 'H2',
+      action: () => ({ before: '## ', after: '' })
     },
     {
-      id: 'h3',
+      id: 'heading3',
       label: 'Heading 3',
       description: 'Small section heading',
-      icon: '📋',
-      action: () => onSelectCommand('h3')
+      icon: HashtagIcon,
+      shortcut: 'H3',
+      action: () => ({ before: '### ', after: '' })
     },
     {
       id: 'bold',
-      label: 'Bold Text',
+      label: 'Bold',
       description: 'Make text bold',
-      icon: '🔤',
-      action: () => onSelectCommand('bold')
+      icon: BoldIcon,
+      shortcut: 'Ctrl+B',
+      action: () => ({ before: '**', after: '**' })
     },
     {
       id: 'italic',
-      label: 'Italic Text',
+      label: 'Italic',
       description: 'Make text italic',
-      icon: '✍️',
-      action: () => onSelectCommand('italic')
+      icon: ItalicIcon,
+      shortcut: 'Ctrl+I',
+      action: () => ({ before: '*', after: '*' })
     },
     {
-      id: 'ul',
+      id: 'bulletlist',
       label: 'Bullet List',
-      description: 'Create a bullet list',
-      icon: '📌',
-      action: () => onSelectCommand('ul')
+      description: 'Create a bulleted list',
+      icon: ListBulletIcon,
+      action: () => ({ before: '- ', after: '' })
     },
     {
-      id: 'ol',
+      id: 'numberlist',
       label: 'Numbered List',
       description: 'Create a numbered list',
-      icon: '🔢',
-      action: () => onSelectCommand('ol')
+      icon: ListBulletIcon,
+      action: () => ({ before: '1. ', after: '' })
     },
     {
       id: 'code',
       label: 'Inline Code',
-      description: 'Inline code snippet',
-      icon: '💻',
-      action: () => onSelectCommand('code')
+      description: 'Inline code formatting',
+      icon: CodeBracketIcon,
+      action: () => ({ before: '`', after: '`' })
     },
     {
-      id: 'pre',
+      id: 'codeblock',
       label: 'Code Block',
       description: 'Multi-line code block',
-      icon: '🖥️',
-      action: () => onSelectCommand('pre')    }
-  ], [onSelectCommand])
+      icon: CodeBracketIcon,
+      action: () => ({ before: '```\n', after: '\n```' })
+    },    {
+      id: 'quote',
+      label: 'Quote',
+      description: 'Create a blockquote',
+      icon: ChatBubbleLeftIcon,
+      action: () => ({ before: '> ', after: '' })
+    },
+    {
+      id: 'link',
+      label: 'Link',
+      description: 'Insert a link',
+      icon: LinkIcon,
+      action: () => ({ before: '[', after: '](url)' })
+    },
+    {
+      id: 'table',
+      label: 'Table',
+      description: 'Insert a table',
+      icon: TableCellsIcon,
+      action: () => ({ 
+        before: '| Column 1 | Column 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |\n', 
+        after: '' 
+      })
+    },
+    {
+      id: 'checkbox',
+      label: 'Checkbox',
+      description: 'Create a task list item',
+      icon: CheckIcon,
+      action: () => ({ before: '- [ ] ', after: '' })
+    },
+    {
+      id: 'image',
+      label: 'Image',
+      description: 'Insert an image',
+      icon: PhotoIcon,
+      action: () => ({ before: '![alt text](', after: ')' })
+    },
+    {
+      id: 'divider',
+      label: 'Divider',
+      description: 'Insert a horizontal line',
+      icon: () => <div className="w-4 h-0.5 bg-current" />,
+      action: () => ({ before: '---\n', after: '' })
+    }
+  ]
+
+  // Filter commands based on search query
+  const filteredCommands = allCommands.filter(command =>
+    command.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    command.description.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  // Reset selected index when commands change
+  useEffect(() => {
+    setSelectedIndex(0)
+  }, [filteredCommands])
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -97,16 +174,21 @@ export default function SlashCommandDropdown({
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          setSelectedIndex(prev => (prev + 1) % commands.length)
+          setSelectedIndex(prev => 
+            prev < filteredCommands.length - 1 ? prev + 1 : 0
+          )
           break
         case 'ArrowUp':
           e.preventDefault()
-          setSelectedIndex(prev => (prev - 1 + commands.length) % commands.length)
+          setSelectedIndex(prev => 
+            prev > 0 ? prev - 1 : filteredCommands.length - 1
+          )
           break
         case 'Enter':
           e.preventDefault()
-          commands[selectedIndex].action()
-          onClose()
+          if (filteredCommands[selectedIndex]) {
+            onSelect(filteredCommands[selectedIndex])
+          }
           break
         case 'Escape':
           e.preventDefault()
@@ -115,152 +197,104 @@ export default function SlashCommandDropdown({
       }
     }
 
-    if (isVisible) {
-      document.addEventListener('keydown', handleKeyDown)
-      return () => document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isVisible, selectedIndex, commands, onClose])
-
-  // Auto-scroll to keep selected item visible
-  useEffect(() => {
-    if (!isVisible || !dropdownRef.current) return
-
-    const selectedElement = dropdownRef.current.querySelector(`[data-index="${selectedIndex}"]`) as HTMLElement
-    if (selectedElement) {
-      selectedElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'nearest'
-      })
-    }
-  }, [selectedIndex, isVisible])
-
-  // Reset selected index when dropdown opens
-  useEffect(() => {
-    if (isVisible) {
-      setSelectedIndex(0)
-    }
-  }, [isVisible])
-
-  // Click outside to close
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    const handleResize = () => {
+      if (isVisible) {
+        // Force recalculation of position on window resize
         onClose()
       }
     }
 
-    if (isVisible) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }  }, [isVisible, onClose])
-  
-  if (!isVisible) return null
-  // Calculate the best position for the dropdown
-  const calculatePosition = () => {
-    const dropdownHeight = 360 // Approximate height of the dropdown
-    const dropdownWidth = 320 // Match the actual width set in style
-    
-    let x = position.x
-    let y = position.y
-    
-    // Debug logging
-    console.log('Original position:', { x, y })
-    console.log('Viewport dimensions:', { width: window.innerWidth, height: window.innerHeight })
-    
-    // Get viewport dimensions
-    const viewportWidth = window.innerWidth
-    const viewportHeight = window.innerHeight
-    
-    // Adjust horizontal position if dropdown would go off screen
-    if (x + dropdownWidth > viewportWidth) {
-      x = Math.max(20, viewportWidth - dropdownWidth - 20)
+    document.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('resize', handleResize)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('resize', handleResize)
     }
-    if (x < 20) {
-      x = 20
-    }
-    
-    // Calculate available space above and below cursor position
-    const spaceAbove = y - 20 // Space available above cursor
-    const spaceBelow = viewportHeight - y - 50 // Space available below cursor
-    
-    console.log('Available space:', { spaceAbove, spaceBelow })
-    
-    // Position dropdown based on available space
-    if (spaceAbove >= 200 && spaceAbove >= spaceBelow) {
-      // Position above the cursor if there's enough space
-      y = Math.max(20, y - dropdownHeight - 10)
-    } else if (spaceBelow >= 200) {
-      // Position below the cursor if there's enough space
-      y = Math.min(y + 30, viewportHeight - dropdownHeight - 20)
-    } else {
-      // If neither position has enough space, choose the one with more space
-      if (spaceAbove > spaceBelow) {
-        y = Math.max(20, y - dropdownHeight - 10)
-      } else {
-        y = Math.min(y + 30, viewportHeight - dropdownHeight - 20)
+  }, [isVisible, selectedIndex, filteredCommands, onSelect, onClose])
+  // Auto-scroll to selected item
+  useEffect(() => {
+    if (dropdownRef.current && selectedIndex >= 0) {
+      const commandItems = dropdownRef.current.querySelectorAll('button')
+      const selectedElement = commandItems[selectedIndex]
+      if (selectedElement) {
+        selectedElement.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth'
+        })
       }
     }
-    
-    console.log('Final position:', { x, y })
-    
-    return { x, y }
-  }
+  }, [selectedIndex])
+  if (!isVisible || filteredCommands.length === 0) return null
 
-  const finalPosition = calculatePosition()
-
-  return (    <div
+  return (
+    <div
       ref={dropdownRef}
-      className="fixed bg-white border border-gray-200 rounded-xl shadow-xl z-[9999] max-h-96 overflow-y-auto backdrop-blur-sm"
+      className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto min-w-80 slash-dropdown slash-dropdown-enter custom-scrollbar"
       style={{
-        left: finalPosition.x,
-        top: finalPosition.y,
-        width: '320px',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        animation: 'slideIn 0.2s ease-out',
-        border: '1px solid #e5e7eb'
+        top: typeof window !== 'undefined' ? Math.max(10, Math.min(position.top, window.innerHeight - 320)) : position.top,
+        left: typeof window !== 'undefined' ? Math.max(10, Math.min(position.left, window.innerWidth - 320)) : position.left,
       }}
     >
-      <div className="p-4">        <div className="text-xs text-gray-500 mb-3 px-1 font-medium flex items-center">
-          <span className="mr-2">⚡</span>
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-semibold">
-            Quick Actions
-          </span>
-          <span className="ml-2 text-gray-400">↑↓ navigate • Enter select • Esc close</span>
-        </div>        <div className="space-y-1">
-          {commands.map((command, index) => (
-            <div
-              key={command.id}
-              data-index={index}
-              className={`flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                index === selectedIndex
-                  ? 'bg-blue-50 text-blue-900 border border-blue-200 shadow-sm transform scale-[1.02]'
-                  : 'hover:bg-gray-50 hover:shadow-sm border border-transparent'
-              }`}
-              onClick={() => {
-                command.action()
-                onClose()
-              }}
-            >
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg mr-3 ${
-                index === selectedIndex 
-                  ? 'bg-blue-100' 
-                  : 'bg-gray-100'
-              }`}>
-                {command.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-sm mb-0.5 truncate">{command.label}</div>
-                <div className="text-xs text-gray-500 truncate">{command.description}</div>
-              </div>
-              {index === selectedIndex && (
-                <div className="text-blue-500 text-sm font-medium ml-2">
-                  ⏎
-                </div>
-              )}
-            </div>
-          ))}
+      {/* Header */}
+      <div className="px-3 py-2 bg-gray-50 border-b border-gray-100">
+        <div className="flex items-center text-xs text-gray-500">
+          <span className="font-medium">Slash Commands</span>
+          <span className="ml-auto">↑↓ Navigate • Enter Select • Esc Close</span>
         </div>
+      </div>
+
+      {/* Commands list */}
+      <div className="py-1">
+        {filteredCommands.map((command, index) => {
+          const Icon = command.icon
+          return (              <button
+                key={command.id}
+                onClick={() => onSelect(command)}
+                className={`w-full px-3 py-2.5 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
+                  index === selectedIndex 
+                    ? 'bg-blue-50 border-r-2 border-blue-500' 
+                    : ''
+                }`}
+                type="button"
+              >                <div className="flex items-start space-x-3">
+                  {/* Icon */}
+                  <div className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center transition-colors duration-150 ${
+                    index === selectedIndex 
+                      ? 'bg-blue-100 text-blue-600' 
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    <Icon className="w-4 h-4" />
+                  </div>                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className={`text-sm font-medium transition-colors duration-150 ${
+                        index === selectedIndex ? 'text-blue-900' : 'text-gray-900'
+                      }`}>
+                        {command.label}
+                      </h4>
+                      {command.shortcut && (
+                        <span className="text-xs text-gray-400 font-mono bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0 ml-2">
+                          {command.shortcut}
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-xs mt-0.5 transition-colors duration-150 ${
+                      index === selectedIndex ? 'text-blue-700' : 'text-gray-500'
+                    }`}>
+                      {command.description}
+                    </p>
+                  </div>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Footer tip */}
+      <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
+        <p className="text-xs text-gray-500">
+          💡 Tip: Type to search commands, or use keyboard shortcuts
+        </p>
       </div>
     </div>
   )
