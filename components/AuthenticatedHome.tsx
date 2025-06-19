@@ -168,7 +168,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div className="flex items-center space-x-3">
-              <h1 className="text-xl font-semibold text-gray-900">MyNotes</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Kagita Notes</h1>
             </div>
             <div className="flex items-center space-x-2">
               <button
@@ -225,7 +225,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
           >
             <Bars3Icon className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-900">MyNotes</h1>
+          <h1 className="text-lg font-semibold text-gray-900">Kagita Notes</h1>
           <div className="w-10"></div> {/* Spacer for centering */}
         </div>
 
@@ -247,7 +247,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
           ) : (
             <div className="h-full flex items-center justify-center bg-white">
               <div className="text-center">
-                <h2 className="text-2xl font-medium text-gray-900 mb-4">Welcome to MyNotes</h2>
+                <h2 className="text-2xl font-medium text-gray-900 mb-4">Welcome to Kagita Notes</h2>
                 <p className="text-gray-600 mb-6">Select a note to view or create a new one to get started.</p>
                 <button
                   onClick={handleCreateNote}

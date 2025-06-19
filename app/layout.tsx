@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'MyNotes - Modern Notes Application',
+  title: 'Kagitanotes - Modern Notes Application',
   description: 'A modern note-taking application built with Next.js, TypeScript, and Supabase',
   viewport: 'width=device-width, initial-scale=1',
 }
