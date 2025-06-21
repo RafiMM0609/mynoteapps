@@ -19,28 +19,19 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
   const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('edit')
   const [hasChanges, setHasChanges] = useState(false)
   const contentRef = useRef<HTMLTextAreaElement>(null)
-  
-  // Slash command states
+    // Slash command states
   const [showSlashDropdown, setShowSlashDropdown] = useState(false)
   const [slashPosition, setSlashPosition] = useState({ top: 0, left: 0 })
   const [slashQuery, setSlashQuery] = useState('')
   const [slashStartPos, setSlashStartPos] = useState(0)
+  const [currentCursorPos, setCurrentCursorPos] = useState(0)
+  
   useEffect(() => {
     const hasAnyChanges = title !== note.title || content !== note.content
     setHasChanges(hasAnyChanges)
   }, [title, content, note.title, note.content])
 
-  // Close slash dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (showSlashDropdown && contentRef.current && !contentRef.current.contains(event.target as Node)) {
-        setShowSlashDropdown(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showSlashDropdown])
+  // Close slash dropdown when clicking outside is now handled by SlashCommandDropdown itself
 
   const handleSave = () => {
     onSave(note.id, title, content)
@@ -105,9 +96,10 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       left: Math.min(rect.left + (currentColumn * charWidth) + 10 - scrollLeft, window.innerWidth - 320) // Prevent overflow
     }
   }
-
   // Handle slash command detection
   const handleSlashCommand = (value: string, cursorPos: number) => {
+    setCurrentCursorPos(cursorPos) // Save current cursor position
+    
     const textBeforeCursor = value.substring(0, cursorPos)
     const lastSlashIndex = textBeforeCursor.lastIndexOf('/')
     
@@ -141,20 +133,21 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       setSlashPosition(position)
       setShowSlashDropdown(true)
     }
-  }
-
-  // Handle slash command selection
+  }  // Handle slash command selection
   const handleSlashCommandSelect = (command: any) => {
     const textarea = contentRef.current
     if (!textarea) return
 
     const { before, after } = command.action()
     
+    // Calculate the end position of the slash query
+    const slashEndPos = slashStartPos + 1 + slashQuery.length
+    
     // Remove the slash and query text
     const beforeSlash = content.substring(0, slashStartPos)
-    const afterCursor = content.substring(textarea.selectionStart)
+    const afterSlashQuery = content.substring(slashEndPos)
     
-    const newContent = beforeSlash + before + after + afterCursor
+    const newContent = beforeSlash + before + after + afterSlashQuery
     setContent(newContent)
     
     // Position cursor
@@ -167,7 +160,6 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
     setShowSlashDropdown(false)
     setSlashQuery('')
   }
-
   // Handle content change with slash command detection
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
@@ -175,6 +167,23 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
     
     setContent(newValue)
     handleSlashCommand(newValue, cursorPos)
+  }
+
+  // Handle cursor position changes (click, arrow keys, etc.)
+  const handleSelectionChange = (e: React.MouseEvent<HTMLTextAreaElement> | React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const textarea = e.target as HTMLTextAreaElement
+    const cursorPos = textarea.selectionStart
+    
+    // Update cursor position and check for slash command
+    setCurrentCursorPos(cursorPos)
+    
+    // If dropdown is visible, check if cursor moved away from slash command
+    if (showSlashDropdown) {
+      const slashEndPos = slashStartPos + 1 + slashQuery.length
+      if (cursorPos < slashStartPos || cursorPos > slashEndPos) {
+        setShowSlashDropdown(false)
+      }
+    }
   }
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // If slash dropdown is open, let it handle navigation keys
@@ -354,6 +363,8 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
               value={content}
               onChange={handleContentChange}
               onKeyDown={handleKeyDown}
+              onClick={handleSelectionChange}
+              onKeyUp={handleSelectionChange}
               className="editor-textarea h-full resize-none"
               placeholder="Start writing your note... (Type '/' for commands)"
             />

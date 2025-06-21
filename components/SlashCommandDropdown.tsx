@@ -37,9 +37,21 @@ export default function SlashCommandDropdown({
   onSelect, 
   onClose, 
   searchQuery 
-}: SlashCommandDropdownProps) {
-  const [selectedIndex, setSelectedIndex] = useState(0)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+}: SlashCommandDropdownProps) {  const [selectedIndex, setSelectedIndex] = useState(0)
+  const dropdownRef = useRef<HTMLDivElement>(null)  // Close slash dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isVisible && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        // Delay closing to allow button clicks to be processed first
+        setTimeout(() => {
+          onClose()
+        }, 50)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isVisible, onClose])
 
   const allCommands: SlashCommand[] = [
     {
@@ -247,16 +259,23 @@ export default function SlashCommandDropdown({
       <div className="py-1">
         {filteredCommands.map((command, index) => {
           const Icon = command.icon
-          return (              <button
+          return (            <button
                 key={command.id}
-                onClick={() => onSelect(command)}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  // Use setTimeout to ensure this runs after any outside click handlers
+                  setTimeout(() => {
+                    onSelect(command)
+                  }, 0)
+                }}
                 className={`w-full px-3 py-2.5 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
                   index === selectedIndex 
                     ? 'bg-blue-50 border-r-2 border-blue-500' 
                     : ''
                 }`}
                 type="button"
-              >                <div className="flex items-start space-x-3">
+              ><div className="flex items-start space-x-3">
                   {/* Icon */}
                   <div className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center transition-colors duration-150 ${
                     index === selectedIndex 
