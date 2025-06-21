@@ -161,7 +161,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0
+        fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
@@ -245,9 +245,9 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
               />
             )
           ) : (
-            <div className="h-full flex items-center justify-center bg-white">
+            <div className="h-full flex items-center justify-center bg-white p-4 sm:p-6">
               <div className="text-center">
-                <h2 className="text-2xl font-medium text-gray-900 mb-4">Welcome to Kagita Notes</h2>
+                <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-4">Welcome to Kagita Notes</h2>
                 <p className="text-gray-600 mb-6">Select a note to view or create a new one to get started.</p>
                 <button
                   onClick={handleCreateNote}

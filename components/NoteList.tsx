@@ -25,7 +25,7 @@ export default function NoteList({ notes, selectedNote, onSelectNote, onDeleteNo
     }
   }
 
-  const truncateContent = (content: string, maxLength: number = 100) => {
+  const truncateContent = (content: string, maxLength: number = 60) => {
     if (content.length <= maxLength) return content
     return content.substring(0, maxLength) + '...'
   }
@@ -56,7 +56,7 @@ export default function NoteList({ notes, selectedNote, onSelectNote, onDeleteNo
             onClick={() => onSelectNote(note)}
           >
             <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 pr-8">
                 <h3 className="text-sm font-medium text-gray-900 truncate">
                   {note.title || 'Untitled'}
                 </h3>
@@ -75,7 +75,7 @@ export default function NoteList({ notes, selectedNote, onSelectNote, onDeleteNo
                   e.stopPropagation()
                   onDeleteNote(note.id)
                 }}
-                className="opacity-0 group-hover:opacity-100 ml-2 p-1 text-gray-400 hover:text-red-500 transition-all duration-150"
+                className="absolute top-3 right-3 opacity-20 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-opacity duration-150"
                 title="Delete note"
               >
                 <TrashIcon className="h-4 w-4" />
