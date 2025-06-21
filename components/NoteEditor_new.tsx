@@ -187,9 +187,9 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
   }
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // If slash dropdown is open, let it handle navigation keys
-    if (showSlashDropdown && ['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
-      return // Let SlashCommandDropdown handle these keys
-    }
+    // if (showSlashDropdown && ['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
+    //   return // Let SlashCommandDropdown handle these keys
+    // }
 
     if (e.ctrlKey || e.metaKey) {
       switch (e.key) {

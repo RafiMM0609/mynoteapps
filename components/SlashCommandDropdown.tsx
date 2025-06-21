@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { 
   BoldIcon, 
   ItalicIcon, 
@@ -31,29 +31,7 @@ interface SlashCommandDropdownProps {
   searchQuery: string
 }
 
-export default function SlashCommandDropdown({ 
-  isVisible, 
-  position, 
-  onSelect, 
-  onClose, 
-  searchQuery 
-}: SlashCommandDropdownProps) {  const [selectedIndex, setSelectedIndex] = useState(0)
-  const dropdownRef = useRef<HTMLDivElement>(null)  // Close slash dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isVisible && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        // Delay closing to allow button clicks to be processed first
-        setTimeout(() => {
-          onClose()
-        }, 50)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isVisible, onClose])
-
-  const allCommands: SlashCommand[] = [
+const allCommands: SlashCommand[] = [
     {
       id: 'heading1',
       label: 'Heading 1',
@@ -168,38 +146,65 @@ export default function SlashCommandDropdown({
     }
   ]
 
+export default function SlashCommandDropdown({ 
+  isVisible, 
+  position, 
+  onSelect, 
+  onClose, 
+  searchQuery 
+}: SlashCommandDropdownProps) {  const [selectedIndex, setSelectedIndex] = useState(0)
+  const dropdownRef = useRef<HTMLDivElement>(null)  // Close slash dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isVisible && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        // Delay closing to allow button clicks to be processed first
+        setTimeout(() => {
+          onClose()
+        }, 50)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isVisible, onClose])
+
   // Filter commands based on search query
-  const filteredCommands = allCommands.filter(command =>
+  const filteredCommands = useMemo(() => allCommands.filter(command =>
     command.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
     command.description.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
+  ), [searchQuery])
   // Reset selected index when commands change
   useEffect(() => {
-    setSelectedIndex(0)
-  }, [filteredCommands])
-  // Handle keyboard navigation
+    if (filteredCommands.length > 0) {
+      setSelectedIndex(0)
+    } else {
+      setSelectedIndex(-1) // No valid selection when no commands
+    }
+  }, [filteredCommands])// Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isVisible) return
-
+      if (!isVisible || filteredCommands.length === 0) return
+      
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          setSelectedIndex(prev => 
-            prev < filteredCommands.length - 1 ? prev + 1 : 0
-          )
+          setSelectedIndex(prev => {
+            const maxIndex = filteredCommands.length - 1
+            return prev >= maxIndex ? 0 : prev + 1
+          })
           break
         case 'ArrowUp':
           e.preventDefault()
-          setSelectedIndex(prev => 
-            prev > 0 ? prev - 1 : filteredCommands.length - 1
-          )
+          setSelectedIndex(prev => {
+            const maxIndex = filteredCommands.length - 1
+            return prev <= 0 ? maxIndex : prev - 1
+          })
           break
         case 'Enter':
           e.preventDefault()
-          if (filteredCommands[selectedIndex]) {
-            onSelect(filteredCommands[selectedIndex])
+          const selectedCommand = filteredCommands[selectedIndex]
+          if (selectedCommand && selectedIndex >= 0 && selectedIndex < filteredCommands.length) {
+            onSelect(selectedCommand)
           }
           break
         case 'Escape':
