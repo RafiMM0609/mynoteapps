@@ -225,32 +225,32 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200">
         <div className="flex-1 min-w-0 mr-4">
           <input
             type="text"
             value={title}
             onChange={handleTitleChange}
-            className="w-full text-xl font-semibold text-gray-900 border-none focus:outline-none bg-transparent"
+            className="w-full text-2xl font-bold text-gray-900 border-none focus:outline-none bg-transparent"
             placeholder="Note title..."
           />
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <button
             onClick={handleCancel}
-            className="btn-secondary"
+            className="flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
           >
-            <XMarkIcon className="h-4 w-4 mr-1" />
+            <XMarkIcon className="h-5 w-5 mr-2 text-gray-400" />
             Cancel
           </button>
           
           <button
             onClick={handleSave}
             disabled={!hasChanges}
-            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <CheckIcon className="h-4 w-4 mr-1" />
+            <CheckIcon className="h-5 w-5 mr-2" />
             Save
           </button>
         </div>

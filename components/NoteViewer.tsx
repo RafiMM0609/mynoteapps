@@ -38,9 +38,9 @@ export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200">
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold text-gray-900 truncate">
+          <h1 className="text-2xl font-bold text-gray-900 truncate">
             {note.title || 'Untitled'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -48,17 +48,17 @@ export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
           </p>
         </div>
         
-        <div className="flex items-center space-x-2 ml-4">
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+        <div className="flex items-center space-x-3 ml-4">
+          <div className="hidden sm:flex items-center bg-gray-200 rounded-lg p-1">
             <button
               onClick={() => setViewMode('preview')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+              className={`flex items-center px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                 viewMode === 'preview'
                   ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-600 hover:bg-gray-300'
               }`}
             >
-              <EyeIcon className="h-4 w-4 mr-1 inline" />
+              <EyeIcon className="h-5 w-5 mr-2 text-gray-400" />
               Preview
             </button>
             <button
@@ -66,7 +66,7 @@ export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
               className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                 viewMode === 'raw'
                   ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-600 hover:bg-gray-300'
               }`}
             >
               Raw
@@ -75,10 +75,10 @@ export default function NoteViewer({ note, onEdit }: NoteViewerProps) {
           
           <button
             onClick={onEdit}
-            className="btn-primary"
+            className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             title="Edit Note"
           >
-            <PencilIcon className="h-4 w-4 mr-2" />
+            <PencilIcon className="h-5 w-5 mr-2" />
             Edit
           </button>
         </div>
