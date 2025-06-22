@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { CheckIcon, XMarkIcon, EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
+import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import TurndownService from 'turndown'
 import type { Note } from '../lib/supabase'
 import SlashCommandDropdown from './SlashCommandDropdown'
 
@@ -15,26 +16,29 @@ interface NoteEditorProps {
 
 export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) {
   const [title, setTitle] = useState(note.title)
-  const [content, setContent] = useState(note.content)
-  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('edit')
   const [hasChanges, setHasChanges] = useState(false)
-  const contentRef = useRef<HTMLTextAreaElement>(null)
-    // Slash command states
+  const editorRef = useRef<HTMLDivElement>(null)
+  const turndownService = useRef(new TurndownService())
+
+  // Slash command states
   const [showSlashDropdown, setShowSlashDropdown] = useState(false)
   const [slashPosition, setSlashPosition] = useState({ top: 0, left: 0 })
   const [slashQuery, setSlashQuery] = useState('')
   const [slashStartPos, setSlashStartPos] = useState(0)
-  const [currentCursorPos, setCurrentCursorPos] = useState(0)
-  
-  useEffect(() => {
-    const hasAnyChanges = title !== note.title || content !== note.content
-    setHasChanges(hasAnyChanges)
-  }, [title, content, note.title, note.content])
+  const [activeNode, setActiveNode] = useState<Node | null>(null)
 
-  // Close slash dropdown when clicking outside is now handled by SlashCommandDropdown itself
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = renderMarkdown(note.content)
+    }
+  }, [note.content])
 
   const handleSave = () => {
-    onSave(note.id, title, content)
+    if (editorRef.current) {
+      const html = editorRef.current.innerHTML
+      const markdown = turndownService.current.turndown(html)
+      onSave(note.id, title, markdown)
+    } 
     setHasChanges(false)
   }
 
@@ -47,183 +51,164 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
 
   const renderMarkdown = (text: string) => {
     try {
-      const rawHtml = marked(text) as string
+      const rawHtml = marked(text, { breaks: true, gfm: true }) as string
       return DOMPurify.sanitize(rawHtml)
     } catch (error) {
       console.error('Error rendering markdown:', error)
       return text
     }
   }
-  const insertMarkdown = (before: string, after: string = '') => {
-    const textarea = contentRef.current
-    if (!textarea) return
 
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = content.substring(start, end)
-    
-    const newContent = 
-      content.substring(0, start) + 
-      before + selectedText + after + 
-      content.substring(end)
-    
-    setContent(newContent)
-    
-    // Set cursor position after the inserted text
-    setTimeout(() => {
-      textarea.focus()
-      const newCursorPos = start + before.length + selectedText.length
-      textarea.setSelectionRange(newCursorPos, newCursorPos)
-    }, 0)
-  }
-  // Calculate dropdown position based on cursor
-  const calculateDropdownPosition = (textarea: HTMLTextAreaElement, cursorPos: number) => {
-    const textBeforeCursor = content.substring(0, cursorPos)
-    const lines = textBeforeCursor.split('\n')
-    const currentLine = lines.length - 1
-    const currentColumn = lines[lines.length - 1].length
-
-    const rect = textarea.getBoundingClientRect()
-    const lineHeight = 20 // Approximate line height
-    const charWidth = 8 // Approximate character width
-
-    // Get scroll position
-    const scrollTop = textarea.scrollTop
-    const scrollLeft = textarea.scrollLeft
-
-    return {
-      top: rect.top + (currentLine * lineHeight) + lineHeight + 25 - scrollTop,
-      left: Math.min(rect.left + (currentColumn * charWidth) + 10 - scrollLeft, window.innerWidth - 320) // Prevent overflow
+  const handleInput = () => {
+    if (!hasChanges) {
+      setHasChanges(true)
     }
-  }
-  // Handle slash command detection
-  const handleSlashCommand = (value: string, cursorPos: number) => {
-    setCurrentCursorPos(cursorPos) // Save current cursor position
-    
-    const textBeforeCursor = value.substring(0, cursorPos)
+
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) {
+      setShowSlashDropdown(false)
+      return
+    }
+
+    const range = selection.getRangeAt(0)
+    const node = range.startContainer
+    const cursorPosition = range.startOffset
+
+    if (node.nodeType !== Node.TEXT_NODE) {
+      setShowSlashDropdown(false)
+      return
+    }
+
+    setActiveNode(node)
+    const textContent = node.textContent || ''
+    const textBeforeCursor = textContent.substring(0, cursorPosition)
     const lastSlashIndex = textBeforeCursor.lastIndexOf('/')
-    
+
     if (lastSlashIndex === -1) {
       setShowSlashDropdown(false)
       return
     }
 
-    // Check if the slash is at the beginning of a line or after whitespace
-    const charBeforeSlash = lastSlashIndex > 0 ? textBeforeCursor[lastSlashIndex - 1] : '\n'
-    const isValidSlashPosition = charBeforeSlash === '\n' || charBeforeSlash === ' ' || charBeforeSlash === '\t'
-
-    if (!isValidSlashPosition) {
+    const query = textBeforeCursor.substring(lastSlashIndex + 1)
+    if (query.includes(' ')) {
       setShowSlashDropdown(false)
       return
     }
 
-    const queryAfterSlash = textBeforeCursor.substring(lastSlashIndex + 1)
-    
-    // Don't show dropdown if there's a space after the slash query
-    if (queryAfterSlash.includes(' ')) {
-      setShowSlashDropdown(false)
-      return
-    }
-
-    setSlashQuery(queryAfterSlash)
+    setSlashQuery(query)
     setSlashStartPos(lastSlashIndex)
-    
-    if (contentRef.current) {
-      const position = calculateDropdownPosition(contentRef.current, cursorPos)
-      setSlashPosition(position)
-      setShowSlashDropdown(true)
-    }
-  }  // Handle slash command selection
+
+    const rect = range.getBoundingClientRect()
+    setSlashPosition({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX })
+    setShowSlashDropdown(true)
+  }
+
   const handleSlashCommandSelect = (command: any) => {
-    const textarea = contentRef.current
-    if (!textarea) return
-
-    const { before, after } = command.action()
-    
-    // Calculate the end position of the slash query
-    const slashEndPos = slashStartPos + 1 + slashQuery.length
-    
-    // Remove the slash and query text
-    const beforeSlash = content.substring(0, slashStartPos)
-    const afterSlashQuery = content.substring(slashEndPos)
-    
-    const newContent = beforeSlash + before + after + afterSlashQuery
-    setContent(newContent)
-    
-    // Position cursor
-    setTimeout(() => {
-      textarea.focus()
-      const newCursorPos = slashStartPos + before.length
-      textarea.setSelectionRange(newCursorPos, newCursorPos)
-    }, 0)
-    
     setShowSlashDropdown(false)
+
+    const selection = window.getSelection()
+    if (!selection || !selection.rangeCount || !activeNode || !editorRef.current) {
+      return
+    }
+    
+    editorRef.current.focus()
+
+    // First, select the command text (e.g., "/bold") so we can replace it.
+    const range = document.createRange()
+    range.setStart(activeNode, slashStartPos)
+    range.setEnd(activeNode, slashStartPos + slashQuery.length + 1)
+    selection.removeAllRanges()
+    selection.addRange(range)
+
+    // Now, execute the appropriate formatting command.
+    // This will replace the selected command text with the formatted style.
+    switch (command.id) {
+      case 'heading1':
+        document.execCommand('formatBlock', false, '<h1>')
+        break
+      case 'heading2':
+        document.execCommand('formatBlock', false, '<h2>')
+        break
+      case 'heading3':
+        document.execCommand('formatBlock', false, '<h3>')
+        break
+      case 'bold':
+        document.execCommand('bold', false)
+        selection.collapseToEnd() // Deselect and place cursor to continue typing
+        break
+      case 'italic':
+        document.execCommand('italic', false)
+        selection.collapseToEnd() // Deselect and place cursor
+        break
+      case 'bulletlist':
+        document.execCommand('insertUnorderedList')
+        break
+      case 'numberlist':
+        document.execCommand('insertOrderedList')
+        break
+      case 'code':
+        // For inline code, we wrap the (now empty) selection in <code> tags.
+        // This is a common pattern for WYSIWYG editors.
+        document.execCommand('insertHTML', false, '<code>&nbsp;</code>')
+        break
+      case 'codeblock':
+        // For a code block, we replace the current paragraph with a <pre> block.
+        document.execCommand('insertHTML', false, '<pre><code>&nbsp;</code></pre>')
+        break
+      default:
+        // If the command is not recognized, just delete the trigger text.
+        document.execCommand('delete', false)
+        break;
+    }
+
+    // Clean up state
     setSlashQuery('')
-  }
-  // Handle content change with slash command detection
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value
-    const cursorPos = e.target.selectionStart
-    
-    setContent(newValue)
-    handleSlashCommand(newValue, cursorPos)
+    setActiveNode(null)
   }
 
-  // Handle cursor position changes (click, arrow keys, etc.)
-  const handleSelectionChange = (e: React.MouseEvent<HTMLTextAreaElement> | React.KeyboardEvent<HTMLTextAreaElement>) => {
-    const textarea = e.target as HTMLTextAreaElement
-    const cursorPos = textarea.selectionStart
-    
-    // Update cursor position and check for slash command
-    setCurrentCursorPos(cursorPos)
-    
-    // If dropdown is visible, check if cursor moved away from slash command
-    if (showSlashDropdown) {
-      const slashEndPos = slashStartPos + 1 + slashQuery.length
-      if (cursorPos < slashStartPos || cursorPos > slashEndPos) {
-        setShowSlashDropdown(false)
-      }
-    }
-  }
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // If slash dropdown is open, let it handle navigation keys
-    // if (showSlashDropdown && ['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
-    //   return // Let SlashCommandDropdown handle these keys
-    // }
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount) return;
 
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key) {
-        case 's':
-          e.preventDefault()
-          handleSave()
-          break
-        case 'b':
-          e.preventDefault()
-          insertMarkdown('**', '**')
-          break
-        case 'i':
-          e.preventDefault()
-          insertMarkdown('*', '*')
-          break
-      }
-    }
+      let container = selection.getRangeAt(0).startContainer;
 
-    // Close slash dropdown on other keys
-    if (showSlashDropdown && !['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
-      if (e.key === 'Backspace') {
-        // Handle backspace - might need to close dropdown
-        const textarea = e.target as HTMLTextAreaElement
-        const cursorPos = textarea.selectionStart
-        if (cursorPos <= slashStartPos) {
-          setShowSlashDropdown(false)
+      // Find if we are inside a list item
+      let parentListItem = null;
+      let currentElement = container.nodeType === Node.TEXT_NODE ? container.parentElement : (container as HTMLElement);
+      
+      while (currentElement && currentElement !== editorRef.current) {
+        if (currentElement.nodeName === 'LI') {
+          parentListItem = currentElement;
+          break;
         }
+        currentElement = currentElement.parentElement;
       }
+
+      // If inside a list, let the browser do its default action (create another list item)
+      if (parentListItem) {
+        return;
+      }
+
+      // Otherwise, prevent default to avoid inheriting styles (like bold)
+      // and insert a new paragraph for the new line.
+      e.preventDefault();
+      // Using insertHTML is often more reliable for creating a new, clean block.
+      // The browser will typically handle closing the current block and starting a new one.
+      document.execCommand('insertHTML', false, '<p><br></p>');
+    }
+  };
+  
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value)
+    if (!hasChanges) {
+      setHasChanges(true)
     }
   }
+
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Slash Command Dropdown */}
-      <SlashCommandDropdown
+       <SlashCommandDropdown
         isVisible={showSlashDropdown}
         position={slashPosition}
         onSelect={handleSlashCommandSelect}
@@ -237,50 +222,13 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={handleTitleChange}
             className="w-full text-xl font-semibold text-gray-900 border-none focus:outline-none bg-transparent"
             placeholder="Note title..."
           />
         </div>
         
         <div className="flex items-center space-x-2">
-          {/* View mode toggle */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('edit')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                viewMode === 'edit'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <PencilSquareIcon className="h-4 w-4 mr-1 inline" />
-              Edit
-            </button>
-            <button
-              onClick={() => setViewMode('preview')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                viewMode === 'preview'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <EyeIcon className="h-4 w-4 mr-1 inline" />
-              Preview
-            </button>
-            <button
-              onClick={() => setViewMode('split')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                viewMode === 'split'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Split
-            </button>
-          </div>
-
-          {/* Action buttons */}
           <button
             onClick={handleCancel}
             className="btn-secondary"
@@ -300,98 +248,22 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center space-x-1 p-2 border-b border-gray-200 bg-gray-50">
-        <button
-          onClick={() => insertMarkdown('**', '**')}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-          title="Bold (Ctrl+B)"
-        >
-          <strong>B</strong>
-        </button>
-        <button
-          onClick={() => insertMarkdown('*', '*')}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors italic"
-          title="Italic (Ctrl+I)"
-        >
-          I
-        </button>
-        <div className="w-px h-6 bg-gray-300 mx-1"></div>
-        <button
-          onClick={() => insertMarkdown('# ')}
-          className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-          title="Heading 1"
-        >
-          H1
-        </button>
-        <button
-          onClick={() => insertMarkdown('## ')}
-          className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-          title="Heading 2"
-        >
-          H2
-        </button>
-        <button
-          onClick={() => insertMarkdown('- ')}
-          className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-          title="Bullet List"
-        >
-          •
-        </button>
-        <button
-          onClick={() => insertMarkdown('`', '`')}
-          className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors font-mono"
-          title="Inline Code"
-        >
-          {'</>'}
-        </button>
-        <button
-          onClick={() => insertMarkdown('```\n', '\n```')}
-          className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-          title="Code Block"
-        >
-          Code
-        </button>
+      {/* Content Area - WYSIWYG Editor */}
+      <div className="flex-1 flex flex-col">
+        <div
+          ref={editorRef}
+          onInput={handleInput}
+          onKeyDown={handleKeyDown}
+          contentEditable={true}
+          suppressContentEditableWarning={true}
+          className="flex-1 p-6 overflow-auto prose max-w-none focus:outline-none"
+        />
       </div>
-
-      {/* Content Area */}
-      <div className="flex-1 flex">
-        {/* Editor */}
-        {(viewMode === 'edit' || viewMode === 'split') && (
-          <div className={`${viewMode === 'split' ? 'w-1/2 border-r border-gray-200' : 'w-full'}`}>            <textarea
-              ref={contentRef}
-              value={content}
-              onChange={handleContentChange}
-              onKeyDown={handleKeyDown}
-              onClick={handleSelectionChange}
-              onKeyUp={handleSelectionChange}
-              className="editor-textarea h-full resize-none"
-              placeholder="Start writing your note... (Type '/' for commands)"
-            />
-          </div>
-        )}
-
-        {/* Preview */}
-        {(viewMode === 'preview' || viewMode === 'split') && (
-          <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} overflow-auto`}>
-            <div className="p-6">
-              {content ? (
-                <div 
-                  className="prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
-                />
-              ) : (
-                <p className="text-gray-500 italic">Nothing to preview yet...</p>
-              )}
-            </div>
-          </div>
-        )}
-      </div>      {/* Status bar */}
+      
+      {/* Status bar */}
       <div className="flex items-center justify-between p-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-600">
-        <div className="flex items-center space-x-4">
-          <span>{content.length} characters</span>
-          <span>{content.split(/\s+/).filter(word => word.length > 0).length} words</span>
-          <span className="text-blue-600">• Type "/" for commands</span>
+        <div>
+          {/* Word/char count can be added back here if needed, but might not be in sync during editing */}
         </div>
         <div className="flex items-center space-x-2">
           {hasChanges && <span className="text-orange-600">• Unsaved changes</span>}
