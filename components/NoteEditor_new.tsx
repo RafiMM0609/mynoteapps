@@ -167,6 +167,14 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // If the slash command dropdown is visible, let it handle navigation and selection.
+    if (showSlashDropdown && ['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].includes(e.key)) {
+      // Prevent default editor behavior for these keys when dropdown is open,
+      // as the dropdown's keydown listener will handle them.
+      e.preventDefault();
+      return;
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       const selection = window.getSelection();
       if (!selection || !selection.rangeCount) return;
