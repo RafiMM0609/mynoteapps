@@ -7,15 +7,29 @@ import DOMPurify from 'dompurify'
 import TurndownService from 'turndown'
 import type { Note } from '../lib/supabase'
 import SlashCommandDropdown from './SlashCommandDropdown'
+import InlineNoteLinking from './InlineNoteLinking'
+import NoteLinkRenderer from './NoteLinkRenderer'
+import { useNoteLinkDetection } from '../hooks/useNoteLinkParser'
 
 interface NoteEditorProps {
   note: Note
   onSave: (noteId: string, title: string, content: string) => void
   onCancel: () => void
+  availableNotes?: Note[]
+  onNoteClick?: (note: Note) => void
+  onCreateNewNote?: (title: string) => void
 }
 
-export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) {
-  const [title, setTitle] = useState(note.title)
+export default function NoteEditor({ 
+  note, 
+  onSave, 
+  onCancel, 
+  availableNotes = [], 
+  onNoteClick, 
+  onCreateNewNote 
+}: NoteEditorProps) {  const [title, setTitle] = useState(note.title)
+  const [content, setContent] = useState(note.content || '')
+  const [cursorPosition, setCursorPosition] = useState(0)
   const [hasChanges, setHasChanges] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const turndownService = useRef(new TurndownService())
@@ -27,12 +41,14 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
   const [slashStartPos, setSlashStartPos] = useState(0)
   const [activeNode, setActiveNode] = useState<Node | null>(null)
 
+  // Note linking detection
+  const noteLinkDetection = useNoteLinkDetection(content, cursorPosition)
   useEffect(() => {
+    setContent(note.content || '')
     if (editorRef.current) {
       editorRef.current.innerHTML = renderMarkdown(note.content)
     }
   }, [note.content])
-
   const handleSave = () => {
     if (editorRef.current) {
       const html = editorRef.current.innerHTML
@@ -49,6 +65,100 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
     onCancel()
   }
 
+  // Handle note link selection
+  const handleNoteLinkSelect = (selectedNote: Note) => {
+    if (!editorRef.current) return
+
+    const selection = window.getSelection()
+    if (!selection || !selection.rangeCount) return
+
+    const range = selection.getRangeAt(0)
+    const node = range.startContainer
+    
+    if (node.nodeType !== Node.TEXT_NODE) return
+
+    const textContent = node.textContent || ''
+    const cursorPos = range.startOffset
+    
+    // Find the [[ pattern before cursor
+    const beforeCursor = textContent.substring(0, cursorPos)
+    const openBrackets = beforeCursor.lastIndexOf('[[')
+    
+    if (openBrackets === -1) return
+
+    // Replace the incomplete note link with the complete one
+    const beforeLink = textContent.substring(0, openBrackets)
+    const afterCursor = textContent.substring(cursorPos)
+    const newText = beforeLink + `[[${selectedNote.title}]]` + afterCursor
+    
+    node.textContent = newText
+    
+    // Position cursor after the note link
+    const newCursorPos = openBrackets + `[[${selectedNote.title}]]`.length
+    range.setStart(node, newCursorPos)
+    range.setEnd(node, newCursorPos)
+    
+    // Update content state
+    updateContentFromEditor()
+    setHasChanges(true)
+  }
+
+  const handleCreateNewNoteFromLink = (noteTitle: string) => {
+    if (onCreateNewNote) {
+      onCreateNewNote(noteTitle)
+    }
+    
+    // Also insert the link in the current note
+    if (!editorRef.current) return
+
+    const selection = window.getSelection()
+    if (!selection || !selection.rangeCount) return
+
+    const range = selection.getRangeAt(0)
+    const node = range.startContainer
+    
+    if (node.nodeType !== Node.TEXT_NODE) return
+
+    const textContent = node.textContent || ''
+    const cursorPos = range.startOffset
+    
+    // Find the [[ pattern before cursor
+    const beforeCursor = textContent.substring(0, cursorPos)
+    const openBrackets = beforeCursor.lastIndexOf('[[')
+    
+    if (openBrackets === -1) return
+
+    // Replace the incomplete note link with the complete one
+    const beforeLink = textContent.substring(0, openBrackets)
+    const afterCursor = textContent.substring(cursorPos)
+    const newText = beforeLink + `[[${noteTitle}]]` + afterCursor
+    
+    node.textContent = newText
+    
+    // Position cursor after the note link
+    const newCursorPos = openBrackets + `[[${noteTitle}]]`.length
+    range.setStart(node, newCursorPos)
+    range.setEnd(node, newCursorPos)
+    
+    updateContentFromEditor()
+    setHasChanges(true)
+  }
+
+  const updateContentFromEditor = () => {
+    if (editorRef.current) {
+      const html = editorRef.current.innerHTML
+      const markdown = turndownService.current.turndown(html)
+      setContent(markdown)
+      
+      // Update cursor position
+      const selection = window.getSelection()
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0)
+        setCursorPosition(range.startOffset)
+      }
+    }
+  }
+
   const renderMarkdown = (text: string) => {
     try {
       const rawHtml = marked(text, { breaks: true, gfm: true }) as string
@@ -58,11 +168,13 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       return text
     }
   }
-
   const handleInput = () => {
     if (!hasChanges) {
       setHasChanges(true)
     }
+
+    // Update content and cursor position for note linking
+    updateContentFromEditor()
 
     const selection = window.getSelection()
     if (!selection || selection.rangeCount === 0) {
@@ -118,9 +230,7 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
     range.setStart(activeNode, slashStartPos)
     range.setEnd(activeNode, slashStartPos + slashQuery.length + 1)
     selection.removeAllRanges()
-    selection.addRange(range)
-
-    // Now, execute the appropriate formatting command.
+    selection.addRange(range)    // Now, execute the appropriate formatting command.
     // This will replace the selected command text with the formatted style.
     switch (command.id) {
       case 'heading1':
@@ -155,10 +265,23 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
         // For a code block, we replace the current paragraph with a <pre> block.
         document.execCommand('insertHTML', false, '<pre><code>&nbsp;</code></pre>')
         break
+      case 'notelink':
+        // Insert note link format [[]]
+        document.execCommand('insertHTML', false, '[[]]')
+        // Position cursor between brackets
+        const newSelection = window.getSelection()
+        if (newSelection && newSelection.rangeCount > 0) {
+          const newRange = newSelection.getRangeAt(0)
+          newRange.setStart(newRange.startContainer, newRange.startOffset - 2)
+          newRange.setEnd(newRange.startContainer, newRange.startOffset - 2)
+          newSelection.removeAllRanges()
+          newSelection.addRange(newRange)
+        }
+        break
       default:
         // If the command is not recognized, just delete the trigger text.
         document.execCommand('delete', false)
-        break;
+        break
     }
 
     // Clean up state
@@ -213,16 +336,29 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       setHasChanges(true)
     }
   }
-
   return (
     <div className="h-full flex flex-col bg-white">
-       <SlashCommandDropdown
+      <SlashCommandDropdown
         isVisible={showSlashDropdown}
         position={slashPosition}
         onSelect={handleSlashCommandSelect}
         onClose={() => setShowSlashDropdown(false)}
         searchQuery={slashQuery}
       />
+
+      {/* Inline Note Linking Dropdown */}
+      {noteLinkDetection?.isInNoteLink && (
+        <InlineNoteLinking
+          isVisible={true}
+          position={slashPosition}
+          searchQuery={noteLinkDetection.searchQuery}
+          availableNotes={availableNotes}
+          currentNoteId={note.id}
+          onSelect={handleNoteLinkSelect}
+          onClose={() => {/* Note link detection will handle closing automatically */}}
+          onCreateNewNote={onCreateNewNote ? handleCreateNewNoteFromLink : undefined}
+        />
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200">

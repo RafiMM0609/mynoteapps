@@ -6,7 +6,8 @@ import {
   DocumentTextIcon, 
   ChevronRightIcon, 
   ChevronDownIcon,
-  PlusIcon
+  PlusIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline'
 import { FolderIcon as FolderSolidIcon } from '@heroicons/react/24/solid'
 import type { NoteWithHierarchy } from '../lib/supabase'
@@ -16,6 +17,7 @@ interface NoteTreeProps {
   onNoteSelect: (note: NoteWithHierarchy) => void
   onCreateNote: (parentId?: string) => void
   onCreateFolder: (parentId?: string) => void
+  onDeleteNote?: (noteId: string) => void
   onMoveNote?: (noteId: string, newParentId: string | null) => void
   selectedNoteId?: string
 }
@@ -26,11 +28,12 @@ interface TreeNodeProps {
   onNoteSelect: (note: NoteWithHierarchy) => void
   onCreateNote: (parentId?: string) => void
   onCreateFolder: (parentId?: string) => void
+  onDeleteNote?: (noteId: string) => void
   selectedNoteId?: string
   children: NoteWithHierarchy[]
 }
 
-function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, selectedNoteId, children }: TreeNodeProps) {
+function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, onDeleteNote, selectedNoteId, children }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(level < 2) // Auto-expand first 2 levels
   const [showActions, setShowActions] = useState(false)
 
@@ -98,9 +101,7 @@ function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, sel
           `}
         >
           {note.title || 'Untitled'}
-        </span>
-
-        {/* Actions */}
+        </span>        {/* Actions */}
         {showActions && (
           <div className="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
@@ -125,11 +126,21 @@ function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, sel
                 <FolderIcon className="w-3 h-3 text-gray-500" />
               </button>
             )}
+            {onDeleteNote && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDeleteNote(note.id)
+                }}
+                className="p-1 rounded hover:bg-red-200 dark:hover:bg-red-800"
+                title="Delete"
+              >
+                <TrashIcon className="w-3 h-3 text-red-500" />
+              </button>
+            )}
           </div>
         )}
-      </div>
-
-      {/* Children */}
+      </div>      {/* Children */}
       {isExpanded && children.length > 0 && (
         <div>
           {children.map((child) => (
@@ -140,6 +151,7 @@ function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, sel
               onNoteSelect={onNoteSelect}
               onCreateNote={onCreateNote}
               onCreateFolder={onCreateFolder}
+              onDeleteNote={onDeleteNote}
               selectedNoteId={selectedNoteId}
               children={[]} // We'll need to filter children for each node
             />
@@ -155,6 +167,7 @@ export default function NoteTree({
   onNoteSelect, 
   onCreateNote, 
   onCreateFolder, 
+  onDeleteNote,
   selectedNoteId 
 }: NoteTreeProps) {
   const [treeData, setTreeData] = useState<NoteWithHierarchy[]>([])
@@ -217,9 +230,8 @@ export default function NoteTree({
       </div>
     )
   }
-
   return (
-    <div className="py-2">
+    <div className="h-full flex flex-col py-2">
       {/* Root level actions */}
       <div className="flex gap-2 px-2 mb-2">
         <button
@@ -236,10 +248,8 @@ export default function NoteTree({
           <FolderIcon className="w-3 h-3" />
           Folder
         </button>
-      </div>
-
-      {/* Tree nodes */}
-      <div className="space-y-0.5">
+      </div>      {/* Tree nodes */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-0.5 pr-1">
         {treeData.map((node) => (
           <TreeNode
             key={node.id}
@@ -248,6 +258,7 @@ export default function NoteTree({
             onNoteSelect={onNoteSelect}
             onCreateNote={onCreateNote}
             onCreateFolder={onCreateFolder}
+            onDeleteNote={onDeleteNote}
             selectedNoteId={selectedNoteId}
             children={node.children || []}
           />

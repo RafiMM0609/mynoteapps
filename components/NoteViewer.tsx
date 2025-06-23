@@ -18,6 +18,7 @@ interface NoteViewerProps {
   allTags: NoteTag[]
   onCreateLink: (targetNoteId: string, linkType: 'reference' | 'embed') => void
   onRemoveLink: (linkId: string) => void
+  onOpenLinkedNote?: (note: Note) => void
   onCreateTag: (name: string, color: string) => void
   onAddTag: (tagId: string) => void
   onRemoveTag: (tagId: string) => void
@@ -32,6 +33,7 @@ export default function NoteViewer({
   allTags,
   onCreateLink,
   onRemoveLink,
+  onOpenLinkedNote,
   onCreateTag,
   onAddTag,
   onRemoveTag
@@ -168,15 +170,14 @@ export default function NoteViewer({
             onAddTag={onAddTag}
             onRemoveTag={onRemoveTag}
             onCreateTag={onCreateTag}
-          />
-
-          {/* Note Linking */}
+          />          {/* Note Linking */}
           <NoteLinking
             currentNote={note}
             availableNotes={allNotes}
             existingLinks={noteLinks}
             onCreateLink={onCreateLink}
             onRemoveLink={onRemoveLink}
+            onOpenLinkedNote={onOpenLinkedNote}
           />
         </div>
       </div>

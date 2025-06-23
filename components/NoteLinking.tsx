@@ -16,6 +16,7 @@ interface NoteLinkingProps {
   existingLinks: NoteLink[]
   onCreateLink: (targetNoteId: string, linkType: 'reference' | 'embed') => void
   onRemoveLink: (linkId: string) => void
+  onOpenLinkedNote?: (note: Note) => void
 }
 
 export default function NoteLinking({ 
@@ -23,7 +24,8 @@ export default function NoteLinking({
   availableNotes, 
   existingLinks, 
   onCreateLink, 
-  onRemoveLink 
+  onRemoveLink,
+  onOpenLinkedNote
 }: NoteLinkingProps) {
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -32,12 +34,11 @@ export default function NoteLinking({
   useEffect(() => {
     // Filter notes based on search query and exclude current note and already linked notes
     const linkedNoteIds = new Set(existingLinks.map(link => link.target_note_id))
-    
-    let filtered = availableNotes.filter(note => 
+      let filtered = availableNotes.filter(note => 
       note.id !== currentNote.id && 
       !linkedNoteIds.has(note.id) &&
-      (note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       note.content.toLowerCase().includes(searchQuery.toLowerCase()))
+      ((note.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+       (note.content?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
     )
 
     setFilteredNotes(filtered.slice(0, 10)) // Limit to 10 results
@@ -84,12 +85,12 @@ export default function NoteLinking({
                 <div className="text-xs text-gray-500 dark:text-gray-400">
                   {link.link_type === 'embed' ? 'Embedded' : 'Referenced'}
                 </div>
-              </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              </div>              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={() => {/* Navigate to linked note */}}
+                  onClick={() => onOpenLinkedNote && targetNote && onOpenLinkedNote(targetNote)}
                   className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
                   title="Open note"
+                  disabled={!onOpenLinkedNote}
                 >
                   <ArrowTopRightOnSquareIcon className="w-3 h-3" />
                 </button>

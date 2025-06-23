@@ -11,7 +11,8 @@ import {
   TableCellsIcon,
   ChatBubbleLeftIcon,
   CheckIcon,
-  PhotoIcon
+  PhotoIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
 
 interface SlashCommand {
@@ -105,13 +106,19 @@ const allCommands: SlashCommand[] = [
       description: 'Create a blockquote',
       icon: ChatBubbleLeftIcon,
       action: () => ({ before: '> ', after: '' })
-    },
-    {
+    },    {
       id: 'link',
       label: 'Link',
       description: 'Insert a link',
       icon: LinkIcon,
       action: () => ({ before: '[', after: '](url)' })
+    },
+    {
+      id: 'notelink',
+      label: 'Note Link',
+      description: 'Link to another note',
+      icon: DocumentTextIcon,
+      action: () => ({ before: '[[', after: ']]' })
     },
     {
       id: 'table',

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { PlusIcon, Bars3Icon, XMarkIcon, FolderIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, Bars3Icon, XMarkIcon, FolderIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import NoteTree from './NoteTree'
 import NoteEditor from './NoteEditor_new'
 import NoteViewer from './NoteViewer'
@@ -29,13 +29,19 @@ interface AuthenticatedHomeProps {
   showToast: (message: string, type: ToastMessage['type']) => void
 }
 
-export default function AuthenticatedHome({ user, onLogout, showToast }: AuthenticatedHomeProps) {
-  const [hierarchyNotes, setHierarchyNotes] = useState<NoteWithHierarchy[]>([])
+export default function AuthenticatedHome({ user, onLogout, showToast }: AuthenticatedHomeProps) {  const [hierarchyNotes, setHierarchyNotes] = useState<NoteWithHierarchy[]>([])
   const [allNotes, setAllNotes] = useState<Note[]>([])
   const [selectedNote, setSelectedNote] = useState<Note | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean
+    note: Note | null
+  }>({
+    isOpen: false,
+    note: null
+  })
   
   // New state for linking and tagging
   const [noteLinks, setNoteLinks] = useState<NoteLink[]>([])
@@ -184,13 +190,23 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
       showToast('Failed to save note', 'error')
     }
   }
-
   const handleDeleteNote = async (noteId: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return
+    // Find the note to show in confirmation
+    const noteToDelete = allNotes.find(note => note.id === noteId)
+    if (!noteToDelete) return
+
+    setDeleteConfirm({
+      isOpen: true,
+      note: noteToDelete
+    })
+  }
+
+  const confirmDeleteNote = async () => {
+    if (!deleteConfirm.note) return
 
     try {
       const token = localStorage.getItem('auth_token')
-      const response = await fetch(`/api/notes/${noteId}`, {
+      const response = await fetch(`/api/notes/${deleteConfirm.note.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -199,7 +215,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
 
       if (response.ok) {
         await loadUserData() // Reload hierarchy
-        if (selectedNote?.id === noteId) {
+        if (selectedNote?.id === deleteConfirm.note.id) {
           setSelectedNote(null)
           setIsEditing(false)
         }
@@ -209,7 +225,19 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
       }
     } catch (error) {
       showToast('Failed to delete note', 'error')
+    } finally {
+      setDeleteConfirm({
+        isOpen: false,
+        note: null
+      })
     }
+  }
+
+  const cancelDeleteNote = () => {
+    setDeleteConfirm({
+      isOpen: false,
+      note: null
+    })
   }
 
   const handleSelectNote = (note: NoteWithHierarchy) => {
@@ -217,7 +245,6 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     setIsEditing(false)
     setIsSidebarOpen(false) // Close sidebar on mobile after selecting
   }
-
   // Linking functions
   const handleCreateLink = async (targetNoteId: string, linkType: 'reference' | 'embed') => {
     if (!selectedNote) return
@@ -232,6 +259,15 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
       }
     } catch (error) {
       showToast('Failed to create link', 'error')
+    }
+  }
+  
+  // Function to open a linked note
+  const handleOpenLinkedNote = (note: Note) => {
+    if (note && note.id) {
+      setSelectedNote(note)
+      setIsEditing(false) // Switch to view mode
+      showToast(`Opened note: ${note.title || 'Untitled'}`, 'info')
     }
   }
 
@@ -371,13 +407,13 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
               </button>
             </div>
           </div>          {/* Notes tree */}
-          <div className="flex-1 overflow-hidden">
-            <NoteTree
+          <div className="flex-1 flex flex-col overflow-hidden">            <NoteTree
               notes={hierarchyNotes}
               selectedNoteId={selectedNote?.id}
               onNoteSelect={handleSelectNote}
               onCreateNote={handleCreateNote}
               onCreateFolder={handleCreateFolder}
+              onDeleteNote={handleDeleteNote}
             />
           </div>
         </div>
@@ -405,8 +441,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                 note={selectedNote}
                 onSave={handleSaveNote}
                 onCancel={() => setIsEditing(false)}
-              />            ) : (
-              <NoteViewer
+              />            ) : (              <NoteViewer
                 note={selectedNote}
                 onEdit={() => setIsEditing(true)}
                 allNotes={allNotes}
@@ -415,6 +450,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                 allTags={allTags}
                 onCreateLink={handleCreateLink}
                 onRemoveLink={handleRemoveLink}
+                onOpenLinkedNote={handleOpenLinkedNote}
                 onCreateTag={handleCreateTag}
                 onAddTag={handleAddTag}
                 onRemoveTag={handleRemoveTag}
@@ -430,12 +466,67 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                 >
                   <PlusIcon className="h-5 w-5 mr-2" />
                   Create your first note
-                </button>
-              </div>
+                </button>              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.isOpen && deleteConfirm.note && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={cancelDeleteNote}
+          />
+          
+          {/* Modal */}
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Delete Note
+                </h3>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-sm text-gray-500 mb-3">
+                Are you sure you want to delete this note? This action cannot be undone.
+              </p>
+              <div className="bg-gray-50 p-3 rounded-md">
+                <p className="text-sm font-medium text-gray-900">
+                  {deleteConfirm.note.title || 'Untitled'}
+                </p>
+                {deleteConfirm.note.content && (
+                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                    {deleteConfirm.note.content.substring(0, 100)}...
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelDeleteNote}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteNote}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Delete Note
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
