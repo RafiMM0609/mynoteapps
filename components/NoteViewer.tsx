@@ -78,7 +78,7 @@ export default function NoteViewer({
     }
   }
   return (
-    <div className="h-full flex bg-white">
+    <div className="h-full flex flex-col md:flex-row bg-white">
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
@@ -159,7 +159,7 @@ export default function NoteViewer({
       </div>
 
       {/* Right Sidebar - Links and Tags */}
-      <div className="w-80 border-l border-gray-200 bg-gray-50 overflow-y-auto">
+      <div className="md:w-80 md:border-l border-gray-200 bg-gray-50 overflow-y-auto w-full border-t md:border-t-0">
         <div className="p-4 space-y-6">
           {/* Note Tags */}
           <NoteTags
