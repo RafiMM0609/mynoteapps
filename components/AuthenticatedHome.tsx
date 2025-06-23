@@ -1,13 +1,27 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { PlusIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
-import NoteList from './NoteList'
+import { PlusIcon, Bars3Icon, XMarkIcon, FolderIcon } from '@heroicons/react/24/outline'
+import NoteTree from './NoteTree'
 import NoteEditor from './NoteEditor_new'
 import NoteViewer from './NoteViewer'
+import NoteLinking from './NoteLinking'
+import NoteTags from './NoteTags'
 import type { AuthUser } from '../lib/auth'
-import type { Note } from '../lib/supabase'
+import type { Note, NoteWithHierarchy, NoteTag, NoteLink } from '../lib/supabase'
 import type { ToastMessage } from '../hooks/useToast'
+import { 
+  getNotesHierarchy, 
+  createNote, 
+  createFolder, 
+  createNoteLink, 
+  removeNoteLink,
+  getUserTags,
+  createTag,
+  addTagToNote,
+  removeTagFromNote,
+  getNoteWithLinks
+} from '../lib/notes'
 
 interface AuthenticatedHomeProps {
   user: AuthUser
@@ -16,57 +30,82 @@ interface AuthenticatedHomeProps {
 }
 
 export default function AuthenticatedHome({ user, onLogout, showToast }: AuthenticatedHomeProps) {
-  const [notes, setNotes] = useState<Note[]>([])
+  const [hierarchyNotes, setHierarchyNotes] = useState<NoteWithHierarchy[]>([])
+  const [allNotes, setAllNotes] = useState<Note[]>([])
   const [selectedNote, setSelectedNote] = useState<Note | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  
+  // New state for linking and tagging
+  const [noteLinks, setNoteLinks] = useState<NoteLink[]>([])
+  const [allTags, setAllTags] = useState<NoteTag[]>([])
+  const [noteTags, setNoteTags] = useState<NoteTag[]>([])
 
-  // Load user notes
+  // Load user data
   useEffect(() => {
-    loadNotes()
+    loadUserData()
   }, [])
 
-  const loadNotes = async () => {
-    try {
-      const token = localStorage.getItem('auth_token')
-      const response = await fetch('/api/notes', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
+  // Load note details when selected note changes
+  useEffect(() => {
+    if (selectedNote) {
+      loadNoteDetails(selectedNote.id)
+    }
+  }, [selectedNote])
 
-      if (response.ok) {
-        const notesData = await response.json()
-        setNotes(notesData)
-      } else {
-        showToast('Failed to load notes', 'error')
-      }
+  const loadUserData = async () => {
+    try {
+      const [notesData, tagsData] = await Promise.all([
+        getNotesHierarchy(user.id),
+        getUserTags(user.id)
+      ])
+      
+      setHierarchyNotes(notesData)
+      // Also create flat array for linking purposes
+      setAllNotes(flattenHierarchy(notesData))
+      setAllTags(tagsData)
     } catch (error) {
-      showToast('Failed to load notes', 'error')
+      showToast('Failed to load data', 'error')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleCreateNote = async () => {
+  const loadNoteDetails = async (noteId: string) => {
     try {
-      const token = localStorage.getItem('auth_token')
-      const response = await fetch('/api/notes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: 'Untitled Note',
-          content: '',
-        }),
+      const noteWithLinks = await getNoteWithLinks(noteId, user.id)
+      if (noteWithLinks) {
+        setNoteLinks([...noteWithLinks.links_from, ...noteWithLinks.links_to])
+        setNoteTags(noteWithLinks.tags)
+      }
+    } catch (error) {
+      console.error('Failed to load note details:', error)
+    }
+  }
+
+  const flattenHierarchy = (notes: NoteWithHierarchy[]): Note[] => {
+    const result: Note[] = []
+    for (const note of notes) {
+      result.push(note)
+      if (note.children) {
+        result.push(...flattenHierarchy(note.children))
+      }
+    }
+    return result
+  }
+
+  const handleCreateNote = async (parentId?: string) => {
+    try {
+      const newNote = await createNote(user.id, {
+        title: 'Untitled Note',
+        content: '',
+        parent_id: parentId || null,
+        is_folder: false
       })
 
-      if (response.ok) {
-        const newNote = await response.json()
-        setNotes(prev => [newNote, ...prev])
+      if (newNote) {
+        await loadUserData() // Reload hierarchy
         setSelectedNote(newNote)
         setIsEditing(true)
         showToast('New note created', 'success')
@@ -78,6 +117,22 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     }
   }
 
+  const handleCreateFolder = async (parentId?: string) => {
+    try {
+      const folderName = prompt('Enter folder name:')
+      if (!folderName) return
+
+      const newFolder = await createFolder(user.id, folderName, parentId)
+      if (newFolder) {
+        await loadUserData() // Reload hierarchy
+        showToast('Folder created', 'success')
+      } else {
+        showToast('Failed to create folder', 'error')
+      }
+    } catch (error) {
+      showToast('Failed to create folder', 'error')
+    }
+  }
   const handleSaveNote = async (noteId: string, title: string, content: string) => {
     try {
       const token = localStorage.getItem('auth_token')
@@ -92,8 +147,10 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
 
       if (response.ok) {
         const updatedNote = await response.json()
-        setNotes(prev => prev.map(note => note.id === noteId ? updatedNote : note))
+        // Update both hierarchy and flat notes
+        setAllNotes(prev => prev.map(note => note.id === noteId ? updatedNote : note))
         setSelectedNote(updatedNote)
+        await loadUserData() // Reload to ensure consistency
         showToast('Note saved', 'success')
       } else {
         showToast('Failed to save note', 'error')
@@ -116,7 +173,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
       })
 
       if (response.ok) {
-        setNotes(prev => prev.filter(note => note.id !== noteId))
+        await loadUserData() // Reload hierarchy
         if (selectedNote?.id === noteId) {
           setSelectedNote(null)
           setIsEditing(false)
@@ -130,10 +187,91 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     }
   }
 
-  const handleSelectNote = (note: Note) => {
+  const handleSelectNote = (note: NoteWithHierarchy) => {
     setSelectedNote(note)
     setIsEditing(false)
     setIsSidebarOpen(false) // Close sidebar on mobile after selecting
+  }
+
+  // Linking functions
+  const handleCreateLink = async (targetNoteId: string, linkType: 'reference' | 'embed') => {
+    if (!selectedNote) return
+
+    try {
+      const link = await createNoteLink(selectedNote.id, targetNoteId, linkType)
+      if (link) {
+        setNoteLinks(prev => [...prev, link])
+        showToast('Link created', 'success')
+      } else {
+        showToast('Failed to create link', 'error')
+      }
+    } catch (error) {
+      showToast('Failed to create link', 'error')
+    }
+  }
+
+  const handleRemoveLink = async (linkId: string) => {
+    try {
+      const success = await removeNoteLink(linkId)
+      if (success) {
+        setNoteLinks(prev => prev.filter(link => link.id !== linkId))
+        showToast('Link removed', 'success')
+      } else {
+        showToast('Failed to remove link', 'error')
+      }
+    } catch (error) {
+      showToast('Failed to remove link', 'error')
+    }
+  }
+
+  // Tagging functions
+  const handleCreateTag = async (name: string, color: string) => {
+    try {
+      const tag = await createTag(user.id, name, color)
+      if (tag) {
+        setAllTags(prev => [...prev, tag])
+        showToast('Tag created', 'success')
+      } else {
+        showToast('Failed to create tag', 'error')
+      }
+    } catch (error) {
+      showToast('Failed to create tag', 'error')
+    }
+  }
+
+  const handleAddTag = async (tagId: string) => {
+    if (!selectedNote) return
+
+    try {
+      const success = await addTagToNote(selectedNote.id, tagId)
+      if (success) {
+        const tag = allTags.find(t => t.id === tagId)
+        if (tag) {
+          setNoteTags(prev => [...prev, tag])
+          showToast('Tag added', 'success')
+        }
+      } else {
+        showToast('Failed to add tag', 'error')
+      }
+    } catch (error) {
+      showToast('Failed to add tag', 'error')
+    }
+  }
+
+  const handleRemoveTag = async (tagId: string) => {
+    if (!selectedNote) return
+
+    try {
+      const success = await removeTagFromNote(selectedNote.id, tagId)
+      if (success) {
+        setNoteTags(prev => prev.filter(tag => tag.id !== tagId))
+        showToast('Tag removed', 'success')
+      } else {
+        showToast('Failed to remove tag', 'error')
+      }
+    } catch (error) {
+      showToast('Failed to remove tag', 'error')
+    }
   }
 
   if (isLoading) {
@@ -169,14 +307,20 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div className="flex items-center space-x-3">
               <h1 className="text-xl font-semibold text-gray-900">Kagita Notes</h1>
-            </div>
-            <div className="flex items-center space-x-2">
+            </div>            <div className="flex items-center space-x-2">
               <button
-                onClick={handleCreateNote}
+                onClick={() => handleCreateNote()}
                 className="btn-primary p-2"
                 title="New Note (Ctrl+N)"
               >
                 <PlusIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => handleCreateFolder()}
+                className="btn-secondary p-2"
+                title="New Folder"
+              >
+                <FolderIcon className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setIsSidebarOpen(false)}
@@ -201,15 +345,14 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                 Sign out
               </button>
             </div>
-          </div>
-
-          {/* Notes list */}
+          </div>          {/* Notes tree */}
           <div className="flex-1 overflow-hidden">
-            <NoteList
-              notes={notes}
-              selectedNote={selectedNote}
-              onSelectNote={handleSelectNote}
-              onDeleteNote={handleDeleteNote}
+            <NoteTree
+              notes={hierarchyNotes}
+              selectedNoteId={selectedNote?.id}
+              onNoteSelect={handleSelectNote}
+              onCreateNote={handleCreateNote}
+              onCreateFolder={handleCreateFolder}
             />
           </div>
         </div>
@@ -237,20 +380,27 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                 note={selectedNote}
                 onSave={handleSaveNote}
                 onCancel={() => setIsEditing(false)}
-              />
-            ) : (
+              />            ) : (
               <NoteViewer
                 note={selectedNote}
                 onEdit={() => setIsEditing(true)}
+                allNotes={allNotes}
+                noteLinks={noteLinks}
+                noteTags={noteTags}
+                allTags={allTags}
+                onCreateLink={handleCreateLink}
+                onRemoveLink={handleRemoveLink}
+                onCreateTag={handleCreateTag}
+                onAddTag={handleAddTag}
+                onRemoveTag={handleRemoveTag}
               />
             )
           ) : (
             <div className="h-full flex items-center justify-center bg-white p-4 sm:p-6">
               <div className="text-center">
                 <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-4">Welcome to Kagita Notes</h2>
-                <p className="text-gray-600 mb-6">Select a note to view or create a new one to get started.</p>
-                <button
-                  onClick={handleCreateNote}
+                <p className="text-gray-600 mb-6">Select a note to view or create a new one to get started.</p>                <button
+                  onClick={() => handleCreateNote()}
                   className="btn-primary"
                 >
                   <PlusIcon className="h-5 w-5 mr-2" />
