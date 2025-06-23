@@ -39,24 +39,43 @@ export default function NoteViewer({
   const [viewMode, setViewMode] = useState<'raw' | 'preview'>('preview')
 
   const renderMarkdown = (content: string) => {
+    if (!content || typeof content !== 'string') {
+      return ''
+    }
+    
     try {
       const rawHtml = marked(content) as string
       return DOMPurify.sanitize(rawHtml)
     } catch (error) {
       console.error('Error rendering markdown:', error)
-      return content
+      return `<pre>${content}</pre>`
     }
   }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    if (!dateString) return 'No date available'
+    
+    try {
+      const date = new Date(dateString)
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date string:', dateString)
+        return 'Invalid date'
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'UTC' // Add timezone to handle ISO strings properly
+      })
+    } catch (error) {
+      console.error('Error formatting date:', error, 'Date string:', dateString)
+      return dateString // Return the original string as fallback
+    }
   }
   return (
     <div className="h-full flex bg-white">
@@ -107,11 +126,9 @@ export default function NoteViewer({
               Edit
             </button>
           </div>
-        </div>
-
-        {/* Content */}
+        </div>        {/* Content */}
         <div className="flex-1 overflow-auto">
-          {note.content ? (
+          {note.content && note.content.trim() ? (
             <div className="p-6">
               {viewMode === 'preview' ? (
                 <div 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { PlusIcon, Bars3Icon, XMarkIcon, FolderIcon } from '@heroicons/react/24/outline'
 import NoteTree from './NoteTree'
 import NoteEditor from './NoteEditor_new'
@@ -41,18 +41,25 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
   const [noteLinks, setNoteLinks] = useState<NoteLink[]>([])
   const [allTags, setAllTags] = useState<NoteTag[]>([])
   const [noteTags, setNoteTags] = useState<NoteTag[]>([])
+  
+  // Use ref to track if we're already loading note details
+  const loadingNoteId = useRef<string | null>(null)
 
   // Load user data
   useEffect(() => {
     loadUserData()
-  }, [])
-
-  // Load note details when selected note changes
+  }, [])  // Load note details when selected note ID changes
   useEffect(() => {
-    if (selectedNote) {
+    console.log('useEffect triggered - selectedNote?.id:', selectedNote?.id, 'loadingNoteId.current:', loadingNoteId.current)
+    if (selectedNote?.id && selectedNote.id !== loadingNoteId.current) {
+      console.log('Loading note details for:', selectedNote.id)
       loadNoteDetails(selectedNote.id)
+    } else if (selectedNote?.id) {
+      console.log('Skipping loadNoteDetails - already loading this note')
+    } else {
+      console.log('No selectedNote or selectedNote.id is undefined')
     }
-  }, [selectedNote])
+  }, [selectedNote?.id]) // Only depend on the ID, not the entire object
 
   const loadUserData = async () => {
     try {
@@ -69,18 +76,36 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
       showToast('Failed to load data', 'error')
     } finally {
       setIsLoading(false)
-    }
-  }
+    }  }
 
   const loadNoteDetails = async (noteId: string) => {
+    // Prevent loading the same note multiple times
+    if (loadingNoteId.current === noteId) {
+      console.log('Skipping loadNoteDetails for noteId:', noteId, '(already loading)')
+      return
+    }
+    
+    console.log('Loading note details for noteId:', noteId)
+    loadingNoteId.current = noteId
+    
     try {
       const noteWithLinks = await getNoteWithLinks(noteId, user.id)
       if (noteWithLinks) {
-        setNoteLinks([...noteWithLinks.links_from, ...noteWithLinks.links_to])
-        setNoteTags(noteWithLinks.tags)
+        // Update selectedNote only if it's still the current selection
+        if (loadingNoteId.current === noteId) {
+          console.log('Updating note data for noteId:', noteId)
+          setSelectedNote(noteWithLinks)
+          setNoteLinks([...noteWithLinks.links_from, ...noteWithLinks.links_to])
+          setNoteTags(noteWithLinks.tags)
+        }
       }
     } catch (error) {
       console.error('Failed to load note details:', error)
+    } finally {
+      // Clear the loading flag only if we're still loading the same note
+      if (loadingNoteId.current === noteId) {
+        loadingNoteId.current = null
+      }
     }
   }
 
