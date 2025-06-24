@@ -7,7 +7,10 @@ import {
   ChevronRightIcon, 
   ChevronDownIcon,
   PlusIcon,
-  TrashIcon
+  TrashIcon,
+  SparklesIcon,
+  HeartIcon,
+  StarIcon
 } from '@heroicons/react/24/outline'
 import { FolderIcon as FolderSolidIcon } from '@heroicons/react/24/solid'
 import type { NoteWithHierarchy } from '../lib/supabase'
@@ -51,28 +54,29 @@ function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, onD
     onNoteSelect(note)
   }
 
-  return (
-    <div className="select-none">
+  return (    <div className="select-none">
       <div
         className={`
-          flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer group
-          hover:bg-gray-100 dark:hover:bg-gray-700
-          ${isSelected ? 'bg-blue-100 dark:bg-blue-900/30' : ''}
+          flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer group transition-all duration-200
+          ${isSelected 
+            ? 'bg-gradient-to-r from-primary-100 to-secondary-100 shadow-md transform scale-105' 
+            : 'hover:bg-white/50 hover:shadow-sm hover:transform hover:scale-102'
+          }
         `}
-        style={{ paddingLeft: `${level * 20 + 8}px` }}
+        style={{ paddingLeft: `${level * 20 + 12}px` }}
         onMouseEnter={() => setShowActions(true)}
         onMouseLeave={() => setShowActions(false)}
       >
         {/* Expand/Collapse button */}
         <button
           onClick={handleToggle}
-          className="flex-shrink-0 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+          className="flex-shrink-0 p-1 rounded-lg hover:bg-white/70 transition-colors duration-200"
         >
           {hasChildren || note.is_folder ? (
             isExpanded ? (
-              <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
             ) : (
-              <ChevronRightIcon className="w-4 h-4 text-gray-500" />
+              <ChevronRightIcon className="w-4 h-4 text-primary-600" />
             )
           ) : (
             <div className="w-4 h-4" />
@@ -80,15 +84,25 @@ function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, onD
         </button>
 
         {/* Icon */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 relative">
           {note.is_folder ? (
-            isExpanded ? (
-              <FolderSolidIcon className="w-4 h-4 text-blue-500" />
-            ) : (
-              <FolderIcon className="w-4 h-4 text-blue-500" />
-            )
+            <div className="relative">
+              {isExpanded ? (
+                <FolderSolidIcon className="w-5 h-5 text-accent-500" />
+              ) : (
+                <FolderIcon className="w-5 h-5 text-accent-500" />
+              )}
+              {children.length > 0 && (
+                <SparklesIcon className="w-3 h-3 text-yellow-400 absolute -top-1 -right-1" />
+              )}
+            </div>
           ) : (
-            <DocumentTextIcon className="w-4 h-4 text-gray-500" />
+            <div className="relative">
+              <DocumentTextIcon className="w-5 h-5 text-primary-600" />
+              {isSelected && (
+                <HeartIcon className="w-3 h-3 text-pink-500 absolute -top-1 -right-1 animate-bounce-gentle" />
+              )}
+            </div>
           )}
         </div>
 
@@ -96,23 +110,29 @@ function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, onD
         <span
           onClick={handleNoteClick}
           className={`
-            flex-1 text-sm truncate
-            ${isSelected ? 'font-semibold text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}
+            flex-1 text-sm truncate font-medium transition-colors duration-200
+            ${isSelected 
+              ? 'text-primary-800 font-semibold' 
+              : 'text-gray-700 group-hover:text-primary-700'
+            }
           `}
         >
           {note.title || 'Untitled'}
+          {isSelected && (
+            <span className="ml-2 text-xs text-primary-500">✨</span>
+          )}
         </span>        {/* Actions */}
         {showActions && (
-          <div className="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 onCreateNote(note.id)
               }}
-              className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
-              title="Add note"
+              className="p-2 rounded-lg bg-gradient-to-r from-primary-400 to-primary-500 text-white hover:from-primary-500 hover:to-primary-600 transition-all duration-200 hover:scale-110 shadow-lg"
+              title="Add note ✨"
             >
-              <PlusIcon className="w-3 h-3 text-gray-500" />
+              <PlusIcon className="w-3 h-3" />
             </button>
             {note.is_folder && (
               <button
@@ -120,10 +140,10 @@ function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, onD
                   e.stopPropagation()
                   onCreateFolder(note.id)
                 }}
-                className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
-                title="Add folder"
+                className="p-2 rounded-lg bg-gradient-to-r from-accent-400 to-accent-500 text-white hover:from-accent-500 hover:to-accent-600 transition-all duration-200 hover:scale-110 shadow-lg"
+                title="Add folder 📁"
               >
-                <FolderIcon className="w-3 h-3 text-gray-500" />
+                <FolderIcon className="w-3 h-3" />
               </button>
             )}
             {onDeleteNote && (
@@ -132,15 +152,15 @@ function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, onD
                   e.stopPropagation()
                   onDeleteNote(note.id)
                 }}
-                className="p-1 rounded hover:bg-red-200 dark:hover:bg-red-800"
-                title="Delete"
+                className="p-2 rounded-lg bg-gradient-to-r from-red-400 to-red-500 text-white hover:from-red-500 hover:to-red-600 transition-all duration-200 hover:scale-110 shadow-lg"
+                title="Delete 🗑️"
               >
-                <TrashIcon className="w-3 h-3 text-red-500" />
+                <TrashIcon className="w-3 h-3" />
               </button>
             )}
           </div>
         )}
-      </div>      {/* Children */}
+      </div>{/* Children */}
       {isExpanded && children.length > 0 && (
         <div>
           {children.map((child) => (

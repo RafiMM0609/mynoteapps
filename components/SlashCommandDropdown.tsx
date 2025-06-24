@@ -72,20 +72,26 @@ const allCommands: SlashCommand[] = [
       icon: ItalicIcon,
       shortcut: 'Ctrl+I',
       action: () => ({ before: '*', after: '*' })
-    },
-    {
+    },    {
       id: 'bulletlist',
       label: 'Bullet List',
-      description: 'Create a bulleted list',
+      description: 'Create a modern bulleted list',
       icon: ListBulletIcon,
       action: () => ({ before: '- ', after: '' })
     },
     {
       id: 'numberlist',
       label: 'Numbered List',
-      description: 'Create a numbered list',
+      description: 'Create a stylized numbered list',
       icon: ListBulletIcon,
       action: () => ({ before: '1. ', after: '' })
+    },
+    {
+      id: 'checklist',
+      label: 'Task List',
+      description: 'Create an interactive checklist',
+      icon: CheckIcon,
+      action: () => ({ before: '- [ ] ', after: '' })
     },
     {
       id: 'code',

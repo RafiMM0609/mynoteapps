@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { PencilIcon, EyeIcon } from '@heroicons/react/24/outline'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
 import type { Note, NoteLink, NoteTag } from '../lib/supabase'
 import NoteLinking from './NoteLinking'
 import NoteTags from './NoteTags'
+import MarkdownPreview from './MarkdownPreview'
 
 interface NoteViewerProps {
   note: Note
@@ -40,17 +39,9 @@ export default function NoteViewer({
 }: NoteViewerProps) {
   const [viewMode, setViewMode] = useState<'raw' | 'preview'>('preview')
 
-  const renderMarkdown = (content: string) => {
-    if (!content || typeof content !== 'string') {
-      return ''
-    }
-    
-    try {
-      const rawHtml = marked(content) as string
-      return DOMPurify.sanitize(rawHtml)
-    } catch (error) {
-      console.error('Error rendering markdown:', error)
-      return `<pre>${content}</pre>`
+  const handleNoteClick = (clickedNote: Note) => {
+    if (onOpenLinkedNote) {
+      onOpenLinkedNote(clickedNote)
     }
   }
 
@@ -133,9 +124,11 @@ export default function NoteViewer({
           {note.content && note.content.trim() ? (
             <div className="p-6">
               {viewMode === 'preview' ? (
-                <div 
-                  className="prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content) }}
+                <MarkdownPreview
+                  content={note.content}
+                  availableNotes={allNotes}
+                  onNoteClick={handleNoteClick}
+                  className="max-w-none"
                 />
               ) : (
                 <pre className="whitespace-pre-wrap font-mono text-sm text-gray-700 leading-relaxed">

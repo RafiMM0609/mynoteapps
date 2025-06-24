@@ -15,6 +15,8 @@ Aplikasi catatan modern yang dibangun dengan Next.js, TypeScript, Tailwind CSS, 
 
 ### 📝 Rich Text Editor
 - **Markdown Formatting**: Bold, italic, headings, lists, dan code blocks
+- **Enhanced Code Blocks**: Modern syntax highlighting dengan copy-to-clipboard
+- **Inline Code Styling**: Beautiful inline code dengan language-specific colors
 - **Slash Commands**: Ketik "/" untuk quick access ke formatting tools
 - **Clean Paste**: Automatic paste formatting cleanup dari external sources
 - **Keyboard Shortcuts**: Ctrl+B, Ctrl+I, Ctrl+Shift+V, dan lainnya

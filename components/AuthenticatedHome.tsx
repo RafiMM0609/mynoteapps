@@ -1,7 +1,18 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { PlusIcon, Bars3Icon, XMarkIcon, FolderIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { 
+  PlusIcon, 
+  Bars3Icon, 
+  XMarkIcon, 
+  FolderIcon, 
+  ExclamationTriangleIcon,
+  SparklesIcon,
+  DocumentTextIcon,
+  HeartIcon,
+  StarIcon
+} from '@heroicons/react/24/outline'
+import Header from './Header'
 import NoteTree from './NoteTree'
 import NoteEditor from './NoteEditor_new'
 import NoteViewer from './NoteViewer'
@@ -334,194 +345,233 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
       showToast('Failed to remove tag', 'error')
     }
   }
-
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="text-gray-600">Loading notes...</span>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-primary-500 border-opacity-25 mx-auto mb-4"></div>
+          <SparklesIcon className="h-8 w-8 text-primary-500 animate-bounce mx-auto mb-2" />
+          <p className="text-gray-600 font-medium">✨ Loading your magical notes...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-screen flex bg-gray-50">
-      {/* Mobile sidebar overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        >
-          <div className="absolute inset-0 bg-black opacity-50"></div>
-        </div>
-      )}
+    <div className="min-h-screen">
+      {/* Header */}
+      <Header 
+        user={user} 
+        onLogout={onLogout} 
+        onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
+        isSidebarOpen={isSidebarOpen}
+      />
 
-      {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <h1 className="text-xl font-semibold text-gray-900">Kagita Notes</h1>
-            </div>            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => handleCreateNote()}
-                className="btn-primary p-2"
-                title="New Note (Ctrl+N)"
-              >
-                <PlusIcon className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => handleCreateFolder()}
-                className="btn-secondary p-2"
-                title="New Folder"
-              >
-                <FolderIcon className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="lg:hidden p-2 text-gray-500 hover:text-gray-700"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* User info */}
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Signed in as</p>
-                <p className="text-sm font-medium text-gray-900">{user.email}</p>
-              </div>
-              <button
-                onClick={onLogout}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                Sign out
-              </button>
-            </div>
-          </div>          {/* Notes tree */}
-          <div className="flex-1 flex flex-col overflow-hidden">            <NoteTree
-              notes={hierarchyNotes}
-              selectedNoteId={selectedNote?.id}
-              onNoteSelect={handleSelectNote}
-              onCreateNote={handleCreateNote}
-              onCreateFolder={handleCreateFolder}
-              onDeleteNote={handleDeleteNote}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
-        {/* Mobile header */}
-        <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2 text-gray-500 hover:text-gray-700"
+      <div className="flex h-screen pt-20"> {/* pt-20 to account for fixed header */}
+        {/* Mobile sidebar overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 z-40 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
           >
-            <Bars3Icon className="h-6 w-6" />
-          </button>
-          <h1 className="text-lg font-semibold text-gray-900">Kagita Notes</h1>
-          <div className="w-10"></div> {/* Spacer for centering */}
-        </div>
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+          </div>
+        )}
 
-        {/* Editor/Viewer */}
-        <div className="flex-1">
-          {selectedNote ? (
-            isEditing ? (
-              <NoteEditor
-                note={selectedNote}
-                onSave={handleSaveNote}
-                onCancel={() => setIsEditing(false)}
-              />            ) : (              <NoteViewer
-                note={selectedNote}
-                onEdit={() => setIsEditing(true)}
-                allNotes={allNotes}
-                noteLinks={noteLinks}
-                noteTags={noteTags}
-                allTags={allTags}
-                onCreateLink={handleCreateLink}
-                onRemoveLink={handleRemoveLink}
-                onOpenLinkedNote={handleOpenLinkedNote}
-                onCreateTag={handleCreateTag}
-                onAddTag={handleAddTag}
-                onRemoveTag={handleRemoveTag}
-              />
-            )
-          ) : (
-            <div className="h-full flex items-center justify-center bg-white p-4 sm:p-6">
-              <div className="text-center">
-                <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-4">Welcome to Kagita Notes</h2>
-                <p className="text-gray-600 mb-6">Select a note to view or create a new one to get started.</p>                <button
-                  onClick={() => handleCreateNote()}
-                  className="btn-primary"
-                >
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  Create your first note
-                </button>              </div>
+        {/* Sidebar */}
+        <div className={`
+          fixed inset-y-0 left-0 top-20 z-50 w-80 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:top-0
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}>
+          <div className="h-full glass m-4 p-6 flex flex-col shadow-2xl">
+            {/* Quick Actions */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <StarIcon className="h-5 w-5 text-yellow-500 mr-2" />
+                  Your Notes
+                </h2>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleCreateNote()}
+                    className="p-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-300 hover:scale-110 shadow-lg group"
+                    title="Create New Note ✨"
+                  >
+                    <PlusIcon className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
+                  </button>
+                  <button
+                    onClick={() => handleCreateFolder()}
+                    className="p-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-xl hover:from-accent-600 hover:to-accent-700 transition-all duration-300 hover:scale-110 shadow-lg group"
+                    title="Create New Folder 📁"
+                  >
+                    <FolderIcon className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Stats Card */}
+              <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 mb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold text-purple-700">{allNotes.length}</p>
+                    <p className="text-sm text-purple-600">Total Notes</p>
+                  </div>
+                  <DocumentTextIcon className="h-8 w-8 text-purple-500" />
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Delete Confirmation Modal */}
+            {/* Notes Tree */}
+            <div className="flex-1 overflow-hidden">
+              <NoteTree
+                notes={hierarchyNotes}
+                selectedNoteId={selectedNote?.id}
+                onNoteSelect={handleSelectNote}
+                onCreateNote={handleCreateNote}
+                onCreateFolder={handleCreateFolder}
+                onDeleteNote={handleDeleteNote}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Main content */}
+        <div className="flex-1 p-4">
+          <div className="h-full glass rounded-2xl overflow-hidden shadow-2xl">
+            {selectedNote ? (
+              isEditing ? (
+                <div className="h-full">
+                  <div className="bg-gradient-to-r from-primary-500 to-secondary-500 p-4 text-white">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <SparklesIcon className="h-5 w-5 mr-2" />
+                        Editing: {selectedNote.title || 'Untitled Note'}
+                      </h3>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setIsEditing(false)}
+                          className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors duration-200"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <NoteEditor
+                    note={selectedNote}
+                    onSave={handleSaveNote}
+                    onCancel={() => setIsEditing(false)}
+                  />
+                </div>
+              ) : (
+                <div className="h-full flex flex-col">
+                  <div className="bg-gradient-to-r from-primary-500 to-secondary-500 p-4 text-white">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <HeartIcon className="h-5 w-5 mr-2 text-pink-200" />
+                        {selectedNote.title || 'Untitled Note'}
+                      </h3>
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors duration-200 flex items-center"
+                      >
+                        <SparklesIcon className="h-4 w-4 mr-2" />
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <NoteViewer
+                      note={selectedNote}
+                      onEdit={() => setIsEditing(true)}
+                      allNotes={allNotes}
+                      noteLinks={noteLinks}
+                      noteTags={noteTags}
+                      allTags={allTags}
+                      onCreateLink={handleCreateLink}
+                      onRemoveLink={handleRemoveLink}
+                      onOpenLinkedNote={handleOpenLinkedNote}
+                      onCreateTag={handleCreateTag}
+                      onAddTag={handleAddTag}
+                      onRemoveTag={handleRemoveTag}
+                    />
+                  </div>
+                </div>
+              )
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center max-w-md">
+                  <div className="mb-8">
+                    <SparklesIcon className="h-24 w-24 text-primary-400 mx-auto mb-4 animate-float" />
+                    <HeartIcon className="h-8 w-8 text-pink-400 mx-auto animate-bounce-gentle" />
+                  </div>
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent mb-4">
+                    Welcome to Your Creative Space! ✨
+                  </h2>
+                  <p className="text-gray-600 mb-8 leading-relaxed">
+                    Ready to capture your brilliant ideas? Select a note from the sidebar or create a new one to begin your journey of inspiration!
+                  </p>
+                  <button
+                    onClick={() => handleCreateNote()}
+                    className="btn-primary flex items-center mx-auto text-lg px-8 py-4 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                  >
+                    <PlusIcon className="h-6 w-6 mr-3" />
+                    Create Your First Magical Note ✨
+                  </button>
+                  <p className="text-sm text-gray-500 mt-4">
+                    💡 Tip: Use Ctrl+N to quickly create a new note!
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>      {/* Delete Confirmation Modal */}
       {deleteConfirm.isOpen && deleteConfirm.note && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black bg-opacity-50"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={cancelDeleteNote}
           />
           
           {/* Modal */}
-          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-            <div className="flex items-center mb-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
+          <div className="relative glass rounded-2xl shadow-2xl max-w-md w-full p-8 animate-scale-in">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-red-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ExclamationTriangleIcon className="w-8 h-8 text-white" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Delete Note
-                </h3>
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <p className="text-sm text-gray-500 mb-3">
-                Are you sure you want to delete this note? This action cannot be undone.
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Delete Note? 🗑️
+              </h3>
+              <p className="text-gray-600">
+                This action cannot be undone and will permanently remove your note.
               </p>
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm font-medium text-gray-900">
-                  {deleteConfirm.note.title || 'Untitled'}
-                </p>
-                {deleteConfirm.note.content && (
-                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                    {deleteConfirm.note.content.substring(0, 100)}...
-                  </p>
-                )}
-              </div>
             </div>
             
-            <div className="flex justify-end space-x-3">
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl mb-6">
+              <p className="font-semibold text-gray-900 mb-1">
+                "{deleteConfirm.note.title || 'Untitled'}"
+              </p>
+              {deleteConfirm.note.content && (
+                <p className="text-sm text-gray-600 line-clamp-2">
+                  {deleteConfirm.note.content.substring(0, 100)}...
+                </p>
+              )}
+            </div>
+            
+            <div className="flex space-x-4">
               <button
                 onClick={cancelDeleteNote}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl transition-all duration-200 hover:scale-105"
               >
-                Cancel
+                Keep Note
               </button>
               <button
                 onClick={confirmDeleteNote}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
               >
-                Delete Note
+                Delete Forever
               </button>
             </div>
           </div>
