@@ -919,3 +919,370 @@ pre:hover[data-language]::after {
     padding: 2px 6px;
   }
 }
+
+/* Enhanced Mobile Responsive Design */
+@media (max-width: 768px) {
+  /* Mobile Header Improvements */
+  .min-h-screen {
+    padding-top: 4rem; /* Account for mobile header */
+  }
+  
+  /* Better Mobile Spacing */
+  .glass {
+    margin: 0.5rem !important;
+    padding: 1rem !important;
+    border-radius: 1rem !important;
+  }
+  
+  /* Mobile Note List Improvements */
+  .custom-scrollbar, .h-full, .overflow-y-auto {
+    max-height: 60vh !important;
+    min-height: 35vh;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile Typography */
+  .text-lg {
+    font-size: 1.1rem !important;
+  }
+  
+  .text-sm {
+    font-size: 0.9rem !important;
+  }
+  
+  .text-xs {
+    font-size: 0.8rem !important;
+  }
+  
+  /* Mobile Button Improvements */
+  button {
+    min-height: 44px; /* Touch target minimum */
+    padding: 0.75rem 1rem !important;
+  }
+  
+  /* Mobile Card Spacing */
+  .note-content, .note-card {
+    margin-bottom: 0.75rem !important;
+    padding: 1rem !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    border-radius: 0.75rem !important;
+  }
+  
+  /* Mobile Safe Areas */
+  .sidebar-mobile {
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+@media (max-width: 600px) {
+  /* Extra small mobile adjustments */
+  .glass {
+    margin: 0.25rem !important;
+    border-radius: 0.875rem !important;
+  }
+  
+  /* Improved touch targets */
+  .p-2, .p-3, .p-4 {
+    padding: 1rem !important;
+  }
+  
+  /* Better visual hierarchy */
+  .mb-2, .mb-3 {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  /* Enhanced readability */
+  .leading-tight {
+    line-height: 1.4 !important;
+  }
+}
+
+/* Scrollbar styling for mobile */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #b3b3b3 #f5f5f5;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  background: #f5f5f5;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #b3b3b3;
+  border-radius: 6px;
+}
+
+/* Mobile Sidebar Enhancements */
+@media (max-width: 1024px) {
+  /* Mobile sidebar improvements */
+  .sidebar-mobile {
+    width: 85vw !important;
+    max-width: 320px;
+    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.95);
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Sidebar animation improvements */
+  .sidebar-enter {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  
+  .sidebar-enter-active {
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                opacity 0.3s ease;
+  }
+  
+  .sidebar-exit {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  
+  .sidebar-exit-active {
+    transform: translateX(-100%);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                opacity 0.3s ease;
+  }
+  
+  /* Mobile overlay improvements */
+  .sidebar-overlay {
+    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+  }
+  
+  /* Mobile header adjustments */
+  .mobile-header {
+    height: 4rem;
+    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.9);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Mobile Pull-to-refresh indicator */
+.pull-to-refresh {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0 0 1rem 1rem;
+  margin: 0 0.5rem;
+  transform: translateY(-60px);
+  transition: transform 0.3s ease;
+}
+
+.pull-to-refresh.active {
+  transform: translateY(0);
+}
+
+/* Mobile floating action button */
+.fab-mobile {
+  position: fixed;
+  bottom: 2rem;
+  right: 1rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 1000;
+}
+
+.fab-mobile:hover,
+.fab-mobile:active {
+  transform: scale(1.1);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6);
+}
+
+.fab-mobile:active {
+  transform: scale(0.95);
+}
+
+/* Mobile Typography Optimization */
+@media (max-width: 768px) {
+  /* Optimized font sizes for mobile reading */
+  body {
+    font-size: 16px; /* Prevents iOS zoom on input focus */
+    line-height: 1.5;
+  }
+  
+  h1, .text-2xl {
+    font-size: 1.5rem !important;
+    line-height: 1.3 !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  h2, .text-xl {
+    font-size: 1.25rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.75rem !important;
+  }
+  
+  h3, .text-lg {
+    font-size: 1.125rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Mobile paragraph spacing */
+  p, .prose p {
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Mobile button text */
+  button {
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+  }
+  
+  /* Mobile input text */
+  input, textarea {
+    font-size: 16px !important; /* Prevent iOS zoom */
+    line-height: 1.5 !important;
+  }
+  
+  /* Mobile card titles */
+  .note-title {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Mobile meta text */
+  .text-sm.text-gray-500,
+  .text-xs.text-gray-400 {
+    font-size: 0.875rem !important;
+    line-height: 1.4 !important;
+  }
+}
+
+/* Dark mode mobile adjustments */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(30, 30, 30, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  .sidebar-mobile {
+    background: rgba(30, 30, 30, 0.95) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  .mobile-header {
+    background: rgba(30, 30, 30, 0.9) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
+/* Mobile Interactive Elements */
+@media (max-width: 768px) {
+  /* Enhanced touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Mobile card interactions */
+  .note-card, .card-hover {
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  .note-card:active, .card-hover:active {
+    transform: scale(0.98);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Mobile button states */
+  button:active {
+    transform: scale(0.96);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Mobile input focus states */
+  input:focus, textarea:focus {
+    outline: none;
+    border: 2px solid #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+  }
+  
+  /* Mobile loading states */
+  .loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  
+  /* Mobile swipe indicators */
+  .swipe-indicator {
+    position: relative;
+  }
+  
+  .swipe-indicator::after {
+    content: '👈 Swipe';
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    color: rgba(0, 0, 0, 0.4);
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+  
+  /* Mobile haptic feedback simulation */
+  .haptic-light:active {
+    animation: haptic-light 0.1s ease;
+  }
+  
+  .haptic-medium:active {
+    animation: haptic-medium 0.15s ease;
+  }
+  
+  @keyframes haptic-light {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.98); }
+  }
+  
+  @keyframes haptic-medium {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(0.96); }
+    75% { transform: scale(1.02); }
+  }
+}
