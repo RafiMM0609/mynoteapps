@@ -251,24 +251,7 @@ export default function NoteTree({
     )
   }
   return (
-    <div className="h-full flex flex-col py-2">
-      {/* Root level actions */}
-      <div className="flex gap-2 px-2 mb-2">
-        <button
-          onClick={() => onCreateNote()}
-          className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-        >
-          <PlusIcon className="w-3 h-3" />
-          Note
-        </button>
-        <button
-          onClick={() => onCreateFolder()}
-          className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-        >
-          <FolderIcon className="w-3 h-3" />
-          Folder
-        </button>
-      </div>      {/* Tree nodes */}
+    <div className="h-full flex flex-col py-1">
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-0.5 pr-1">
         {treeData.map((node) => (
           <TreeNode

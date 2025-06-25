@@ -10,7 +10,9 @@ import {
   SparklesIcon,
   DocumentTextIcon,
   HeartIcon,
-  StarIcon
+  StarIcon,
+  MagnifyingGlassIcon,
+  Squares2X2Icon
 } from '@heroicons/react/24/outline'
 import Header from './Header'
 import NoteTree from './NoteTree'
@@ -18,6 +20,7 @@ import NoteEditor from './NoteEditor_new'
 import NoteViewer from './NoteViewer'
 import NoteLinking from './NoteLinking'
 import NoteTags from './NoteTags'
+import SearchableNoteList from './SearchableNoteList'
 import type { AuthUser } from '../lib/auth'
 import type { Note, NoteWithHierarchy, NoteTag, NoteLink } from '../lib/supabase'
 import type { ToastMessage } from '../hooks/useToast'
@@ -46,6 +49,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
   const [isEditing, setIsEditing] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [viewMode, setViewMode] = useState<'tree' | 'search'>('tree') // New state for view mode
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean
     note: Note | null
@@ -256,6 +260,13 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     setIsEditing(false)
     setIsSidebarOpen(false) // Close sidebar on mobile after selecting
   }
+
+  // Wrapper for SearchableNoteList which expects regular Note type
+  const handleSelectNoteFromSearch = (note: Note) => {
+    setSelectedNote(note)
+    setIsEditing(false)
+    setIsSidebarOpen(false) // Close sidebar on mobile after selecting
+  }
   // Linking functions
   const handleCreateLink = async (targetNoteId: string, linkType: 'reference' | 'embed') => {
     if (!selectedNote) return
@@ -409,6 +420,34 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                 </div>
               </div>
 
+              {/* View Mode Toggle */}
+              <div className="mb-4">
+                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('tree')}
+                    className={`flex-1 flex items-center justify-center px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                      viewMode === 'tree'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <Squares2X2Icon className="h-4 w-4 mr-2" />
+                    Tree View
+                  </button>
+                  <button
+                    onClick={() => setViewMode('search')}
+                    className={`flex-1 flex items-center justify-center px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                      viewMode === 'search'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
+                    Search
+                  </button>
+                </div>
+              </div>
+
               {/* Stats Card */}
               <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 mb-4">
                 <div className="flex items-center justify-between">
@@ -421,16 +460,25 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
               </div>
             </div>
 
-            {/* Notes Tree */}
+            {/* Notes View - Tree or Search */}
             <div className="flex-1 overflow-hidden">
-              <NoteTree
-                notes={hierarchyNotes}
-                selectedNoteId={selectedNote?.id}
-                onNoteSelect={handleSelectNote}
-                onCreateNote={handleCreateNote}
-                onCreateFolder={handleCreateFolder}
-                onDeleteNote={handleDeleteNote}
-              />
+              {viewMode === 'tree' ? (
+                <NoteTree
+                  notes={hierarchyNotes}
+                  selectedNoteId={selectedNote?.id}
+                  onNoteSelect={handleSelectNote}
+                  onCreateNote={handleCreateNote}
+                  onCreateFolder={handleCreateFolder}
+                  onDeleteNote={handleDeleteNote}
+                />
+              ) : (
+                <SearchableNoteList
+                  notes={allNotes}
+                  selectedNote={selectedNote}
+                  onSelectNote={handleSelectNoteFromSearch}
+                  onDeleteNote={handleDeleteNote}
+                />
+              )}
             </div>
           </div>
         </div>
