@@ -21,6 +21,7 @@ import NoteViewer from './NoteViewer'
 import NoteLinking from './NoteLinking'
 import NoteTags from './NoteTags'
 import SearchableNoteList from './SearchableNoteList'
+import SearchModal from './SearchModal'
 import type { AuthUser } from '../lib/auth'
 import type { Note, NoteWithHierarchy, NoteTag, NoteLink } from '../lib/supabase'
 import type { ToastMessage } from '../hooks/useToast'
@@ -50,12 +51,15 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'tree' | 'search'>('tree') // New state for view mode
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false) // Add search modal state
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean
     note: Note | null
+    isDeleting: boolean
   }>({
     isOpen: false,
-    note: null
+    note: null,
+    isDeleting: false
   })
   
   // New state for linking and tagging
@@ -69,7 +73,23 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
   // Load user data
   useEffect(() => {
     loadUserData()
-  }, [])  // Load note details when selected note ID changes
+  }, [])
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K to open search modal
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsSearchModalOpen(true)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Load note details when selected note ID changes
   useEffect(() => {
     console.log('useEffect triggered - selectedNote?.id:', selectedNote?.id, 'loadingNoteId.current:', loadingNoteId.current)
     if (selectedNote?.id && selectedNote.id !== loadingNoteId.current) {
@@ -212,12 +232,19 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
 
     setDeleteConfirm({
       isOpen: true,
-      note: noteToDelete
+      note: noteToDelete,
+      isDeleting: false
     })
   }
 
   const confirmDeleteNote = async () => {
     if (!deleteConfirm.note) return
+
+    // Set loading state
+    setDeleteConfirm(prev => ({
+      ...prev,
+      isDeleting: true
+    }))
 
     try {
       const token = localStorage.getItem('auth_token')
@@ -243,7 +270,8 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     } finally {
       setDeleteConfirm({
         isOpen: false,
-        note: null
+        note: null,
+        isDeleting: false
       })
     }
   }
@@ -251,7 +279,8 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
   const cancelDeleteNote = () => {
     setDeleteConfirm({
       isOpen: false,
-      note: null
+      note: null,
+      isDeleting: false
     })
   }
 
@@ -394,9 +423,9 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
           fixed inset-y-0 left-0 top-20 z-50 w-80 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:top-0
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
-          <div className="h-full glass m-4 p-6 flex flex-col shadow-2xl">
+          <div className="h-full glass m-4 p-6 flex flex-col shadow-2xl custom-scrollbar overflow-hidden">
             {/* Quick Actions */}
-            <div className="mb-6">
+            <div className="mb-6 flex-shrink-0">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-800 flex items-center">
                   <StarIcon className="h-5 w-5 text-yellow-500 mr-2" />
@@ -417,39 +446,48 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                   >
                     <FolderIcon className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
                   </button>
+                  <button
+                    onClick={() => setIsSearchModalOpen(true)}
+                    className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:scale-110 shadow-lg group"
+                    title="Search Notes (Ctrl+K) 🔍"
+                  >
+                    <MagnifyingGlassIcon className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  </button>
                 </div>
               </div>
 
               {/* View Mode Toggle */}
               <div className="mb-4">
-                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <div className="flex items-center bg-white/60 backdrop-blur-sm rounded-xl p-1 shadow-sm border border-gray-100">
                   <button
                     onClick={() => setViewMode('tree')}
-                    className={`flex-1 flex items-center justify-center px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    className={`flex-1 flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                       viewMode === 'tree'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                        ? 'bg-white text-gray-900 shadow-md scale-105'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                     }`}
                   >
                     <Squares2X2Icon className="h-4 w-4 mr-2" />
-                    Tree View
+                    <span className="hidden sm:inline">Tree View</span>
+                    <span className="sm:hidden">Tree</span>
                   </button>
                   <button
                     onClick={() => setViewMode('search')}
-                    className={`flex-1 flex items-center justify-center px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    className={`flex-1 flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                       viewMode === 'search'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                        ? 'bg-white text-gray-900 shadow-md scale-105'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                     }`}
                   >
                     <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
-                    Search
+                    <span className="hidden sm:inline">Search</span>
+                    <span className="sm:hidden">Search</span>
                   </button>
                 </div>
               </div>
 
               {/* Stats Card */}
-              <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 mb-4">
+              {/* <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 mb-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-2xl font-bold text-purple-700">{allNotes.length}</p>
@@ -457,28 +495,33 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                   </div>
                   <DocumentTextIcon className="h-8 w-8 text-purple-500" />
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Notes View - Tree or Search */}
             <div className="flex-1 overflow-hidden">
-              {viewMode === 'tree' ? (
-                <NoteTree
-                  notes={hierarchyNotes}
-                  selectedNoteId={selectedNote?.id}
-                  onNoteSelect={handleSelectNote}
-                  onCreateNote={handleCreateNote}
-                  onCreateFolder={handleCreateFolder}
-                  onDeleteNote={handleDeleteNote}
-                />
-              ) : (
-                <SearchableNoteList
-                  notes={allNotes}
-                  selectedNote={selectedNote}
-                  onSelectNote={handleSelectNoteFromSearch}
-                  onDeleteNote={handleDeleteNote}
-                />
-              )}
+              <div className="h-full custom-scrollbar">
+                {viewMode === 'tree' ? (
+                  <NoteTree
+                    notes={hierarchyNotes}
+                    selectedNoteId={selectedNote?.id}
+                    onNoteSelect={handleSelectNote}
+                    onCreateNote={handleCreateNote}
+                    onCreateFolder={handleCreateFolder}
+                    onDeleteNote={handleDeleteNote}
+                  />
+                ) : (
+                  <div className="h-full bg-white/30 backdrop-blur-sm rounded-xl border border-white/20 overflow-hidden">
+                    <SearchableNoteList
+                      notes={allNotes}
+                      selectedNote={selectedNote}
+                      onSelectNote={handleSelectNoteFromSearch}
+                      onDeleteNote={handleDeleteNote}
+                      onOpenSearchModal={() => setIsSearchModalOpen(true)}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -611,20 +654,63 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
             <div className="flex space-x-4">
               <button
                 onClick={cancelDeleteNote}
-                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl transition-all duration-200 hover:scale-105"
+                disabled={deleteConfirm.isDeleting}
+                className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-all duration-200 ${
+                  deleteConfirm.isDeleting 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800 hover:scale-105'
+                }`}
               >
                 Keep Note
               </button>
               <button
                 onClick={confirmDeleteNote}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
+                disabled={deleteConfirm.isDeleting}
+                className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-2 ${
+                  deleteConfirm.isDeleting 
+                    ? 'bg-red-400 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 hover:scale-105'
+                } text-white`}
               >
-                Delete Forever
+                {deleteConfirm.isDeleting ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle 
+                        className="opacity-25" 
+                        cx="12" 
+                        cy="12" 
+                        r="10" 
+                        stroke="currentColor" 
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path 
+                        className="opacity-75" 
+                        fill="currentColor" 
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Forever'
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
+      
+      {/* Search Modal */}
+      <SearchModal 
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        notes={allNotes}
+        onSelectNote={(note) => {
+          setSelectedNote(note)
+          setViewMode('tree') // Switch to tree view when note is selected
+        }}
+      />
     </div>
   )
 }
