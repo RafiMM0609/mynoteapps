@@ -22,6 +22,7 @@ import NoteLinking from './NoteLinking'
 import NoteTags from './NoteTags'
 import SearchableNoteList from './SearchableNoteList'
 import SearchModal from './SearchModal'
+import MobileNavigation from './MobileNavigation'
 import type { AuthUser } from '../lib/auth'
 import type { Note, NoteWithHierarchy, NoteTag, NoteLink } from '../lib/supabase'
 import type { ToastMessage } from '../hooks/useToast'
@@ -398,7 +399,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20 lg:pb-0">
       {/* Header */}
       <Header 
         user={user} 
@@ -407,7 +408,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
         isSidebarOpen={isSidebarOpen}
       />
 
-      <div className="flex h-screen pt-20"> {/* pt-20 to account for fixed header */}
+      <div className="flex h-[calc(100vh-6rem)] lg:h-[calc(100vh-7rem)]">
         {/* Mobile sidebar overlay */}
         {isSidebarOpen && (
           <div 
@@ -418,40 +419,40 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
           </div>
         )}
 
-        {/* Sidebar */}
+        {/* Sidebar - Fixed height with proper scrolling */}
         <div className={`
-          fixed inset-y-0 left-0 top-20 z-50 w-80 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:top-0
+          fixed inset-y-0 left-0 top-16 z-50 w-full max-w-sm lg:w-80 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:top-0 mobile-sidebar
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
-          <div className="h-full glass m-4 p-6 flex flex-col shadow-2xl custom-scrollbar overflow-hidden">
-            {/* Quick Actions */}
-            <div className="mb-6 flex-shrink-0">
+          <div className="h-full glass m-2 lg:m-4 flex flex-col shadow-2xl overflow-hidden">
+            {/* Quick Actions - Fixed header */}
+            <div className="flex-shrink-0 p-4 lg:p-6 border-b border-white/20">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                  <StarIcon className="h-5 w-5 text-yellow-500 mr-2" />
+                <h2 className="text-base lg:text-lg font-semibold text-gray-800 flex items-center">
+                  <StarIcon className="h-4 w-4 lg:h-5 lg:w-5 text-yellow-500 mr-2" />
                   Your Notes
                 </h2>
-                <div className="flex space-x-2">
+                <div className="flex space-x-1 lg:space-x-2">
                   <button
                     onClick={() => handleCreateNote()}
-                    className="p-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-300 hover:scale-110 shadow-lg group"
+                    className="p-2 lg:p-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-300 hover:scale-110 shadow-lg group touch-target"
                     title="Create New Note ✨"
                   >
-                    <PlusIcon className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
+                    <PlusIcon className="h-4 w-4 lg:h-5 lg:w-5 group-hover:rotate-90 transition-transform duration-300" />
                   </button>
                   <button
                     onClick={() => handleCreateFolder()}
-                    className="p-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-xl hover:from-accent-600 hover:to-accent-700 transition-all duration-300 hover:scale-110 shadow-lg group"
+                    className="p-2 lg:p-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-xl hover:from-accent-600 hover:to-accent-700 transition-all duration-300 hover:scale-110 shadow-lg group touch-target"
                     title="Create New Folder 📁"
                   >
-                    <FolderIcon className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                    <FolderIcon className="h-4 w-4 lg:h-5 lg:w-5 group-hover:scale-110 transition-transform duration-300" />
                   </button>
                   <button
                     onClick={() => setIsSearchModalOpen(true)}
-                    className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:scale-110 shadow-lg group"
+                    className="p-2 lg:p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:scale-110 shadow-lg group touch-target"
                     title="Search Notes (Ctrl+K) 🔍"
                   >
-                    <MagnifyingGlassIcon className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                    <MagnifyingGlassIcon className="h-4 w-4 lg:h-5 lg:w-5 group-hover:scale-110 transition-transform duration-300" />
                   </button>
                 </div>
               </div>
@@ -485,21 +486,10 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                   </button>
                 </div>
               </div>
-
-              {/* Stats Card */}
-              {/* <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 mb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-2xl font-bold text-purple-700">{allNotes.length}</p>
-                    <p className="text-sm text-purple-600">Total Notes</p>
-                  </div>
-                  <DocumentTextIcon className="h-8 w-8 text-purple-500" />
-                </div>
-              </div> */}
             </div>
 
-            {/* Notes View - Tree or Search */}
-            <div className="flex-1 overflow-hidden">
+            {/* Notes View - Scrollable content area */}
+            <div className="flex-1 overflow-hidden px-4 lg:px-6 pb-4 lg:pb-6">
               <div className="h-full custom-scrollbar">
                 {viewMode === 'tree' ? (
                   <NoteTree
@@ -526,28 +516,11 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
           </div>
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 p-4">
-          <div className="h-full glass rounded-2xl overflow-hidden shadow-2xl">
-            {selectedNote ? (
+        {/* Main content - Balanced height */}
+        <div className="flex-1 p-2 lg:p-4">
+          <div className="h-full glass rounded-2xl overflow-hidden shadow-2xl">{selectedNote ? (
               isEditing ? (
                 <div className="h-full">
-                  <div className="bg-gradient-to-r from-primary-500 to-secondary-500 p-4 text-white">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold flex items-center">
-                        <SparklesIcon className="h-5 w-5 mr-2" />
-                        Editing: {selectedNote.title || 'Untitled Note'}
-                      </h3>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => setIsEditing(false)}
-                          className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors duration-200"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                   <NoteEditor
                     note={selectedNote}
                     onSave={handleSaveNote}
@@ -555,38 +528,21 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                   />
                 </div>
               ) : (
-                <div className="h-full flex flex-col">
-                  <div className="bg-gradient-to-r from-primary-500 to-secondary-500 p-4 text-white">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold flex items-center">
-                        <HeartIcon className="h-5 w-5 mr-2 text-pink-200" />
-                        {selectedNote.title || 'Untitled Note'}
-                      </h3>
-                      <button
-                        onClick={() => setIsEditing(true)}
-                        className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors duration-200 flex items-center"
-                      >
-                        <SparklesIcon className="h-4 w-4 mr-2" />
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <NoteViewer
-                      note={selectedNote}
-                      onEdit={() => setIsEditing(true)}
-                      allNotes={allNotes}
-                      noteLinks={noteLinks}
-                      noteTags={noteTags}
-                      allTags={allTags}
-                      onCreateLink={handleCreateLink}
-                      onRemoveLink={handleRemoveLink}
-                      onOpenLinkedNote={handleOpenLinkedNote}
-                      onCreateTag={handleCreateTag}
-                      onAddTag={handleAddTag}
-                      onRemoveTag={handleRemoveTag}
-                    />
-                  </div>
+                <div className="h-full">
+                  <NoteViewer
+                    note={selectedNote}
+                    onEdit={() => setIsEditing(true)}
+                    allNotes={allNotes}
+                    noteLinks={noteLinks}
+                    noteTags={noteTags}
+                    allTags={allTags}
+                    onCreateLink={handleCreateLink}
+                    onRemoveLink={handleRemoveLink}
+                    onOpenLinkedNote={handleOpenLinkedNote}
+                    onCreateTag={handleCreateTag}
+                    onAddTag={handleAddTag}
+                    onRemoveTag={handleRemoveTag}
+                  />
                 </div>
               )
             ) : (
@@ -701,6 +657,15 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
         </div>
       )}
       
+      {/* Mobile Navigation */}
+      <MobileNavigation 
+        onCreateNote={() => handleCreateNote()}
+        onOpenSearch={() => setIsSearchModalOpen(true)}
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        selectedNote={selectedNote}
+        isSidebarOpen={isSidebarOpen}
+      />
+
       {/* Search Modal */}
       <SearchModal 
         isOpen={isSearchModalOpen}
@@ -709,6 +674,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
         onSelectNote={(note) => {
           setSelectedNote(note)
           setViewMode('tree') // Switch to tree view when note is selected
+          setIsSidebarOpen(false) // Close sidebar on mobile when note is selected
         }}
       />
     </div>

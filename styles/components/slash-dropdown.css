@@ -1,0 +1,113 @@
+/**
+ * Slash Command Dropdown Styling
+ * Modern dropdown with proper interactions
+ */
+
+.slash-dropdown {
+  position: absolute;
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.1), 
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.slash-dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+
+.slash-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.slash-dropdown::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+.slash-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Button styling within dropdown */
+.slash-dropdown button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  border: none;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  color: #374151;
+}
+
+.slash-dropdown button:hover {
+  background-color: #f9fafb !important;
+}
+
+.slash-dropdown button:focus {
+  background-color: #f9fafb !important;
+}
+
+/* Fix text selection and user interaction */
+.slash-dropdown * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Ensure proper text rendering */
+.slash-dropdown h4,
+.slash-dropdown p,
+.slash-dropdown span {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fix potential layout issues */
+.slash-dropdown .flex {
+  display: flex;
+}
+
+.slash-dropdown .items-center {
+  align-items: center;
+}
+
+.slash-dropdown .items-start {
+  align-items: flex-start;
+}
+
+.slash-dropdown .justify-between {
+  justify-content: space-between;
+}
+
+.slash-dropdown .space-x-3 > :not([hidden]) ~ :not([hidden]) {
+  margin-left: 0.75rem;
+}
+
+/* Ensure proper hover states */
+.slash-dropdown button:hover .bg-gray-100 {
+  background-color: #e5e7eb;
+}
+
+.slash-dropdown button:hover .text-gray-600 {
+  color: #4b5563;
+}
+
+/* Animation for slash dropdown */
+.slash-dropdown-enter {
+  animation: slideIn 0.15s ease-out;
+}

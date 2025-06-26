@@ -1,0 +1,211 @@
+/**
+ * Code Block Styling
+ * Enhanced syntax highlighting and code presentation
+ */
+
+/* Modern Inline Code Styling */
+.prose code,
+code:not(pre code) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease-in-out;
+}
+
+.prose code:hover,
+code:not(pre code):hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.prose code::before,
+code:not(pre code)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+/* Modern Code Block Styling */
+.prose pre,
+pre {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 0.75rem;
+  border: 1px solid #334155;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  padding: 0;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+/* Code Block Hover Effect */
+.prose pre:hover,
+pre:hover {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 2px solid #3b82f6;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Code text color change on hover */
+.prose pre:hover code,
+pre:hover code {
+  color: #1e293b;
+}
+
+.prose pre::before,
+pre::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ef4444);
+  border-radius: 0.75rem 0.75rem 0 0;
+  z-index: 1;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Gradient line change on hover */
+.prose pre:hover::before,
+pre:hover::before {
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb, #7c3aed, #dc2626);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.prose pre code,
+pre code {
+  background: transparent;
+  color: #e2e8f0;
+  display: block;
+  padding: 1.5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #475569 #1e293b;
+}
+
+/* Force override any conflicting styles */
+.prose pre code,
+pre code,
+.code-block-container pre code {
+  background-color: transparent !important;
+  background-image: none !important;
+  padding: 1.5rem !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Custom scrollbar for code blocks */
+.prose pre code::-webkit-scrollbar {
+  height: 8px;
+}
+
+.prose pre code::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.prose pre code::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #475569, #64748b);
+  border-radius: 4px;
+}
+
+.prose pre code::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #64748b, #94a3b8);
+}
+
+/* Mobile Code Block Optimizations */
+@media (max-width: 768px) {
+  .prose pre {
+    font-size: 11px;
+    padding: 0.5rem;
+    margin: 0.5rem -0.5rem;
+    border-radius: 8px;
+    max-width: calc(100vw - 2rem);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .prose pre code {
+    font-size: 11px;
+    white-space: pre;
+    word-break: normal;
+    overflow-wrap: normal;
+    display: block;
+    width: max-content;
+    min-width: 100%;
+  }
+}
+
+/* Mobile-specific code block styling */
+.mobile-code-block {
+  @media (max-width: 768px) {
+    margin: 0.5rem -0.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+.mobile-code-block pre {
+  @media (max-width: 768px) {
+    font-size: 11px !important;
+    line-height: 1.3;
+    padding: 0.5rem !important;
+    white-space: pre;
+    word-break: normal;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+}
+
+.mobile-code-block code {
+  @media (max-width: 768px) {
+    font-size: 11px !important;
+    white-space: pre;
+    word-wrap: normal;
+    overflow-wrap: normal;
+    display: block;
+    width: max-content;
+    min-width: 100%;
+  }
+}
+
+.mobile-code-block .copy-button {
+  @media (max-width: 768px) {
+    top: 0.25rem;
+    right: 0.25rem;
+    padding: 0.25rem;
+    font-size: 10px;
+    min-height: 28px;
+    min-width: 28px;
+  }
+}

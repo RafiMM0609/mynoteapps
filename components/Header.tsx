@@ -23,14 +23,15 @@ export default function Header({ user, onLogout, onSidebarToggle, isSidebarOpen 
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   return (
-    <header className="glass sticky top-0 z-50 px-4 py-3 mx-4 mt-4 mb-6 shadow-lg">
+    <header className="glass sticky top-0 z-50 px-3 lg:px-4 py-1.5 lg:py-3 mx-2 lg:mx-4 mt-1 lg:mt-4 mb-2 lg:mb-6 shadow-lg">
       <div className="flex items-center justify-between">
         {/* Left side - Logo & Sidebar Toggle */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 lg:space-x-4">
           {onSidebarToggle && (
             <button
               onClick={onSidebarToggle}
-              className="p-2 rounded-xl bg-gradient-to-r from-primary-500 to-secondary-500 text-white hover:from-primary-600 hover:to-secondary-600 transition-all duration-300 hover:scale-105 shadow-lg"
+              className="p-2 lg:p-2 rounded-xl bg-gradient-to-r from-primary-500 to-secondary-500 text-white hover:from-primary-600 hover:to-secondary-600 transition-all duration-300 hover:scale-105 shadow-lg touch-target"
+              aria-label="Toggle sidebar"
             >
               {isSidebarOpen ? (
                 <XMarkIcon className="h-5 w-5" />
@@ -40,16 +41,16 @@ export default function Header({ user, onLogout, onSidebarToggle, isSidebarOpen 
             </button>
           )}
           
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 lg:space-x-3">
             <div className="relative">
-              <SparklesIcon className="h-8 w-8 text-primary-600 animate-glow" />
-              <HeartIcon className="h-4 w-4 text-pink-500 absolute -top-1 -right-1 animate-bounce-gentle" />
+              <SparklesIcon className="h-6 w-6 lg:h-8 lg:w-8 text-primary-600 animate-glow" />
+              <HeartIcon className="h-3 w-3 lg:h-4 lg:w-4 text-pink-500 absolute -top-1 -right-1 animate-bounce-gentle" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent">
+              <h1 className="text-lg lg:text-2xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent">
                 Kagita Notes
               </h1>
-              <p className="text-xs text-gray-600 font-medium">Where Ideas Come to Life ✨</p>
+              <p className="text-xs text-gray-600 font-medium hidden sm:block">Where Ideas Come to Life ✨</p>
             </div>
           </div>
         </div>
@@ -59,30 +60,32 @@ export default function Header({ user, onLogout, onSidebarToggle, isSidebarOpen 
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center space-x-3 p-2 rounded-xl bg-white/50 hover:bg-white/70 transition-all duration-300 hover:scale-105 shadow-md"
+              className="flex items-center space-x-2 lg:space-x-3 p-2 rounded-xl bg-white/50 hover:bg-white/70 transition-all duration-300 hover:scale-105 shadow-md touch-target"
+              aria-label="User menu"
             >
-              <div className="flex items-center space-x-2">
-                <SunIcon className="h-5 w-5 text-yellow-500 animate-float" />
-                <span className="text-sm font-medium text-gray-700">
+              <div className="flex items-center space-x-1 lg:space-x-2">
+                <SunIcon className="h-4 w-4 lg:h-5 lg:w-5 text-yellow-500 animate-float" />
+                <span className="text-xs lg:text-sm font-medium text-gray-700 hidden sm:inline">
                   Hi, {user.email.split('@')[0]}! 👋
                 </span>
               </div>
-              <UserCircleIcon className="h-8 w-8 text-primary-600" />
+              <UserCircleIcon className="h-7 w-7 lg:h-8 lg:w-8 text-primary-600" />
             </button>
 
             {/* User Dropdown */}
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-48 glass rounded-xl shadow-xl z-50 animate-scale-in">
-                <div className="p-2">
-                  <div className="px-3 py-2 text-xs text-gray-600 border-b border-white/20">
-                    {user.email}
+              <div className="absolute right-0 mt-2 w-56 lg:w-48 glass rounded-xl shadow-xl z-50 animate-scale-in mobile-modal">
+                <div className="p-2 modal-content">
+                  <div className="px-3 py-3 text-sm text-gray-700 border-b border-white/20">
+                    <div className="font-medium">{user.email.split('@')[0]}</div>
+                    <div className="text-xs text-gray-500 mt-1">{user.email}</div>
                   </div>
                   <button
                     onClick={() => {
                       onLogout?.()
                       setShowUserMenu(false)
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 mt-1"
+                    className="w-full text-left px-3 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 mt-1 touch-target"
                   >
                     Sign Out
                   </button>

@@ -38,9 +38,9 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
   const lines = children.split('\n');
 
   return (
-    <div className={`code-block-container ${className}`}>
+    <div className={`code-block-container ${className} mobile-code-block`}>
       {title && (
-        <div className="code-block-title">
+        <div className="code-block-title text-sm lg:text-base">
           {title}
         </div>
       )}
@@ -49,15 +49,18 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
           className={`
             ${showLineNumbers ? 'line-numbers' : ''} 
             language-${language}
+            text-xs sm:text-sm lg:text-base
+            overflow-x-auto
+            p-3 lg:p-4
           `}
           data-language={language}
         >
-          <code ref={codeRef} className={`language-${language}`}>
+          <code ref={codeRef} className={`language-${language} text-xs sm:text-sm lg:text-base break-words`}>
             {showLineNumbers ? (
               lines.map((line, index) => (
                 <div 
                   key={index}
-                  className={`line ${highlightedLines.includes(index + 1) ? 'highlighted' : ''}`}
+                  className={`line ${highlightedLines.includes(index + 1) ? 'highlighted' : ''} text-xs sm:text-sm lg:text-base`}
                 >
                   {line}
                   {index === lines.length - 1 && <span className="cursor" />}
@@ -73,18 +76,18 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
         </pre>
         <button
           onClick={handleCopy}
-          className={`copy-button ${copied ? 'copied' : ''}`}
+          className={`copy-button ${copied ? 'copied' : ''} touch-target text-xs lg:text-sm`}
           title={copied ? 'Copied!' : 'Copy code'}
         >
           {copied ? (
             <>
-              <CheckIcon className="w-4 h-4" />
-              <span>Copied!</span>
+              <CheckIcon className="w-3 h-3 lg:w-4 lg:h-4" />
+              <span className="hidden sm:inline">Copied!</span>
             </>
           ) : (
             <>
-              <ClipboardIcon className="w-4 h-4" />
-              <span>Copy</span>
+              <ClipboardIcon className="w-3 h-3 lg:w-4 lg:h-4" />
+              <span className="hidden sm:inline">Copy</span>
             </>
           )}
         </button>

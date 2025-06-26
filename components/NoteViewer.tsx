@@ -74,64 +74,69 @@ export default function NoteViewer({
     <div className="h-full flex flex-col md:flex-row bg-white">
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-gray-900 truncate">
+        {/* Header - Enhanced UX with better visual hierarchy */}
+        <div className="sticky-header flex items-start justify-between px-4 lg:px-6 py-4 lg:py-5 bg-white/95 backdrop-blur-sm border-b border-gray-200/60 shadow-sm">
+          <div className="flex-1 min-w-0 mr-4">
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-900 truncate mb-2">
               {note.title || 'Untitled'}
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Last updated: {formatDate(note.updated_at)}
-            </p>
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                <span className="font-medium">Last updated: {formatDate(note.updated_at)}</span>
+              </div>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-3 ml-4">
-            <div className="hidden sm:flex items-center bg-gray-200 rounded-lg p-1">
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center bg-gray-100 rounded-lg p-1 shadow-sm">
               <button
                 onClick={() => setViewMode('preview')}
-                className={`flex items-center px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                   viewMode === 'preview'
                     ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-300'
+                    : 'text-gray-600 hover:bg-gray-200 hover:text-gray-700'
                 }`}
               >
-                <EyeIcon className="h-5 w-5 mr-2 text-gray-400" />
-                Preview
+                <EyeIcon className="h-4 w-4" />
+                <span>Preview</span>
               </button>
               <button
                 onClick={() => setViewMode('raw')}
-                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                   viewMode === 'raw'
                     ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-300'
+                    : 'text-gray-600 hover:bg-gray-200 hover:text-gray-700'
                 }`}
               >
-                Raw
+                <span>Raw</span>
               </button>
             </div>
             
             <button
               onClick={onEdit}
-              className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm shadow-blue-200"
               title="Edit Note"
             >
-              <PencilIcon className="h-5 w-5 mr-2" />
-              Edit
+              <PencilIcon className="w-4 h-4" />
+              <span className="hidden sm:inline font-medium">Edit Note</span>
             </button>
           </div>
-        </div>        {/* Content */}
-        <div className="flex-1 overflow-auto">
+        </div>
+        
+        {/* Content - Mobile Optimized */}
+        <div className="flex-1 overflow-auto note-viewer-mobile">
           {note.content && note.content.trim() ? (
-            <div className="p-6">
+            <div className="p-3 lg:p-6">
               {viewMode === 'preview' ? (
                 <MarkdownPreview
                   content={note.content}
                   availableNotes={allNotes}
                   onNoteClick={handleNoteClick}
-                  className="max-w-none"
+                  className="max-w-none prose-mobile"
                 />
               ) : (
-                <pre className="whitespace-pre-wrap font-mono text-sm text-gray-700 leading-relaxed">
+                <pre className="whitespace-pre-wrap font-mono text-xs lg:text-sm text-gray-700 leading-relaxed overflow-x-auto">
                   {note.content}
                 </pre>
               )}

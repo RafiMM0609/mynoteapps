@@ -9,7 +9,9 @@ import type { Note } from '../lib/supabase'
 import SlashCommandDropdown from './SlashCommandDropdown'
 import InlineNoteLinking from './InlineNoteLinking'
 import NoteLinkRenderer from './NoteLinkRenderer'
+import FloatingActionButtons from './FloatingActionButtons'
 import { useNoteLinkDetection } from '../hooks/useNoteLinkParser'
+import { useHeaderVisibility, useScrollDetection } from '../hooks/useScrollDetection'
 
 interface NoteEditorProps {
   note: Note
@@ -31,6 +33,8 @@ export default function NoteEditor({
   const [content, setContent] = useState(note.content || '')
   const [cursorPosition, setCursorPosition] = useState(0)
   const [hasChanges, setHasChanges] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const turndownService = useRef(new TurndownService())
 
@@ -43,19 +47,152 @@ export default function NoteEditor({
 
   // Note linking detection
   const noteLinkDetection = useNoteLinkDetection(content, cursorPosition)
+  
+  // Header visibility detection + Backup positioning for old browsers
+  const { isHeaderVisible, headerRef } = useHeaderVisibility()
+  const { isScrolledPastThreshold, containerRef } = useScrollDetection({ threshold: 150 })
+  
+  // Force FAB visibility state for edge cases
+  const [forceShowFAB, setForceShowFAB] = useState(false)
+  
+  // Status bar visibility state
+  const [showStatusBar, setShowStatusBar] = useState(true)
+  const [isStatusBarFloating, setIsStatusBarFloating] = useState(false)
+  
+  // Backup positioning system for browsers with fixed positioning issues
+  useEffect(() => {
+    const header = headerRef.current
+    if (!header) return
+
+    // Check if browser properly supports fixed positioning
+    const testElement = document.createElement('div')
+    testElement.style.position = 'fixed'
+    testElement.style.top = '0'
+    document.body.appendChild(testElement)
+    
+    const rect = testElement.getBoundingClientRect()
+    const supportsFixed = rect.top === 0
+    
+    document.body.removeChild(testElement)
+
+    if (!supportsFixed) {
+      // Fallback: Manually position header on scroll
+      const handleScroll = () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+        header.style.transform = `translateY(${scrollTop}px)`
+      }
+
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      return () => window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  // Emergency FAB visibility system - ensures FAB shows after long content
+  useEffect(() => {
+    const checkFABVisibility = () => {
+      const scrollableContent = document.querySelector('.scrollable-editor-content') as HTMLElement
+      if (!scrollableContent) return
+
+      const scrollHeight = scrollableContent.scrollHeight
+      const clientHeight = scrollableContent.clientHeight
+      const scrollTop = scrollableContent.scrollTop
+
+      // If content is taller than 2 screen heights, force show FAB
+      const isVeryLongContent = scrollHeight > clientHeight * 2
+      
+      // If user has scrolled down significantly, show FAB
+      const hasScrolledSignificantly = scrollTop > clientHeight * 0.5
+
+      setForceShowFAB(isVeryLongContent || hasScrolledSignificantly)
+    }
+
+    // Check immediately and on scroll
+    const scrollableContent = document.querySelector('.scrollable-editor-content')
+    if (scrollableContent) {
+      checkFABVisibility()
+      scrollableContent.addEventListener('scroll', checkFABVisibility, { passive: true })
+      
+      // Emergency timeout - force show FAB after 2 seconds if content is very long
+      const emergencyTimeout = setTimeout(() => {
+        const scrollHeight = scrollableContent.scrollHeight
+        const clientHeight = scrollableContent.clientHeight
+        
+        if (scrollHeight > clientHeight * 1.5) {
+          console.log('Emergency FAB activation for long content')
+          setForceShowFAB(true)
+        }
+      }, 2000)
+      
+      return () => {
+        scrollableContent.removeEventListener('scroll', checkFABVisibility)
+        clearTimeout(emergencyTimeout)
+      }
+    }
+
+    // Also check on window scroll as fallback
+    window.addEventListener('scroll', checkFABVisibility, { passive: true })
+    return () => window.removeEventListener('scroll', checkFABVisibility)
+  }, [])
+
+  // Additional safety check - force FAB on content changes if content is long
+  useEffect(() => {
+    if (content.length > 2000) { // If content is very long (>2000 chars)
+      const timer = setTimeout(() => {
+        setForceShowFAB(true)
+      }, 1000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [content])
+
   useEffect(() => {
     setContent(note.content || '')
     if (editorRef.current) {
       editorRef.current.innerHTML = renderMarkdown(note.content)
     }
   }, [note.content])
-  const handleSave = () => {
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S or Cmd+S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        if (hasChanges && !isSaving) {
+          handleSave()
+        }
+      }
+      // Escape to cancel
+      if (e.key === 'Escape' && hasChanges) {
+        e.preventDefault()
+        if (confirm('Are you sure you want to discard your changes?')) {
+          handleCancel()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [hasChanges, isSaving])
+  const handleSave = async () => {
     if (editorRef.current) {
-      const html = editorRef.current.innerHTML
-      const markdown = turndownService.current.turndown(html)
-      onSave(note.id, title, markdown)
-    } 
-    setHasChanges(false)
+      setIsSaving(true)
+      try {
+        const html = editorRef.current.innerHTML
+        const markdown = turndownService.current.turndown(html)
+        await onSave(note.id, title, markdown)
+        
+        setHasChanges(false)
+        setSaveSuccess(true)
+        
+        // Reset success state after animation
+        setTimeout(() => setSaveSuccess(false), 600)
+      } catch (error) {
+        console.error('Save failed:', error)
+      } finally {
+        setIsSaving(false)
+      }
+    }
   }
 
   const handleCancel = () => {
@@ -336,8 +473,25 @@ export default function NoteEditor({
       setHasChanges(true)
     }
   }
+  // Smart status bar visibility management
+  useEffect(() => {
+    const handleStatusBarVisibility = () => {
+      const isMobile = window.innerWidth <= 768
+      const shouldFloat = isScrolledPastThreshold && !isMobile
+      const shouldHide = isMobile && (!isHeaderVisible || isScrolledPastThreshold)
+      
+      setIsStatusBarFloating(shouldFloat)
+      setShowStatusBar(!shouldHide)
+    }
+    
+    handleStatusBarVisibility()
+    window.addEventListener('resize', handleStatusBarVisibility)
+    
+    return () => window.removeEventListener('resize', handleStatusBarVisibility)
+  }, [isScrolledPastThreshold, isHeaderVisible])
+
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div ref={containerRef} className="editor-container-with-fixed-header note-editor-mobile">
       <SlashCommandDropdown
         isVisible={showSlashDropdown}
         position={slashPosition}
@@ -360,60 +514,117 @@ export default function NoteEditor({
         />
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200">
-        <div className="flex-1 min-w-0 mr-4">
-          <input
-            type="text"
-            value={title}
-            onChange={handleTitleChange}
-            className="w-full text-2xl font-bold text-gray-900 border-none focus:outline-none bg-transparent"
-            placeholder="Note title..."
-          />
-        </div>
-        
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={handleCancel}
-            className="flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
-          >
-            <XMarkIcon className="h-5 w-5 mr-2 text-gray-400" />
-            Cancel
-          </button>
+      {/* Enhanced Header - Better UX and Visual Hierarchy */}
+      <div 
+        ref={headerRef}
+        className="fixed-header-alternative px-4 lg:px-6 py-4 lg:py-5 bg-white/95 backdrop-blur-sm border-b border-gray-200/60"
+      >
+        <div className="flex items-start justify-between gap-4">
+          {/* Title Section - More prominent and informative */}
+          <div className="flex-1 min-w-0">
+            <input
+              type="text"
+              value={title}
+              onChange={handleTitleChange}
+              className="w-full text-xl lg:text-2xl font-bold text-gray-900 border-none focus:outline-none bg-transparent placeholder-gray-400 mb-2"
+              placeholder="Enter note title..."
+            />
+            {/* Status indicators - Better visual feedback */}
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                  hasChanges ? 'bg-orange-400 animate-pulse' : 'bg-green-400'
+                }`}></div>
+                <span className="font-medium">
+                  {hasChanges ? 'Unsaved changes' : 'All changes saved'}
+                </span>
+              </div>
+              <div className="hidden sm:flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
+                <kbd className="font-mono font-semibold">Ctrl+S</kbd>
+                <span>to save</span>
+              </div>
+            </div>
+          </div>
           
-          <button
-            onClick={handleSave}
-            disabled={!hasChanges}
-            className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <CheckIcon className="h-5 w-5 mr-2" />
-            Save
-          </button>
+          {/* Action Buttons - Cleaner, more accessible design */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleCancel}
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              disabled={isSaving}
+              title="Cancel editing (Esc)"
+            >
+              <XMarkIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Cancel</span>
+            </button>
+            
+            <button
+              onClick={handleSave}
+              disabled={!hasChanges || isSaving}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 shadow-sm ${
+                !hasChanges 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : saveSuccess 
+                    ? 'bg-green-500 focus:ring-green-500 shadow-green-200' 
+                    : isSaving 
+                      ? 'bg-blue-400 cursor-wait' 
+                      : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 shadow-blue-200'
+              }`}
+              title={hasChanges ? "Save changes (Ctrl+S)" : "No changes to save"}
+            >
+              <CheckIcon className={`w-4 h-4 ${isSaving ? 'animate-spin' : saveSuccess ? 'animate-bounce' : ''}`} />
+              <span className="hidden sm:inline font-medium">
+                {isSaving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Note'}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Content Area - WYSIWYG Editor */}
-      <div className="flex-1 flex flex-col">
+      {/* Scrollable Content Area */}
+      <div className="scrollable-editor-content custom-scrollbar">
         <div
           ref={editorRef}
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           contentEditable={true}
           suppressContentEditableWarning={true}
-          className="flex-1 p-6 overflow-auto prose max-w-none focus:outline-none"
+          className="prose max-w-none focus:outline-none p-6"
         />
+        
+        {/* Status bar - Smart visibility with better UX */}
+        {showStatusBar && (
+          <div className={`editor-status-bar auto-hide ${isStatusBarFloating ? 'floating' : ''} ${
+            !showStatusBar ? 'mobile-hidden' : ''
+          } flex items-center justify-between p-2 text-xs text-gray-600`}>
+            <div className="flex items-center space-x-3">
+              {/* Optional: Word count */}
+              {content.length > 0 && (
+                <span className="text-gray-500">
+                  {content.split(' ').filter(word => word.length > 0).length} words
+                </span>
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              {isSaving && <span className="text-blue-600 animate-pulse">• Saving...</span>}
+              {saveSuccess && <span className="text-green-600">• Saved</span>}
+              {hasChanges && !isSaving && <span className="text-orange-600">• Unsaved changes</span>}
+              <span className="text-xs opacity-60">Ctrl+S to save</span>
+            </div>
+          </div>
+        )}
       </div>
-      
-      {/* Status bar */}
-      <div className="flex items-center justify-between p-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-600">
-        <div>
-          {/* Word/char count can be added back here if needed, but might not be in sync during editing */}
-        </div>
-        <div className="flex items-center space-x-2">
-          {hasChanges && <span className="text-orange-600">• Unsaved changes</span>}
-          <span>Ctrl+S to save</span>
-        </div>
-      </div>
+
+      {/* Floating Action Buttons - ALWAYS show if header not visible, scrolled, or forced */}
+      {(!isHeaderVisible || isScrolledPastThreshold || forceShowFAB) && (
+        <FloatingActionButtons
+          onSave={handleSave}
+          onCancel={handleCancel}
+          hasChanges={hasChanges}
+          isSaving={isSaving}
+          saveSuccess={saveSuccess}
+        />
+      )}
     </div>
   )
 }

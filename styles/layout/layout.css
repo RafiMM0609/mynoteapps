@@ -1,0 +1,353 @@
+/**
+ * Layout & Navigation Components
+ * Modern layout system with proper responsive design
+ */
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Sticky Header with Fallbacks */
+.sticky-header {
+  position: sticky;
+  position: -webkit-sticky; /* Safari support */
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Fallback for browsers that don't support sticky properly */
+.sticky-header-failsafe {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(249, 250, 251, 0.95);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+@supports not (position: sticky) {
+  .sticky-header-failsafe {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+  }
+}
+
+/* Enhanced Editor Layout with Better UX */
+.editor-container-with-fixed-header {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Improved scrollable content - Better spacing and padding */
+.scrollable-editor-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Important for flexbox scrolling */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+  /* Add padding bottom to prevent content overlap with status bar */
+  padding-bottom: 4rem;
+}
+
+.scrollable-editor-content .prose {
+  flex: 1;
+  min-height: calc(100vh - 250px); /* Better calculation for content height */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  /* Ensure content doesn't touch the bottom */
+  margin-bottom: 2rem;
+}
+
+/* Status bar should be subtle and non-intrusive */
+.editor-status-bar {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(229, 231, 235, 0.6);
+  background: rgba(249, 250, 251, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease-in-out;
+  z-index: 5;
+}
+
+/* Hide status bar when not needed - Better UX */
+.editor-status-bar.hidden {
+  opacity: 0;
+  transform: translateY(100%);
+  pointer-events: none;
+}
+
+/* Alternative: Make status bar float and less intrusive */
+.editor-status-bar.floating {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  left: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Mobile-Optimized Editor Layout */
+@media (max-width: 768px) {
+  .editor-container-with-fixed-header {
+    height: 100vh;
+    height: -webkit-fill-available; /* Safari mobile fix */
+  }
+  
+  .scrollable-editor-content {
+    /* More padding on mobile to prevent keyboard overlap */
+    padding-bottom: 6rem;
+  }
+  
+  .scrollable-editor-content .prose {
+    /* Better mobile content spacing */
+    min-height: calc(100vh - 300px);
+    margin-bottom: 3rem;
+    padding: 1rem;
+  }
+  
+  /* Mobile status bar improvements */
+  .editor-status-bar {
+    /* Make status bar less prominent on mobile */
+    padding: 0.5rem 1rem;
+    font-size: 11px;
+    background: rgba(249, 250, 251, 0.98);
+  }
+  
+  .editor-status-bar.floating {
+    /* Better floating behavior on mobile */
+    bottom: 0.5rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    border-radius: 0.5rem;
+  }
+  
+  /* Hide status bar on mobile when scrolling for cleaner UX */
+  .editor-status-bar.mobile-hidden {
+    opacity: 0;
+    transform: translateY(100%);
+    transition: all 0.3s ease-in-out;
+  }
+}
+
+.scrollable-editor-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable-editor-content::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 4px;
+}
+
+.scrollable-editor-content::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.scrollable-editor-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+/* Enhanced Balance Layout */
+.balanced-layout {
+  display: flex;
+  height: calc(100vh - 8rem);
+  gap: 1rem;
+}
+
+.balanced-sidebar {
+  flex: 0 0 320px;
+  max-width: 320px;
+  min-width: 280px;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.balanced-content {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+/* Dark mode scrollbar */
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.7);
+}
+
+/* Enhanced backdrop blur for better visual depth */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.backdrop-blur-md {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Search component specific styles */
+.search-glass {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover effects for interactive elements */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile Responsive Improvements */
+@media (max-width: 1024px) {
+  .mobile-sidebar {
+    width: 90vw !important;
+    max-width: 400px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .balanced-layout {
+    height: calc(100vh - 6rem);
+  }
+  
+  .balanced-sidebar {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .scrollable-editor-content {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .editor-container-with-fixed-header {
+    height: 100vh;
+    height: -webkit-fill-available; /* Safari mobile fix */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.6);
+    border-radius: 2px;
+  }
+}
+
+/* Mobile optimized glassmorphism */
+@media (max-width: 768px) {
+  .glass {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+}
+
+/* Professional Status Bar Variants */
+.editor-status-bar.minimal {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 11px;
+  color: rgba(107, 114, 128, 0.8);
+}
+
+.editor-status-bar.glassmorphism {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Status bar auto-hide functionality */
+.editor-status-bar.auto-hide {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-status-bar.auto-hide:not(:hover):not(:focus-within) {
+  opacity: 0.3;
+}
+
+.editor-status-bar.auto-hide:hover,
+.editor-status-bar.auto-hide:focus-within {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
