@@ -6,7 +6,8 @@ import type { Note } from '../lib/supabase'
 import { getUnlinkedNotes, getUserNotes } from '../lib/notes'
 
 interface EnhancedNoteListProps {
-  userId: string
+  userId?: string
+  notes?: Note[] // Optional pre-filtered notes
   selectedNote: Note | null
   onSelectNote: (note: Note) => void
   onDeleteNote: (noteId: string) => void
@@ -83,6 +84,7 @@ function DeleteConfirmationModal({ isOpen, note, onConfirm, onCancel }: DeleteCo
 
 export default function EnhancedNoteList({ 
   userId,
+  notes: providedNotes,
   selectedNote, 
   onSelectNote, 
   onDeleteNote, 
@@ -90,8 +92,8 @@ export default function EnhancedNoteList({
   highlightMatches = false,
   showLinkedNotes = false 
 }: EnhancedNoteListProps) {
-  const [notes, setNotes] = useState<Note[]>([])
-  const [loading, setLoading] = useState(true)
+  const [notes, setNotes] = useState<Note[]>(providedNotes || [])
+  const [loading, setLoading] = useState(!providedNotes) // Only show loading if we need to fetch notes
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean
     note: Note | null
@@ -100,11 +102,27 @@ export default function EnhancedNoteList({
     note: null
   })
 
+  // Track whether we're using provided notes or fetching our own
+  const usingProvidedNotes = !!providedNotes
+
+  // Update notes when providedNotes changes
   useEffect(() => {
-    loadNotes()
-  }, [userId, showLinkedNotes])
+    if (providedNotes) {
+      setNotes(providedNotes)
+      setLoading(false)
+    }
+  }, [providedNotes])
+
+  // Only fetch notes if userId is provided and no notes are provided
+  useEffect(() => {
+    if (userId && !providedNotes) {
+      loadNotes()
+    }
+  }, [userId, showLinkedNotes, providedNotes])
 
   const loadNotes = async () => {
+    if (!userId) return
+    
     setLoading(true)
     try {
       const fetchedNotes = showLinkedNotes 
@@ -174,8 +192,10 @@ export default function EnhancedNoteList({
         isOpen: false,
         note: null
       })
-      // Reload notes after deletion
-      loadNotes()
+      // Only reload notes if we're managing our own notes (not using providedNotes)
+      if (userId && !usingProvidedNotes) {
+        loadNotes()
+      }
     }
   }
 
