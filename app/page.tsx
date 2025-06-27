@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useToast } from '../hooks/useToast'
 import { ToastContainer } from '../components/Toast'
+import { PWAInstallPrompt, PWAStatus } from '../components/PWAInstallPrompt'
 import LoginForm from '../components/LoginForm'
 import RegisterForm from '../components/RegisterForm'
 import AuthenticatedHome from '../components/AuthenticatedHome'
@@ -150,6 +151,7 @@ export default function HomePage() {
           />
         )}
         <ToastContainer toasts={toasts} onRemove={removeToast} />
+        <PWAInstallPrompt />
       </>
     )
   }
@@ -158,6 +160,7 @@ export default function HomePage() {
     <>
       <AuthenticatedHome user={user} onLogout={handleLogout} showToast={showToast} />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <PWAInstallPrompt />
     </>
   )
 }
