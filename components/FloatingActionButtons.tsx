@@ -26,18 +26,7 @@ export default function FloatingActionButtons({
 
   return (
     <div className="fab-save-container">
-      {/* Cancel FAB */}
-      <button
-        onClick={onCancel}
-        className="fab-cancel"
-        disabled={isSaving}
-        aria-label="Cancel editing"
-      >
-        <XMarkIcon className="w-5 h-5" />
-        <span className="fab-tooltip">Cancel</span>
-      </button>
-
-      {/* Save FAB */}
+      {/* Save FAB - Only show the blue save button for better aesthetics */}
       <button
         onClick={onSave}
         disabled={!hasChanges || isSaving || disabled}

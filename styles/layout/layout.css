@@ -80,6 +80,8 @@
   scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
   /* Add padding bottom to prevent content overlap with status bar */
   padding-bottom: 4rem;
+  /* Ensure proper scroll behavior on desktop */
+  overscroll-behavior: contain;
 }
 
 .scrollable-editor-content .prose {
@@ -89,6 +91,9 @@
   word-wrap: break-word;
   /* Ensure content doesn't touch the bottom */
   margin-bottom: 2rem;
+  /* Fix desktop editing scroll */
+  min-height: auto;
+  height: auto;
 }
 
 /* Status bar should be subtle and non-intrusive */
@@ -163,6 +168,54 @@
     opacity: 0;
     transform: translateY(100%);
     transition: all 0.3s ease-in-out;
+  }
+}
+
+/* Desktop Scrolling Fixes */
+@media (min-width: 769px) {
+  .editor-container-with-fixed-header {
+    overflow: hidden;
+    height: 100vh;
+  }
+  
+  .scrollable-editor-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: calc(100vh - 120px);
+    scroll-behavior: smooth;
+  }
+  
+  .scrollable-editor-content .prose {
+    min-height: auto;
+    height: auto;
+    overflow: visible;
+  }
+  
+  /* Ensure contentEditable can scroll properly */
+  .scrollable-editor-content [contenteditable="true"] {
+    min-height: calc(100vh - 200px);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    outline: none;
+  }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  /* Hide floating save button when header save button is visible */
+  .fab-save-container {
+    display: none;
+  }
+  
+  /* Better spacing for mobile editor */
+  .scrollable-editor-content {
+    padding-bottom: 8rem; /* Extra space for mobile keyboard */
+  }
+  
+  .scrollable-editor-content .prose {
+    padding: 1rem;
+    min-height: calc(100vh - 250px);
   }
 }
 
@@ -272,6 +325,142 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Mobile Navigation Styles */
+.mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(229, 231, 235, 0.5);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  padding: 0.75rem 1rem 1.5rem;
+  margin: 0;
+}
+
+/* Touch target improvements for mobile */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Floating Action Button Styles */
+.fab-save-container {
+  position: fixed;
+  bottom: 6rem;
+  right: 1rem;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fab-save {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.fab-save:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 12px 35px rgba(59, 130, 246, 0.6);
+}
+
+.fab-save:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 15px rgba(156, 163, 175, 0.3);
+}
+
+.fab-tooltip {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  margin-right: 0.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.fab-save:hover .fab-tooltip {
+  opacity: 1;
+}
+
+.fab-status-indicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: #f59e0b;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: pulse 2s infinite;
+}
+
+.fab-status-indicator.saved {
+  background: #10b981;
+  animation: none;
+}
+
+/* Improved User Menu Positioning on Mobile */
+@media (max-width: 768px) {
+  .mobile-nav {
+    padding: 0.5rem 0.75rem 1.25rem;
+  }
+  
+  .fab-save-container {
+    bottom: 5rem;
+    right: 0.75rem;
+  }
+  
+  .fab-save {
+    width: 52px;
+    height: 52px;
+  }
+  
+  /* Better mobile user menu positioning */
+  .glass {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  
+  /* User menu positioning fix for mobile */
+  .user-dropdown {
+    position: fixed !important;
+    top: 4rem !important;
+    right: 0.5rem !important;
+    left: auto !important;
+    width: calc(100vw - 1rem) !important;
+    max-width: 280px !important;
+  }
+}
+
 /* Mobile Responsive Improvements */
 @media (max-width: 1024px) {
   .mobile-sidebar {
@@ -306,6 +495,27 @@
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background-color: rgba(156, 163, 175, 0.6);
     border-radius: 2px;
+  }
+  
+  /* Fix main content height for mobile */
+  .main-content-mobile {
+    height: calc(100vh - 4rem - 5rem); /* Subtract header and mobile nav height */
+    min-height: 0;
+  }
+  
+  /* Ensure note viewer content is scrollable */
+  .note-viewer-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  
+  .note-viewer-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
   }
 }
 

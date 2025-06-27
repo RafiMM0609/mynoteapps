@@ -590,6 +590,11 @@ export default function NoteEditor({
           contentEditable={true}
           suppressContentEditableWarning={true}
           className="prose max-w-none focus:outline-none p-6"
+          style={{
+            minHeight: 'calc(100vh - 200px)',
+            overflowWrap: 'break-word',
+            wordBreak: 'break-word'
+          }}
         />
         
         {/* Status bar - Smart visibility with better UX */}
@@ -615,15 +620,17 @@ export default function NoteEditor({
         )}
       </div>
 
-      {/* Floating Action Buttons - ALWAYS show if header not visible, scrolled, or forced */}
+      {/* Floating Action Buttons - Only show on mobile when header not visible */}
       {(!isHeaderVisible || isScrolledPastThreshold || forceShowFAB) && (
-        <FloatingActionButtons
-          onSave={handleSave}
-          onCancel={handleCancel}
-          hasChanges={hasChanges}
-          isSaving={isSaving}
-          saveSuccess={saveSuccess}
-        />
+        <div className="lg:hidden">
+          <FloatingActionButtons
+            onSave={handleSave}
+            onCancel={handleCancel}
+            hasChanges={hasChanges}
+            isSaving={isSaving}
+            saveSuccess={saveSuccess}
+          />
+        </div>
       )}
     </div>
   )

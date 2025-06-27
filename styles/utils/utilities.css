@@ -185,12 +185,19 @@
   }
   
   .note-viewer-mobile {
-    padding: 0.75rem;
+    padding: 0;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Ensure scrolling works on iOS */
+    position: relative;
   }
   
   .note-viewer-mobile .prose {
     padding: 0;
     margin: 0;
+    max-width: none;
+    width: 100%;
   }
   
   .note-editor-mobile {
@@ -216,6 +223,23 @@
     padding: 0.75rem;
     font-size: 16px;
     line-height: 1.6;
+  }
+  
+  /* Mobile viewport height fix */
+  .h-full {
+    height: 100vh;
+    height: -webkit-fill-available; /* Safari mobile fix */
+  }
+  
+  /* Ensure proper scrolling on mobile */
+  .overflow-auto {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .overflow-y-auto {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .prose h1 {

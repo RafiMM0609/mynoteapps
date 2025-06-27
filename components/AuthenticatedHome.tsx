@@ -517,8 +517,8 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
         </div>
 
         {/* Main content - Balanced height */}
-        <div className="flex-1 p-2 lg:p-4">
-          <div className="h-full glass rounded-2xl overflow-hidden shadow-2xl">{selectedNote ? (
+        <div className="flex-1 p-2 lg:p-4 main-content-mobile">
+          <div className="h-full glass rounded-2xl overflow-hidden shadow-2xl note-viewer-container">{selectedNote ? (
               isEditing ? (
                 <div className="h-full">
                   <NoteEditor
@@ -528,7 +528,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                   />
                 </div>
               ) : (
-                <div className="h-full">
+                <div className="h-full note-viewer-content">
                   <NoteViewer
                     note={selectedNote}
                     onEdit={() => setIsEditing(true)}

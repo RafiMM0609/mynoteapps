@@ -73,7 +73,7 @@ export default function NoteViewer({
   return (
     <div className="h-full flex flex-col md:flex-row bg-white">
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Header - Enhanced UX with better visual hierarchy */}
         <div className="sticky-header flex items-start justify-between px-4 lg:px-6 py-4 lg:py-5 bg-white/95 backdrop-blur-sm border-b border-gray-200/60 shadow-sm">
           <div className="flex-1 min-w-0 mr-4">
@@ -125,9 +125,9 @@ export default function NoteViewer({
         </div>
         
         {/* Content - Mobile Optimized */}
-        <div className="flex-1 overflow-auto note-viewer-mobile">
+        <div className="flex-1 overflow-auto note-viewer-mobile lg:overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           {note.content && note.content.trim() ? (
-            <div className="p-3 lg:p-6">
+            <div className="p-3 lg:p-6 pb-20 lg:pb-6">
               {viewMode === 'preview' ? (
                 <MarkdownPreview
                   content={note.content}
@@ -159,8 +159,8 @@ export default function NoteViewer({
       </div>
 
       {/* Right Sidebar - Links and Tags */}
-      <div className="md:w-80 md:border-l border-gray-200 bg-gray-50 overflow-y-auto w-full border-t md:border-t-0">
-        <div className="p-4 space-y-6">
+      <div className="md:w-80 md:border-l border-gray-200 bg-gray-50 overflow-y-auto w-full border-t md:border-t-0 md:max-h-full">
+        <div className="p-4 space-y-6 pb-20 md:pb-4">
           {/* Note Tags */}
           <NoteTags
             noteTags={noteTags}
