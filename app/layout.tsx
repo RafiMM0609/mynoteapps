@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import AppWrapper from '../components/AppWrapper'
 
 export const metadata: Metadata = {
   title: '✨ Kagita Notes - Magical Note-Taking Experience',
@@ -40,7 +41,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-          {children}
+          <AppWrapper>
+            {children}
+          </AppWrapper>
         </div>
       </body>
     </html>

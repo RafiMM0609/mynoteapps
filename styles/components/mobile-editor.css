@@ -1,0 +1,47 @@
+/**
+ * Mobile Editor Optimizations
+ * Ensures proper scrolling behavior on mobile devices
+ */
+
+/* Enable proper scrolling on mobile */
+@media (max-width: 768px) {
+  .note-editor-mobile {
+    height: calc(100vh - 56px); /* Adjust for mobile navbar */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .note-editor-mobile .scrollable-editor-content {
+    flex: 1;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    max-height: calc(100vh - 130px) !important;
+  }
+
+  .note-editor-mobile .prose {
+    min-height: auto !important;
+    height: auto !important;
+    padding-bottom: 120px; /* Extra padding at the bottom for better UX */
+  }
+
+  /* Override any potential conflicting styles */
+  .editor-container-with-fixed-header {
+    overflow: hidden !important;
+  }
+
+  /* Fix for iOS Safari bug with 100vh */
+  @supports (-webkit-touch-callout: none) {
+    .note-editor-mobile {
+      height: -webkit-fill-available;
+    }
+  }
+}
+
+/* Touch-friendly tap targets for mobile */
+@media (max-width: 768px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

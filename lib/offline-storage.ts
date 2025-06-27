@@ -10,10 +10,27 @@ interface OfflineNote {
   synced: boolean;
 }
 
-class OfflineStorage {
+interface SyncQueueItem {
+  id: string;
+  operation: 'create' | 'update' | 'delete';
+  entityType: 'note' | 'setting';
+  entityId: string;
+  data: any;
+  timestamp: number;
+  attempts: number;
+}
+
+interface OfflineSettings {
+  key: string;
+  value: any;
+}
+
+// Create and export the class for typing
+export class OfflineStorage {
   private dbName = 'KagitaNotesDB';
-  private version = 1;
+  private version = 2; // Increased version to handle schema updates
   private db: IDBDatabase | null = null;
+  private syncInProgress = false;
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -38,6 +55,14 @@ class OfflineStorage {
         // Create settings store
         if (!db.objectStoreNames.contains('settings')) {
           db.createObjectStore('settings', { keyPath: 'key' });
+        }
+        
+        // Create sync queue store
+        if (!db.objectStoreNames.contains('syncQueue')) {
+          const syncQueueStore = db.createObjectStore('syncQueue', { keyPath: 'id' });
+          syncQueueStore.createIndex('timestamp', 'timestamp', { unique: false });
+          syncQueueStore.createIndex('entityType', 'entityType', { unique: false });
+          syncQueueStore.createIndex('attempts', 'attempts', { unique: false });
         }
       };
     });
@@ -123,7 +148,84 @@ class OfflineStorage {
     }
   }
 
-  async saveSetting(key: string, value: any): Promise<void> {
+  // Sync Queue methods
+  async addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp' | 'attempts'>): Promise<string> {
+    if (!this.db) await this.init();
+    
+    const syncItem: SyncQueueItem = {
+      ...item,
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      attempts: 0
+    };
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['syncQueue'], 'readwrite');
+      const store = transaction.objectStore('syncQueue');
+      const request = store.add(syncItem);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(syncItem.id);
+    });
+  }
+  
+  async getSyncQueue(): Promise<SyncQueueItem[]> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['syncQueue'], 'readonly');
+      const store = transaction.objectStore('syncQueue');
+      const index = store.index('timestamp');
+      const request = index.getAll();
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result || []);
+    });
+  }
+  
+  async removeSyncQueueItem(id: string): Promise<void> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['syncQueue'], 'readwrite');
+      const store = transaction.objectStore('syncQueue');
+      const request = store.delete(id);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+  
+  async updateSyncQueueItemAttempts(id: string): Promise<void> {
+    if (!this.db) await this.init();
+    
+    return new Promise(async (resolve, reject) => {
+      const transaction = this.db!.transaction(['syncQueue'], 'readwrite');
+      const store = transaction.objectStore('syncQueue');
+      
+      // First get the item
+      const getRequest = store.get(id);
+      
+      getRequest.onerror = () => reject(getRequest.error);
+      getRequest.onsuccess = () => {
+        const item = getRequest.result;
+        if (!item) {
+          return reject(new Error('Sync queue item not found'));
+        }
+        
+        // Update attempts count
+        item.attempts += 1;
+        
+        // Put back the updated item
+        const putRequest = store.put(item);
+        putRequest.onerror = () => reject(putRequest.error);
+        putRequest.onsuccess = () => resolve();
+      };
+    });
+  }
+  
+  // Settings management
+  async setSetting(key: string, value: any): Promise<void> {
     if (!this.db) await this.init();
     
     return new Promise((resolve, reject) => {
@@ -135,7 +237,7 @@ class OfflineStorage {
       request.onsuccess = () => resolve();
     });
   }
-
+  
   async getSetting(key: string): Promise<any> {
     if (!this.db) await this.init();
     
@@ -145,11 +247,17 @@ class OfflineStorage {
       const request = store.get(key);
 
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        const result = request.result;
-        resolve(result ? result.value : null);
-      };
+      request.onsuccess = () => resolve(request.result?.value ?? null);
     });
+  }
+  
+  // Last sync timestamp tracking
+  async updateLastSyncTimestamp(): Promise<void> {
+    return this.setSetting('lastSyncTimestamp', Date.now());
+  }
+  
+  async getLastSyncTimestamp(): Promise<number | null> {
+    return this.getSetting('lastSyncTimestamp');
   }
 
   async clearAllData(): Promise<void> {
@@ -172,10 +280,109 @@ class OfflineStorage {
       })
     ]);
   }
+  
+  // Background sync processing
+  async processSyncQueue(api: any): Promise<{ success: number; failed: number }> {
+    if (this.syncInProgress) {
+      return { success: 0, failed: 0 };
+    }
+    
+    try {
+      this.syncInProgress = true;
+      
+      const queue = await this.getSyncQueue();
+      let successCount = 0;
+      let failedCount = 0;
+      
+      // Process items in order
+      for (const item of queue) {
+        try {
+          // Skip items that have been attempted too many times (5 max attempts)
+          if (item.attempts >= 5) {
+            console.warn(`Sync item ${item.id} exceeded max attempts, removing from queue`);
+            await this.removeSyncQueueItem(item.id);
+            failedCount++;
+            continue;
+          }
+          
+          // Process based on operation type
+          switch (item.operation) {
+            case 'create':
+              if (item.entityType === 'note') {
+                await api.createNote(item.data);
+              }
+              break;
+              
+            case 'update':
+              if (item.entityType === 'note') {
+                await api.updateNote(item.entityId, item.data);
+              }
+              break;
+              
+            case 'delete':
+              if (item.entityType === 'note') {
+                await api.deleteNote(item.entityId);
+              }
+              break;
+          }
+          
+          // If we reach here, the operation was successful
+          await this.removeSyncQueueItem(item.id);
+          successCount++;
+          
+        } catch (error) {
+          console.error(`Failed to process sync item ${item.id}:`, error);
+          await this.updateSyncQueueItemAttempts(item.id);
+          failedCount++;
+        }
+      }
+      
+      // Update last sync timestamp if any items were processed
+      if (successCount > 0) {
+        await this.updateLastSyncTimestamp();
+      }
+      
+      return { success: successCount, failed: failedCount };
+    } finally {
+      this.syncInProgress = false;
+    }
+  }
+  
+  // Mark a note as synced
+  async markNoteSynced(id: string): Promise<void> {
+    const note = await this.getNote(id);
+    if (note) {
+      note.synced = true;
+      await this.saveNote(note);
+    }
+  }
+  
+  // Get offline status information
+  async getOfflineStats(): Promise<{ unsyncedNotes: number; queueSize: number; lastSync: number | null }> {
+    const [allQueue, lastSync] = await Promise.all([
+      this.getSyncQueue(),
+      this.getLastSyncTimestamp()
+    ]);
+    
+    // Count unsynced notes
+    const unsyncedNotesCount = allQueue.filter(item => 
+      item.entityType === 'note' && ['create', 'update'].includes(item.operation)
+    ).length;
+    
+    return {
+      unsyncedNotes: unsyncedNotesCount,
+      queueSize: allQueue.length,
+      lastSync
+    };
+  }
 }
 
 // Singleton instance
 export const offlineStorage = new OfflineStorage();
+
+// Create and export singleton instance
+const offlineStorageDefault = new OfflineStorage();
+export default offlineStorageDefault;
 
 // Helper functions for common operations
 export const OfflineUtils = {

@@ -13,6 +13,7 @@
 @import '../styles/components/code-blocks.css';
 @import '../styles/components/lists.css';
 @import '../styles/components/slash-dropdown.css';
+@import '../styles/components/mobile-editor.css';
 @import '../styles/layout/layout.css';
 @import '../styles/utils/animations.css';
 @import '../styles/utils/utilities.css';

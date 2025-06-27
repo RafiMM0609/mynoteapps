@@ -679,7 +679,10 @@ export default function NoteEditor({
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="scrollable-editor-content custom-scrollbar">
+      <div className="scrollable-editor-content custom-scrollbar overflow-y-auto" style={{ 
+        maxHeight: 'calc(100vh - 130px)',
+        height: 'auto',
+      }}>
         <div
           ref={editorRef}
           onInput={handleInput}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { XMarkIcon, CheckCircleIcon, ExclamationCircleIcon, InformationCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import type { ToastMessage } from '../hooks/useToast'
 
@@ -73,10 +73,54 @@ interface ToastContainerProps {
 }
 
 export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
+  const [isMobile, setIsMobile] = useState(false)
+  const [isEditorActive, setIsEditorActive] = useState(false)
+
+  // Detect mobile devices and editor focus state
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    // Check if note editor is focused or user is typing
+    const checkEditorActivity = () => {
+      const editor = document.querySelector('[contenteditable="true"]')
+      const isActiveElement = document.activeElement === editor
+      setIsEditorActive(isActiveElement)
+    }
+    
+    checkMobile()
+    checkEditorActivity()
+    
+    window.addEventListener('resize', checkMobile)
+    document.addEventListener('focusin', checkEditorActivity)
+    document.addEventListener('click', checkEditorActivity)
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile)
+      document.removeEventListener('focusin', checkEditorActivity)
+      document.removeEventListener('click', checkEditorActivity)
+    }
+  }, [])
+
+  // Determine the optimal toast position based on device and context
+  const getToastPositionClasses = () => {
+    if (isMobile) {
+      // On mobile, if editor is active, place toasts at the top to avoid keyboard
+      if (isEditorActive) {
+        return 'flex-col items-center top-0 pt-safe sm:items-start'
+      }
+      // Otherwise, place at bottom but with extra padding for mobile navigation
+      return 'flex-col-reverse items-center bottom-0 pb-16 mb-safe sm:items-end'
+    }
+    // Default desktop position (bottom right)
+    return 'flex-col-reverse items-end bottom-0 sm:items-end'
+  }
+
   return (
     <div
       aria-live="assertive"
-      className="fixed inset-0 flex items-end px-4 py-6 pointer-events-none sm:p-6 sm:items-start z-50"
+      className={`fixed inset-x-0 px-4 py-6 pointer-events-none sm:p-6 z-50 ${getToastPositionClasses()}`}
     >
       <div className="w-full flex flex-col items-center space-y-4 sm:items-end">
         {toasts.map((toast) => (
