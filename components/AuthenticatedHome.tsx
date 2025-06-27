@@ -16,6 +16,9 @@ import {
 } from '@heroicons/react/24/outline'
 import Header from './Header'
 import NoteTree from './NoteTree'
+import EnhancedNoteTree from './EnhancedNoteTree'
+import EnhancedNoteList from './EnhancedNoteList'
+import ViewToggle from './ViewToggle'
 import NoteEditor from './NoteEditor_new'
 import NoteViewer from './NoteViewer'
 import NoteLinking from './NoteLinking'
@@ -52,6 +55,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'tree' | 'search'>('tree') // New state for view mode
+  const [showLinkedNotes, setShowLinkedNotes] = useState(false) // Show unlinked notes by default
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false) // Add search modal state
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean
@@ -291,6 +295,13 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     setIsSidebarOpen(false) // Close sidebar on mobile after selecting
   }
 
+  // Wrapper for Enhanced components that work with different note types
+  const handleSelectNoteFromEnhanced = (note: Note) => {
+    setSelectedNote(note)
+    setIsEditing(false)
+    setIsSidebarOpen(false) // Close sidebar on mobile after selecting
+  }
+
   // Wrapper for SearchableNoteList which expects regular Note type
   const handleSelectNoteFromSearch = (note: Note) => {
     setSelectedNote(note)
@@ -458,7 +469,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
               </div>
 
               {/* View Mode Toggle */}
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <div className="flex items-center bg-white/60 backdrop-blur-sm rounded-xl p-1 shadow-sm border border-gray-100">
                   <button
                     onClick={() => setViewMode('tree')}
@@ -485,32 +496,32 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                     <span className="sm:hidden">Search</span>
                   </button>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Notes View - Scrollable content area */}
-            <div className="flex-1 overflow-hidden px-4 lg:px-6 pb-4 lg:pb-6">
-              <div className="h-full custom-scrollbar">
-                {viewMode === 'tree' ? (
-                  <NoteTree
-                    notes={hierarchyNotes}
+            <div className="flex-1 overflow-hidden">
+              <div className="h-full flex flex-col">
+                {/* View Toggle - Simplified */}
+                <ViewToggle 
+                  showLinkedNotes={showLinkedNotes}
+                  onToggleLinkedNotes={setShowLinkedNotes}
+                  viewMode="tree"
+                  onToggleViewMode={() => {}} // Not used in simplified version
+                />
+                
+                {/* Notes Content - Always Tree View */}
+                <div className="flex-1 overflow-hidden">
+                  <EnhancedNoteTree
+                    userId={user.id}
                     selectedNoteId={selectedNote?.id}
                     onNoteSelect={handleSelectNote}
                     onCreateNote={handleCreateNote}
                     onCreateFolder={handleCreateFolder}
                     onDeleteNote={handleDeleteNote}
+                    showLinkedNotes={showLinkedNotes}
                   />
-                ) : (
-                  <div className="h-full bg-white/30 backdrop-blur-sm rounded-xl border border-white/20 overflow-hidden">
-                    <SearchableNoteList
-                      notes={allNotes}
-                      selectedNote={selectedNote}
-                      onSelectNote={handleSelectNoteFromSearch}
-                      onDeleteNote={handleDeleteNote}
-                      onOpenSearchModal={() => setIsSearchModalOpen(true)}
-                    />
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

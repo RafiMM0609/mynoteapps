@@ -8,6 +8,15 @@ import { useNoteLinkParser } from '../hooks/useNoteLinkParser'
 import { NoteLink } from './NoteLinkRenderer'
 import { CodeBlock } from './EnhancedCodeBlock'
 
+// Initialize DOMPurify for client-side use
+const sanitizeHtml = (html: string): string => {
+  if (typeof window === 'undefined') {
+    // Server-side: return as-is (or use a server-safe sanitizer)
+    return html
+  }
+  return DOMPurify.sanitize(html)
+}
+
 interface MarkdownPreviewProps {
   content: string
   availableNotes: Note[]
@@ -41,7 +50,7 @@ export default function MarkdownPreview({
         breaks: true, 
         gfm: true
       }) as string
-      return DOMPurify.sanitize(rawHtml)
+      return sanitizeHtml(rawHtml)
     } catch (error) {
       console.error('Error rendering markdown:', error)
       return content
@@ -59,6 +68,12 @@ export default function MarkdownPreview({
     codeBlocks.forEach((codeElement) => {
       const preElement = codeElement.parentElement
       if (!preElement) return
+
+      // Skip if this code block already has a copy button (from EnhancedCodeBlock component)
+      const parentContainer = preElement.closest('.code-block-container')
+      if (parentContainer && parentContainer.querySelector('.copy-button')) {
+        return // Skip processing this pre element
+      }
 
       const className = codeElement.className
       const languageMatch = className.match(/language-(\w+)/)

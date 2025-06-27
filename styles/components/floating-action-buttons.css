@@ -1,0 +1,223 @@
+/**
+ * Floating Action Button Styles
+ * Specially optimized for mobile devices
+ */
+
+.fab-save-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 50;
+  transition: all 0.3s ease-in-out;
+}
+
+.fab-save-container.mobile {
+  bottom: 80px; /* Allow space for mobile navigation */
+}
+
+.fab-save-container.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fab-save-container.hidden {
+  opacity: 0;
+  transform: translateY(30px);
+  pointer-events: none;
+}
+
+.fab-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  box-shadow: 
+    0 6px 16px rgba(79, 70, 229, 0.4),
+    0 3px 8px rgba(79, 70, 229, 0.2);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.fab-save:disabled {
+  background: #9ca3af;
+  box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3);
+  cursor: not-allowed;
+}
+
+.fab-save::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.fab-save:not(:disabled):hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    0 8px 24px rgba(79, 70, 229, 0.5),
+    0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.fab-save:not(:disabled):hover::before {
+  left: 100%;
+}
+
+.fab-save:not(:disabled):active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: 
+    0 4px 16px rgba(79, 70, 229, 0.4),
+    0 2px 8px rgba(79, 70, 229, 0.2);
+}
+
+.fab-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #6b7280;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 2px 6px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-cancel:hover {
+  background: rgba(255, 255, 255, 0.95);
+  color: #4b5563;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.15),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.fab-cancel:active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.fab-tooltip {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: rgba(55, 65, 81, 0.9);
+  color: white;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.fab-save:hover .fab-tooltip,
+.fab-cancel:hover .fab-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hide tooltip on mobile devices to avoid cluttering the UI */
+@media (max-width: 768px) {
+  .fab-tooltip {
+    display: none;
+  }
+  
+  .fab-save, .fab-cancel {
+    /* Enlarge touch target for mobile */
+    width: 60px;
+    height: 60px;
+  }
+  
+  .fab-save-container.mobile {
+    right: 16px;
+    bottom: 72px;
+  }
+}
+
+/* Status indicator for saving state */
+.fab-status-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid white;
+  transition: background-color 0.3s ease;
+}
+
+.fab-status-indicator.saved {
+  background: #10b981;
+}
+
+/* Loading state */
+.btn-loading {
+  position: relative;
+}
+
+.btn-loading svg {
+  opacity: 0;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: calc(50% - 10px);
+  left: calc(50% - 10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile swipe animations */
+@media (max-width: 768px) {
+  .fab-save-container {
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+  }
+  
+  .swipe-left .fab-save-container {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  
+  .swipe-right .fab-save-container {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+}

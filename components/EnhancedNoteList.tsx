@@ -1,16 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { TrashIcon, DocumentTextIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { useState, useEffect } from 'react'
+import { TrashIcon, DocumentTextIcon, ExclamationTriangleIcon, EyeIcon, LinkIcon } from '@heroicons/react/24/outline'
 import type { Note } from '../lib/supabase'
+import { getUnlinkedNotes, getUserNotes } from '../lib/notes'
 
 interface EnhancedNoteListProps {
-  notes: Note[]
+  userId: string
   selectedNote: Note | null
   onSelectNote: (note: Note) => void
   onDeleteNote: (noteId: string) => void
   searchQuery?: string
   highlightMatches?: boolean
+  showLinkedNotes?: boolean
 }
 
 interface DeleteConfirmationModalProps {
@@ -80,13 +82,16 @@ function DeleteConfirmationModal({ isOpen, note, onConfirm, onCancel }: DeleteCo
 }
 
 export default function EnhancedNoteList({ 
-  notes, 
+  userId,
   selectedNote, 
   onSelectNote, 
   onDeleteNote, 
   searchQuery = '',
-  highlightMatches = false 
+  highlightMatches = false,
+  showLinkedNotes = false 
 }: EnhancedNoteListProps) {
+  const [notes, setNotes] = useState<Note[]>([])
+  const [loading, setLoading] = useState(true)
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean
     note: Note | null
@@ -94,6 +99,24 @@ export default function EnhancedNoteList({
     isOpen: false,
     note: null
   })
+
+  useEffect(() => {
+    loadNotes()
+  }, [userId, showLinkedNotes])
+
+  const loadNotes = async () => {
+    setLoading(true)
+    try {
+      const fetchedNotes = showLinkedNotes 
+        ? await getUserNotes(userId)
+        : await getUnlinkedNotes(userId)
+      setNotes(fetchedNotes)
+    } catch (error) {
+      console.error('Error loading notes:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -125,6 +148,17 @@ export default function EnhancedNoteList({
     return content.substring(0, maxLength) + '...'
   }
 
+  // Filter notes based on search query
+  const filteredNotes = notes.filter(note => {
+    if (!searchQuery.trim()) return true
+    
+    const query = searchQuery.toLowerCase()
+    const title = (note.title || '').toLowerCase()
+    const content = (note.content || '').toLowerCase()
+    
+    return title.includes(query) || content.includes(query)
+  })
+
   const handleDeleteClick = (note: Note, e: React.MouseEvent) => {
     e.stopPropagation()
     setDeleteModal({
@@ -140,6 +174,8 @@ export default function EnhancedNoteList({
         isOpen: false,
         note: null
       })
+      // Reload notes after deletion
+      loadNotes()
     }
   }
 
@@ -150,13 +186,30 @@ export default function EnhancedNoteList({
     })
   }
 
-  if (notes.length === 0) {
+  if (loading) {
+    return (
+      <div className="p-4 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="text-gray-500 mt-2">Loading notes...</p>
+      </div>
+    )
+  }
+
+  if (filteredNotes.length === 0) {
     return (
       <div className="p-4 text-center">
         <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-500">No notes found</p>
+        <p className="text-gray-500">
+          {searchQuery ? 'No notes found' : (showLinkedNotes ? 'No notes yet' : 'No unlinked notes')}
+        </p>
         <p className="text-sm text-gray-400 mt-1">
-          {searchQuery ? 'Try different search terms' : 'Create your first note to get started'}
+          {searchQuery 
+            ? 'Try different search terms' 
+            : (showLinkedNotes 
+              ? 'Create your first note to get started'
+              : 'All notes are linked. Create a new note or unlink existing ones.'
+            )
+          }
         </p>
       </div>
     )
@@ -164,51 +217,81 @@ export default function EnhancedNoteList({
 
   return (
     <>
-      <div className="h-full overflow-y-auto custom-scrollbar">
-        <div className="p-2">
-          {notes.map((note) => (
-            <div
-              key={note.id}
-              className={`
-                group relative p-3 mb-2 rounded-lg cursor-pointer transition-all duration-150
-                ${selectedNote?.id === note.id 
-                  ? 'bg-blue-50 border border-blue-200 shadow-sm' 
-                  : 'bg-gray-50 hover:bg-gray-100 border border-transparent hover:shadow-sm'
-                }
-              `}
-              onClick={() => onSelectNote(note)}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0 pr-8">
-                  <h3 
-                    className="text-sm font-medium text-gray-900 truncate"
-                    dangerouslySetInnerHTML={{
-                      __html: highlightText(note.title || 'Untitled', searchQuery)
-                    }}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formatDate(note.updated_at)}
-                  </p>
-                  {note.content && (
-                    <div 
-                      className="text-xs text-gray-600 mt-2 leading-relaxed"
-                      dangerouslySetInnerHTML={{
-                        __html: highlightText(truncateContent(note.content), searchQuery)
-                      }}
-                    />
-                  )}
+      <div className="h-full flex flex-col">
+        {/* Header with view toggle */}
+        <div className="p-3 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-gray-700">
+              {showLinkedNotes ? 'All Notes' : 'Main Notes'}
+            </h3>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-gray-500">
+                {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
+              </span>
+              {!showLinkedNotes && (
+                <div className="flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                  <EyeIcon className="w-3 h-3 mr-1" />
+                  Unlinked only
                 </div>
-                
-                <button
-                  onClick={(e) => handleDeleteClick(note, e)}
-                  className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all duration-150"
-                  title="Delete note"
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </button>
-              </div>
+              )}
             </div>
-          ))}
+          </div>
+        </div>
+
+        {/* Notes list */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="p-2">
+            {filteredNotes.map((note) => (
+              <div
+                key={note.id}
+                className={`
+                  group relative p-3 mb-2 rounded-lg cursor-pointer transition-all duration-150
+                  ${selectedNote?.id === note.id 
+                    ? 'bg-blue-50 border border-blue-200 shadow-sm' 
+                    : 'bg-gray-50 hover:bg-gray-100 border border-transparent hover:shadow-sm'
+                  }
+                `}
+                onClick={() => onSelectNote(note)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0 pr-8">
+                    <div className="flex items-center space-x-2">
+                      <h3 
+                        className="text-sm font-medium text-gray-900 truncate"
+                        dangerouslySetInnerHTML={{
+                          __html: highlightText(note.title || 'Untitled', searchQuery)
+                        }}
+                      />
+                      {note.is_folder && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                          Folder
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formatDate(note.updated_at)}
+                    </p>
+                    {note.content && (
+                      <div 
+                        className="text-xs text-gray-600 mt-2 leading-relaxed"
+                        dangerouslySetInnerHTML={{
+                          __html: highlightText(truncateContent(note.content), searchQuery)
+                        }}
+                      />
+                    )}
+                  </div>
+                  
+                  <button
+                    onClick={(e) => handleDeleteClick(note, e)}
+                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all duration-150"
+                    title="Delete note"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

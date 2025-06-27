@@ -41,6 +41,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+          {/* Wrap the entire app in a dynamic component that loads only on client */}
           <AppWrapper>
             {children}
           </AppWrapper>

@@ -1,6 +1,6 @@
 /**
  * Slash Command Dropdown Styling
- * Modern dropdown with proper interactions
+ * Modern dropdown with proper interactions and mobile optimization
  */
 
 .slash-dropdown {
@@ -18,6 +18,30 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Mobile optimized dropdown */
+.mobile-slash-dropdown {
+  position: fixed;
+  bottom: 0;
+  max-height: 60vh;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  box-shadow: 
+    0 -10px 25px -5px rgba(0, 0, 0, 0.1), 
+    0 -5px 10px -5px rgba(0, 0, 0, 0.05);
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%) translateX(-50%);
+  }
+  to {
+    transform: translateY(0) translateX(-50%);
+  }
 }
 
 .slash-dropdown::-webkit-scrollbar {
@@ -58,6 +82,32 @@
 
 .slash-dropdown button:focus {
   background-color: #f9fafb !important;
+}
+
+/* Mobile touch feedback */
+@media (max-width: 768px) {
+  .slash-dropdown button:active {
+    background-color: #f3f4f6 !important;
+  }
+  
+  .slash-dropdown button.touch-target {
+    min-height: 54px;
+    padding: 1rem;
+  }
+  
+  .slash-dropdown .mobile-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.5rem;
+    color: #6b7280;
+    background: rgba(243, 244, 246, 0.8);
+    border-radius: 8px;
+    margin-left: auto;
+    font-weight: 500;
+  }
 }
 
 /* Fix text selection and user interaction */

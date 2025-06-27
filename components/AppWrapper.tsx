@@ -1,17 +1,27 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { ToastContainer } from './Toast'
-import NetworkStatus from './NetworkStatus'
+import dynamic from 'next/dynamic'
 import AppProviders, { useAppToast, useAppNetwork } from './AppProviders'
+
+// Dynamically import NetworkStatus to avoid chunk loading issues
+const NetworkStatus = dynamic(() => import('./NetworkStatus'), {
+  ssr: false,
+  loading: () => null
+})
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { toasts, removeToast } = useAppToast()
-  const { isOnline } = useAppNetwork()
   
   // Register service worker for offline functionality
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    // Only run in the browser
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+      return;
+    }
+    
+    try {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(
           (registration) => {
@@ -22,6 +32,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
           }
         )
       })
+    } catch (error) {
+      console.error('Error registering service worker:', error)
     }
   }, [])
 
@@ -29,7 +41,9 @@ function AppContent({ children }: { children: React.ReactNode }) {
     <>
       {children}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
-      <NetworkStatus />
+      <Suspense fallback={null}>
+        <NetworkStatus />
+      </Suspense>
     </>
   )
 }

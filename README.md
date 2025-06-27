@@ -22,7 +22,17 @@ Aplikasi catatan modern yang dibangun dengan Next.js, TypeScript, Tailwind CSS, 
 - **Keyboard Shortcuts**: Ctrl+B, Ctrl+I, Ctrl+Shift+V, dan lainnya
 - **Auto-save**: Seamless saving dengan real-time updates
 
-### � Authentication & Security
+### 🔗 Enhanced Note Organization
+- **Smart Filtering**: Tampilkan hanya note utama (unlinked) untuk organisasi yang lebih bersih
+- **Note Linking**: Sistem linking antar notes untuk membuat hierarki
+- **Dual View Modes**: 
+  - **Main Notes**: Hanya menampilkan note yang tidak di-link oleh note lain
+  - **All Notes**: Menampilkan semua note termasuk yang sudah di-link
+- **View Toggle**: Beralih antara List view dan Tree view
+- **Hierarchical Organization**: Tree structure dengan expand/collapse functionality
+- **Auto-hide Linked Notes**: Note yang di-link otomatis tersembunyi dari main view
+
+### 🏗️ Authentication & Security
 - **User Authentication**: Secure login/register system
 - **JWT Token**: Session management dengan expiry
 - **Row Level Security**: Database-level security dengan Supabase RLS
@@ -524,3 +534,4 @@ localStorage.setItem('debug', 'true')
 
 // Debug API calls
 console.log('API Request:', { url, method, body })
+```

@@ -1,0 +1,89 @@
+/**
+ * Innovative Note Linking Styles
+ * Modern, responsive design with mobile optimizations
+ */
+
+.innovative-note-linking {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.innovative-note-linking.is-mobile .note-links-grid {
+  grid-template-columns: repeat(1, 1fr);
+}
+
+.note-links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.note-link-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.note-link-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Active state for touch feedback */
+.note-link-card.active {
+  background: #f9fafb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .note-link-card {
+    padding: 16px;
+    min-height: 60px; /* Ensure touch target size */
+  }
+  
+  .innovative-note-linking.is-mobile input {
+    font-size: 16px; /* Prevent zoom on focus on iOS */
+    padding: 12px 16px;
+    border-radius: 12px;
+  }
+  
+  .note-link-card:active {
+    background: #f3f4f6;
+    transform: scale(0.98);
+  }
+}
+
+/* Swipe gesture feedback */
+.swipe-left-animation {
+  animation: swipe-left 0.3s ease forwards;
+}
+
+.swipe-right-animation {
+  animation: swipe-right 0.3s ease forwards;
+}
+
+@keyframes swipe-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+}
+
+@keyframes swipe-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+}

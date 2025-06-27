@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
@@ -12,6 +12,20 @@ import NoteLinkRenderer from './NoteLinkRenderer'
 import FloatingActionButtons from './FloatingActionButtons'
 import { useNoteLinkDetection } from '../hooks/useNoteLinkParser'
 import { useHeaderVisibility, useScrollDetection } from '../hooks/useScrollDetection'
+import TypingPerformanceMonitor from './TypingPerformanceMonitor'
+import VirtualizedDocument from './VirtualizedDocument'
+import ProgressiveRendering from './ProgressiveRendering'
+import markdownProcessor from '../lib/async-markdown'
+import { useTypingPerformance } from '../hooks/useTypingPerformance'
+
+// Safe sanitization function that works in both client and server environments
+const sanitizeHtml = (html: string): string => {
+  if (typeof window === 'undefined') {
+    // Server-side: return as-is
+    return html
+  }
+  return DOMPurify.sanitize(html)
+}
 
 interface NoteEditorProps {
   note: Note
@@ -29,7 +43,8 @@ export default function NoteEditor({
   availableNotes = [], 
   onNoteClick, 
   onCreateNewNote 
-}: NoteEditorProps) {  const [title, setTitle] = useState(note.title)
+}: NoteEditorProps) {  
+  const [title, setTitle] = useState(note.title)
   const [content, setContent] = useState(note.content || '')
   const [cursorPosition, setCursorPosition] = useState(0)
   const [hasChanges, setHasChanges] = useState(false)
@@ -37,6 +52,22 @@ export default function NoteEditor({
   const [saveSuccess, setSaveSuccess] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const turndownService = useRef(new TurndownService())
+  
+  // Performance monitoring state
+  const [isLargeDocument, setIsLargeDocument] = useState(false)
+  const [useVirtualization, setUseVirtualization] = useState(false)
+  const [useProgressiveRendering, setUseProgressiveRendering] = useState(false)
+  const [isRenderingMarkdown, setIsRenderingMarkdown] = useState(false)
+  
+  // Use typing performance monitor to detect lag
+  const {
+    isLagging,
+    optimizationsApplied,
+    forceOptimizations
+  } = useTypingPerformance({
+    threshold: 100,
+    sampleSize: 10
+  })
 
   // Slash command states
   const [showSlashDropdown, setShowSlashDropdown] = useState(false)
@@ -169,12 +200,46 @@ export default function NoteEditor({
     }
   }, [content])
 
+  // Check if content is large and enable optimizations
+  useEffect(() => {
+    // Content size thresholds
+    const LARGE_CONTENT_THRESHOLD = 10000; // 10KB
+    const VERY_LARGE_CONTENT_THRESHOLD = 50000; // 50KB
+    
+    // Check content size and apply appropriate optimizations
+    const contentLength = (note.content || '').length;
+    const isLarge = contentLength > LARGE_CONTENT_THRESHOLD;
+    const isVeryLarge = contentLength > VERY_LARGE_CONTENT_THRESHOLD;
+    
+    setIsLargeDocument(isLarge);
+    
+    // Enable virtualization for very large documents or when lag is detected
+    setUseVirtualization(isVeryLarge || (isLarge && (isLagging || optimizationsApplied)));
+    
+    // Enable progressive rendering for large documents that don't need full virtualization
+    setUseProgressiveRendering(isLarge && !isVeryLarge && !useVirtualization);
+    
+  }, [note.content, isLagging, optimizationsApplied]);
+
   useEffect(() => {
     setContent(note.content || '')
+    
     if (editorRef.current) {
-      editorRef.current.innerHTML = renderMarkdown(note.content)
+      // For immediate responsiveness, use sync rendering first for smaller content
+      if (note.content && note.content.length < 5000 && !optimizationsApplied) {
+        editorRef.current.innerHTML = renderMarkdownSync(note.content)
+      } else {
+        // For larger content, show loading state and use async rendering
+        editorRef.current.innerHTML = '<div class="text-gray-500">Rendering content...</div>'
+        
+        renderMarkdown(note.content).then(html => {
+          if (editorRef.current) {
+            editorRef.current.innerHTML = html
+          }
+        })
+      }
     }
-  }, [note.content])
+  }, [note.content, optimizationsApplied])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -320,10 +385,26 @@ export default function NoteEditor({
     }
   }
 
-  const renderMarkdown = (text: string) => {
+  const renderMarkdown = async (text: string) => {
+    try {
+      setIsRenderingMarkdown(true)
+      
+      // Use the optimized async markdown processor
+      const html = await markdownProcessor.parse(text || '')
+      setIsRenderingMarkdown(false)
+      return html
+    } catch (error) {
+      console.error('Error rendering markdown:', error)
+      setIsRenderingMarkdown(false)
+      return text
+    }
+  }
+  
+  // Synchronous version for small content or when immediate rendering is needed
+  const renderMarkdownSync = (text: string) => {
     try {
       const rawHtml = marked(text, { breaks: true, gfm: true }) as string
-      return DOMPurify.sanitize(rawHtml)
+      return sanitizeHtml(rawHtml)
     } catch (error) {
       console.error('Error rendering markdown:', error)
       return text
@@ -683,19 +764,55 @@ export default function NoteEditor({
         maxHeight: 'calc(100vh - 130px)',
         height: 'auto',
       }}>
-        <div
-          ref={editorRef}
-          onInput={handleInput}
-          onKeyDown={handleKeyDown}
-          contentEditable={true}
-          suppressContentEditableWarning={true}
-          className="prose max-w-none focus:outline-none p-6"
-          style={{
-            minHeight: 'calc(100vh - 200px)',
-            overflowWrap: 'break-word',
-            wordBreak: 'break-word'
+        {/* Performance Monitor */}
+        <TypingPerformanceMonitor 
+          onLagDetected={(isLagging) => {
+            if (isLagging && !optimizationsApplied) {
+              forceOptimizations()
+            }
           }}
+          showDebugInfo={false}
         />
+        
+        {/* Use appropriate rendering strategy based on content size and performance */}
+        {useVirtualization ? (
+          <VirtualizedDocument
+            content={content}
+            className="prose max-w-none p-6"
+            readOnly={false}
+            onContentChange={(newContent) => {
+              setContent(newContent)
+              setHasChanges(true)
+            }}
+            onRenderComplete={() => setIsRenderingMarkdown(false)}
+          />
+        ) : useProgressiveRendering ? (
+          <ProgressiveRendering
+            content={content}
+            className="prose max-w-none p-6"
+            initialChunkSize={5000}
+            incrementSize={10000}
+            renderPlaceholder={(remainingChunks) => (
+              <div className="text-center p-4 text-gray-500">
+                Loading more content... ({remainingChunks} chunks remaining)
+              </div>
+            )}
+          />
+        ) : (
+          <div
+            ref={editorRef}
+            onInput={handleInput}
+            onKeyDown={handleKeyDown}
+            contentEditable={true}
+            suppressContentEditableWarning={true}
+            className="prose max-w-none focus:outline-none p-6"
+            style={{
+              minHeight: 'calc(100vh - 200px)',
+              overflowWrap: 'break-word',
+              wordBreak: 'break-word'
+            }}
+          />
+        )}
         
         {/* Status bar - Smart visibility with better UX */}
         {showStatusBar && (
@@ -708,6 +825,17 @@ export default function NoteEditor({
                 <span className="text-gray-500">
                   {content.split(' ').filter(word => word.length > 0).length} words
                 </span>
+              )}
+              
+              {/* Performance indicators */}
+              {isLargeDocument && (
+                <span className={`text-xs ${optimizationsApplied ? 'text-green-600' : 'text-yellow-600'}`}>
+                  {optimizationsApplied ? 'Optimized' : 'Large document'}
+                </span>
+              )}
+              
+              {isRenderingMarkdown && (
+                <span className="text-blue-600 animate-pulse">Rendering...</span>
               )}
             </div>
             <div className="flex items-center space-x-2">

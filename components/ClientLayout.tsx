@@ -1,30 +1,67 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { ToastContainer } from '../components/Toast'
-import NetworkStatus from '../components/NetworkStatus'
 import { useToast } from '../hooks/useToast'
-import { useBackgroundSync } from '../hooks/useBackgroundSync'
+
+// Load NetworkStatus dynamically to avoid chunk loading issues
+const NetworkStatus = dynamic(() => import('./NetworkStatus'), {
+  ssr: false,
+  loading: () => <div className="hidden">Loading network status...</div>
+})
+
+// Create a safer version of useBackgroundSync that doesn't break the render
+const SafeBackgroundSync = () => {
+  // Safely attempt to load the hook
+  const [syncState, setSyncState] = useState({
+    isSyncing: false,
+    lastSync: null as number | null,
+    unsyncedNotes: 0
+  })
+  
+  useEffect(() => {
+    let isMounted = true
+    
+    const loadBackgroundSync = async () => {
+      try {
+        const { useBackgroundSync } = await import('../hooks/useBackgroundSync')
+        if (isMounted && typeof useBackgroundSync === 'function') {
+          const { isSyncing, lastSyncResult } = useBackgroundSync()
+          setSyncState({ 
+            isSyncing, 
+            lastSync: lastSyncResult?.timestamp || null, 
+            unsyncedNotes: 0 
+          })
+        }
+      } catch (error) {
+        console.error('Failed to load background sync:', error)
+      }
+    }
+    
+    loadBackgroundSync()
+    
+    return () => {
+      isMounted = false
+    }
+  }, [])
+  
+  return syncState
+}
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { toasts, removeToast } = useToast()
-  const { isSyncing } = useBackgroundSync()
   
-  // Optional: Show toast when sync status changes
-  const [lastSyncState, setLastSyncState] = useState(isSyncing)
+  // Use the safer version of the hook
+  const { isSyncing } = SafeBackgroundSync()
   
-  useEffect(() => {
-    if (lastSyncState && !isSyncing) {
-      // Sync just completed
-    }
-    setLastSyncState(isSyncing)
-  }, [isSyncing, lastSyncState])
-
   return (
     <>
       {children}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
-      <NetworkStatus />
+      <Suspense fallback={null}>
+        <NetworkStatus />
+      </Suspense>
     </>
   )
 }

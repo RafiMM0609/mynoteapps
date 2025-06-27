@@ -453,3 +453,71 @@ export async function searchNotesByTag(userId: string, tagId: string): Promise<N
     return []
   }
 }
+
+// ========== NEW FUNCTIONS FOR HIERARCHY ==========
+
+// Get notes that are not linked (not in target_note_id column)
+// This creates a cleaner view showing only "parent" or unlinked notes
+export async function getUnlinkedNotes(userId: string): Promise<Note[]> {
+  try {
+    const { data: notes, error } = await supabase
+      .from('notes')
+      .select('*')
+      .eq('user_id', userId)
+      .not('id', 'in', 
+        supabase
+          .from('note_links')
+          .select('target_note_id')
+      )
+      .order('updated_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching unlinked notes:', error)
+      return []
+    }
+
+    return notes || []
+  } catch (error) {
+    console.error('Error fetching unlinked notes:', error)
+    return []
+  }
+}
+
+// Get notes hierarchy excluding linked notes (for cleaner organization)
+export async function getUnlinkedNotesHierarchy(userId: string, parentId: string | null = null): Promise<NoteWithHierarchy[]> {
+  try {
+    // First get all note IDs that are targets in note_links
+    const { data: linkedNoteIds, error: linkedError } = await supabase
+      .from('note_links')
+      .select('target_note_id')
+
+    if (linkedError) {
+      console.error('Error fetching linked note IDs:', linkedError)
+      return []
+    }
+
+    const excludeIds = linkedNoteIds?.map(link => link.target_note_id) || []
+
+    // Get hierarchy excluding linked notes
+    const { data, error } = await supabase
+      .rpc('get_note_hierarchy', {
+        user_id_param: userId,
+        parent_id_param: parentId
+      })
+
+    if (error) {
+      console.error('Error fetching notes hierarchy:', error)
+      return []
+    }
+
+    // Filter out notes that are linked (appear as targets)
+    const filteredData = (data || []).filter((note: NoteWithHierarchy) => 
+      !excludeIds.includes(note.id)
+    )
+
+    return filteredData
+  } catch (error) {
+    console.error('Error fetching unlinked notes hierarchy:', error)
+    return []
+  }
+}

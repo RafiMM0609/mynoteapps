@@ -30,6 +30,7 @@ interface SlashCommandDropdownProps {
   onSelect: (command: SlashCommand) => void
   onClose: () => void
   searchQuery: string
+  isMobile?: boolean
 }
 
 const allCommands: SlashCommand[] = [
@@ -164,9 +165,22 @@ export default function SlashCommandDropdown({
   position, 
   onSelect, 
   onClose, 
-  searchQuery 
-}: SlashCommandDropdownProps) {  const [selectedIndex, setSelectedIndex] = useState(0)
-  const dropdownRef = useRef<HTMLDivElement>(null)  // Close slash dropdown when clicking outside
+  searchQuery,
+  isMobile = false
+}: SlashCommandDropdownProps) {
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  
+  // Detect mobile automatically if not explicitly set
+  const detectMobile = useRef<boolean>(
+    typeof window !== 'undefined' && 
+    (window.innerWidth <= 768 || 'ontouchstart' in window || 
+    /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+  )
+  
+  const isMobileDevice = isMobile || detectMobile.current
+  
+  // Close slash dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isVisible && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -259,17 +273,34 @@ export default function SlashCommandDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto min-w-80 slash-dropdown slash-dropdown-enter custom-scrollbar"
+      className={`fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto slash-dropdown slash-dropdown-enter custom-scrollbar ${
+        isMobileDevice ? 'mobile-slash-dropdown' : 'min-w-80'
+      }`}
       style={{
         top: typeof window !== 'undefined' ? Math.max(10, Math.min(position.top, window.innerHeight - 320)) : position.top,
-        left: typeof window !== 'undefined' ? Math.max(10, Math.min(position.left, window.innerWidth - 320)) : position.left,
+        left: typeof window !== 'undefined' ? 
+          isMobileDevice ? '50%' : // Center on mobile
+          Math.max(10, Math.min(position.left, window.innerWidth - 320)) : position.left,
+        transform: isMobileDevice ? 'translateX(-50%)' : 'none', // Center on mobile
+        width: isMobileDevice ? 'calc(100% - 20px)' : 'auto', // Full width on mobile with padding
+        maxWidth: isMobileDevice ? '400px' : 'none',
       }}
     >
       {/* Header */}
       <div className="px-3 py-2 bg-gray-50 border-b border-gray-100">
         <div className="flex items-center text-xs text-gray-500">
           <span className="font-medium">Slash Commands</span>
-          <span className="ml-auto">↑↓ Navigate • Enter Select • Esc Close</span>
+          {!isMobileDevice && (
+            <span className="ml-auto">↑↓ Navigate • Enter Select • Esc Close</span>
+          )}
+          {isMobileDevice && (
+            <button 
+              className="ml-auto text-gray-600 p-1 -mr-1 touch-target"
+              onClick={onClose}
+            >
+              Close
+            </button>
+          )}
         </div>
       </div>
 
@@ -277,62 +308,68 @@ export default function SlashCommandDropdown({
       <div className="py-1">
         {filteredCommands.map((command, index) => {
           const Icon = command.icon
-          return (            <button
-                key={command.id}
-                onMouseDown={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  // Use setTimeout to ensure this runs after any outside click handlers
-                  setTimeout(() => {
-                    onSelect(command)
-                  }, 0)
-                }}
-                className={`w-full px-3 py-2.5 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
+          return (
+            <button
+              key={command.id}
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                // Use setTimeout to ensure this runs after any outside click handlers
+                setTimeout(() => {
+                  onSelect(command)
+                }, 0)
+              }}
+              className={`w-full px-3 ${isMobileDevice ? 'py-4' : 'py-2.5'} text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
+                index === selectedIndex 
+                  ? 'bg-blue-50 border-r-2 border-blue-500' 
+                  : ''
+              } ${isMobileDevice ? 'touch-target' : ''}`}
+              type="button"
+            >
+              <div className="flex items-start space-x-3">
+                {/* Icon */}
+                <div className={`flex-shrink-0 ${isMobileDevice ? 'w-10 h-10' : 'w-8 h-8'} rounded-md flex items-center justify-center transition-colors duration-150 ${
                   index === selectedIndex 
-                    ? 'bg-blue-50 border-r-2 border-blue-500' 
-                    : ''
-                }`}
-                type="button"
-              ><div className="flex items-start space-x-3">
-                  {/* Icon */}
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center transition-colors duration-150 ${
-                    index === selectedIndex 
-                      ? 'bg-blue-100 text-blue-600' 
-                      : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    <Icon className="w-4 h-4" />
-                  </div>                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className={`text-sm font-medium transition-colors duration-150 ${
-                        index === selectedIndex ? 'text-blue-900' : 'text-gray-900'
-                      }`}>
-                        {command.label}
-                      </h4>
-                      {command.shortcut && (
-                        <span className="text-xs text-gray-400 font-mono bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0 ml-2">
-                          {command.shortcut}
-                        </span>
-                      )}
-                    </div>
-                    <p className={`text-xs mt-0.5 transition-colors duration-150 ${
-                      index === selectedIndex ? 'text-blue-700' : 'text-gray-500'
+                    ? 'bg-blue-100 text-blue-600' 
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  <Icon className={isMobileDevice ? "w-5 h-5" : "w-4 h-4"} />
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h4 className={`${isMobileDevice ? 'text-base' : 'text-sm'} font-medium transition-colors duration-150 ${
+                      index === selectedIndex ? 'text-blue-900' : 'text-gray-900'
                     }`}>
-                      {command.description}
-                    </p>
+                      {command.label}
+                    </h4>
+                    {command.shortcut && !isMobileDevice && (
+                      <span className="text-xs text-gray-400 font-mono bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0 ml-2">
+                        {command.shortcut}
+                      </span>
+                    )}
                   </div>
+                  <p className={`${isMobileDevice ? 'text-sm' : 'text-xs'} mt-0.5 transition-colors duration-150 ${
+                    index === selectedIndex ? 'text-blue-700' : 'text-gray-500'
+                  }`}>
+                    {command.description}
+                  </p>
+                </div>
               </div>
             </button>
           )
         })}
       </div>
 
-      {/* Footer tip */}
-      <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
-        <p className="text-xs text-gray-500">
-          💡 Tip: Type to search commands, or use keyboard shortcuts
-        </p>
-      </div>
+      {/* Footer tip - only show on desktop */}
+      {!isMobileDevice && (
+        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
+          <p className="text-xs text-gray-500">
+            💡 Tip: Type to search commands, or use keyboard shortcuts
+          </p>
+        </div>
+      )}
     </div>
   )
 }

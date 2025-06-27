@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Note } from '@/lib/supabase';
+import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 
 interface InnovativeNoteLinkingProps {
   notes: Note[];
@@ -15,6 +16,19 @@ export default function InnovativeNoteLinking({
   onNoteSelect 
 }: InnovativeNoteLinkingProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeCard, setActiveCard] = useState<string | null>(null);
+  
+  // Use our mobile optimization hook
+  const { 
+    isMobile, 
+    touchActive,
+    swipeGesture,
+    attachTouchHandlers,
+    containerRef
+  } = useMobileOptimization({
+    enableSwipeGestures: true,
+    swipeThreshold: 40
+  });
   
   // Filter out current note and filter by search term if provided
   const filteredNotes = notes
@@ -24,14 +38,37 @@ export default function InnovativeNoteLinking({
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (note.content && note.content.toLowerCase().includes(searchTerm.toLowerCase()))
     );
+    
+  // Attach touch handlers to container
+  useEffect(() => {
+    const element = containerRef.current as HTMLDivElement;
+    if (element) {
+      const cleanup = attachTouchHandlers(element);
+      return cleanup;
+    }
+  }, [attachTouchHandlers]);
+  
+  // Touch feedback for better mobile UX
+  const handleTouchStart = (noteId: string) => {
+    setActiveCard(noteId);
+  };
+  
+  const handleTouchEnd = () => {
+    setActiveCard(null);
+  };
 
   return (
-    <div className="innovative-note-linking">
+    <div 
+      ref={containerRef as React.RefObject<HTMLDivElement>}
+      className={`innovative-note-linking ${isMobile ? 'is-mobile' : ''}`}
+    >
       <div className="mb-4">
         <input
           type="text"
           placeholder="Search notes..."
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            isMobile ? 'text-base p-3' : ''
+          }`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -42,8 +79,12 @@ export default function InnovativeNoteLinking({
           filteredNotes.map(note => (
             <div 
               key={note.id}
-              className="note-link-card border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+              className={`note-link-card border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors ${
+                isMobile ? 'touch-target p-4' : ''
+              } ${activeCard === note.id ? 'bg-gray-50' : ''}`}
               onClick={() => onNoteSelect(note)}
+              onTouchStart={() => handleTouchStart(note.id)}
+              onTouchEnd={handleTouchEnd}
             >
               <h3 className="font-medium text-blue-600">{note.title}</h3>
               {note.content && (
