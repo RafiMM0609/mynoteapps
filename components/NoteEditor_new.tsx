@@ -45,6 +45,30 @@ export default function NoteEditor({
   const [slashStartPos, setSlashStartPos] = useState(0)
   const [activeNode, setActiveNode] = useState<Node | null>(null)
 
+  // Mobile-aware list exit detection
+  const [lastEnterTime, setLastEnterTime] = useState(0)
+  const [showMobileListHint, setShowMobileListHint] = useState(false)
+  
+  // Helper function to detect if we're on mobile
+  const isMobileDevice = () => {
+    return window.innerWidth <= 768 || 'ontouchstart' in window || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  }
+
+  // Helper function to show mobile hint
+  const showMobileHint = (message: string) => {
+    if (isMobileDevice()) {
+      setShowMobileListHint(true)
+      setTimeout(() => setShowMobileListHint(false), 2000)
+    }
+  }
+
+  // Cleanup mobile hint when component unmounts
+  useEffect(() => {
+    return () => {
+      setShowMobileListHint(false)
+    }
+  }, [])
+
   // Note linking detection
   const noteLinkDetection = useNoteLinkDetection(content, cursorPosition)
   
@@ -443,18 +467,91 @@ export default function NoteEditor({
 
       // Find if we are inside a list item
       let parentListItem = null;
+      let parentList = null;
       let currentElement = container.nodeType === Node.TEXT_NODE ? container.parentElement : (container as HTMLElement);
       
       while (currentElement && currentElement !== editorRef.current) {
         if (currentElement.nodeName === 'LI') {
           parentListItem = currentElement;
+        }
+        if (currentElement.nodeName === 'UL' || currentElement.nodeName === 'OL') {
+          parentList = currentElement;
           break;
         }
         currentElement = currentElement.parentElement;
       }
 
-      // If inside a list, let the browser do its default action (create another list item)
-      if (parentListItem) {
+      // Enhanced list handling for both desktop and mobile
+      if (parentListItem && parentList) {
+        // Check if the current list item is empty or only contains a single empty line
+        const listItemText = parentListItem.textContent?.trim() || '';
+        const isEmptyListItem = listItemText === '' || listItemText === '\n';
+        
+        if (isEmptyListItem) {
+          // Exit list behavior - works for both desktop and mobile
+          e.preventDefault();
+          
+          // Remove the empty list item
+          parentListItem.remove();
+          
+          // Insert a new paragraph after the list
+          const newParagraph = document.createElement('p');
+          newParagraph.innerHTML = '<br>';
+          
+          // Insert after the list
+          if (parentList.nextSibling) {
+            parentList.parentNode?.insertBefore(newParagraph, parentList.nextSibling);
+          } else {
+            parentList.parentNode?.appendChild(newParagraph);
+          }
+          
+          // Set cursor in the new paragraph
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.setStart(newParagraph, 0);
+          range.setEnd(newParagraph, 0);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+          
+          return;
+        } else if (isMobileDevice()) {
+          // Enhanced mobile behavior: Double-tap detection for exiting lists
+          const currentTime = Date.now();
+          
+          // If double Enter within 500ms on mobile, exit list
+          if (currentTime - lastEnterTime < 500) {
+            e.preventDefault();
+            
+            // Create new paragraph after list
+            const newParagraph = document.createElement('p');
+            newParagraph.innerHTML = '<br>';
+            
+            if (parentList.nextSibling) {
+              parentList.parentNode?.insertBefore(newParagraph, parentList.nextSibling);
+            } else {
+              parentList.parentNode?.appendChild(newParagraph);
+            }
+            
+            // Set cursor in new paragraph
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.setStart(newParagraph, 0);
+            range.setEnd(newParagraph, 0);
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+            
+            // Reset timestamp
+            setLastEnterTime(0);
+            return;
+          } else {
+            // Store timestamp for double-tap detection
+            setLastEnterTime(currentTime);
+            // Show hint to user on mobile
+            showMobileHint("Press Enter again to exit list");
+          }
+        }
+        
+        // Normal list behavior - let browser handle new list item creation
         return;
       }
 
@@ -619,6 +716,13 @@ export default function NoteEditor({
           </div>
         )}
       </div>
+
+      {/* Mobile List Hint */}
+      {showMobileListHint && isMobileDevice() && (
+        <div className="mobile-list-hint show">
+          Press Enter again to exit list
+        </div>
+      )}
 
       {/* Floating Action Buttons - Only show on mobile when header not visible */}
       {(!isHeaderVisible || isScrolledPastThreshold || forceShowFAB) && (

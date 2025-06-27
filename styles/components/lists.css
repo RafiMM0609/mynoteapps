@@ -331,4 +331,31 @@
     height: 1.25rem;
     font-size: 0.75rem;
   }
+  
+  /* Enhanced mobile list editing */
+  .prose ul li, .prose ol li {
+    /* Better touch targets for mobile editing */
+    min-height: 1.75rem;
+    line-height: 1.6;
+    /* Visual feedback for list item selection */
+    transition: background-color 0.2s ease;
+  }
+  
+  /* Active editing state for mobile */
+  .prose ul li:focus-within, .prose ol li:focus-within {
+    background-color: rgba(59, 130, 246, 0.05);
+    border-radius: 4px;
+    outline: 1px solid rgba(59, 130, 246, 0.2);
+  }
+  
+  /* Mobile list exit indicator */
+  .prose ul li:empty::after, .prose ol li:empty::after {
+    content: "Press Enter twice to exit list";
+    color: #9ca3af;
+    font-size: 0.75rem;
+    font-style: italic;
+    position: absolute;
+    margin-left: 0.5rem;
+    opacity: 0.6;
+  }
 }
