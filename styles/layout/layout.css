@@ -394,7 +394,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     min-height: 0;
-    padding-bottom: 6rem; /* Space above mobile nav */
+    padding-bottom: 1.5rem; /* Space above mobile nav */
   }
   
   /* Better mobile user menu positioning */

@@ -19,7 +19,6 @@ export default function ViewToggle({
   return (
     <div className="p-3 border-b border-gray-200 bg-gray-50">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-800">Notes</h2>
         
         {/* Simplified Toggle - Only Main/All */}
         <div className="flex items-center bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -54,15 +53,6 @@ export default function ViewToggle({
         </div>
       </div>
       
-      {/* Description */}
-      <div className="mt-2">
-        <p className="text-xs text-gray-500">
-          {showLinkedNotes 
-            ? 'Showing all notes including linked notes' 
-            : 'Showing only main notes (not linked by other notes) for cleaner organization'
-          }
-        </p>
-      </div>
     </div>
   )
 }

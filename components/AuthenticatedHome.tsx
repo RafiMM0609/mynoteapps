@@ -57,6 +57,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
   const [viewMode, setViewMode] = useState<'tree' | 'search'>('tree') // New state for view mode
   const [showLinkedNotes, setShowLinkedNotes] = useState(false) // Show unlinked notes by default
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false) // Add search modal state
+  const [showNoteLinking, setShowNoteLinking] = useState(false) // Add state for note linking toggle
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean
     note: Note | null
@@ -293,6 +294,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     setSelectedNote(note)
     setIsEditing(false)
     setIsSidebarOpen(false) // Close sidebar on mobile after selecting
+    setShowNoteLinking(false) // Close note linking when switching notes
   }
 
   // Wrapper for Enhanced components that work with different note types
@@ -300,6 +302,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     setSelectedNote(note)
     setIsEditing(false)
     setIsSidebarOpen(false) // Close sidebar on mobile after selecting
+    setShowNoteLinking(false) // Close note linking when switching notes
   }
 
   // Wrapper for SearchableNoteList which expects regular Note type
@@ -307,6 +310,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     setSelectedNote(note)
     setIsEditing(false)
     setIsSidebarOpen(false) // Close sidebar on mobile after selecting
+    setShowNoteLinking(false) // Close note linking when switching notes
   }
   // Linking functions
   const handleCreateLink = async (targetNoteId: string, linkType: 'reference' | 'embed') => {
@@ -397,6 +401,21 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
       showToast('Failed to remove tag', 'error')
     }
   }
+
+  // Handler untuk toggle note linking di mobile
+  const handleToggleNoteLinking = () => {
+    // Hanya toggle jika ada note yang dipilih
+    if (!selectedNote) {
+      showToast('Please select a note first', 'info')
+      return
+    }
+    
+    setShowNoteLinking(!showNoteLinking)
+    // Jika note linking dibuka, tutup sidebar lainnya untuk memberikan lebih banyak ruang
+    if (!showNoteLinking) {
+      setIsSidebarOpen(false)
+    }
+  }
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -437,66 +456,28 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
         `}>
           <div className="h-full glass m-2 lg:m-4 flex flex-col shadow-2xl overflow-hidden">
             {/* Quick Actions - Fixed header */}
-            <div className="flex-shrink-0 p-4 lg:p-6 border-b border-white/20">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base lg:text-lg font-semibold text-gray-800 flex items-center">
-                  <StarIcon className="h-4 w-4 lg:h-5 lg:w-5 text-yellow-500 mr-2" />
-                  Your Notes
-                </h2>
-                <div className="flex space-x-1 lg:space-x-2">
-                  <button
-                    onClick={() => handleCreateNote()}
-                    className="p-2 lg:p-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-300 hover:scale-110 shadow-lg group touch-target"
-                    title="Create New Note ✨"
-                  >
-                    <PlusIcon className="h-4 w-4 lg:h-5 lg:w-5 group-hover:rotate-90 transition-transform duration-300" />
-                  </button>
-                  <button
-                    onClick={() => handleCreateFolder()}
-                    className="p-2 lg:p-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-xl hover:from-accent-600 hover:to-accent-700 transition-all duration-300 hover:scale-110 shadow-lg group touch-target"
-                    title="Create New Folder 📁"
-                  >
-                    <FolderIcon className="h-4 w-4 lg:h-5 lg:w-5 group-hover:scale-110 transition-transform duration-300" />
-                  </button>
-                  <button
-                    onClick={() => setIsSearchModalOpen(true)}
-                    className="p-2 lg:p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:scale-110 shadow-lg group touch-target"
-                    title="Search Notes (Ctrl+K) 🔍"
-                  >
-                    <MagnifyingGlassIcon className="h-4 w-4 lg:h-5 lg:w-5 group-hover:scale-110 transition-transform duration-300" />
-                  </button>
-                </div>
+            <div className="flex-shrink-0 p-4 lg:p-4 border-b border-white/20">
+              <h2 className="text-base lg:text-lg font-semibold text-gray-800 flex items-center mb-4">
+                <StarIcon className="h-4 w-4 lg:h-5 lg:w-5 text-yellow-500 mr-2" />
+                Your Notes
+              </h2>
+              <div className="flex space-x-4 lg:space-x-2">
+                <button
+                  onClick={() => handleCreateNote()}
+                  className="p-2 lg:p-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 hover:scale-110 shadow-lg group touch-target"
+                  title="Create New Note ✨"
+                >
+                  <PlusIcon className="h-4 w-4 lg:h-5 lg:w-5 group-hover:rotate-90 transition-transform duration-300" />
+                </button>
+                <button
+                  onClick={() => setIsSearchModalOpen(true)}
+                  className="p-2 lg:p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:scale-110 shadow-lg group touch-target"
+                  title="Search Notes (Ctrl+K) 🔍"
+                >
+                  <MagnifyingGlassIcon className="h-4 w-4 lg:h-5 lg:w-5 group-hover:scale-110 transition-transform duration-300" />
+                </button>
               </div>
-
-              {/* View Mode Toggle */}
-              {/* <div className="mb-4">
-                <div className="flex items-center bg-white/60 backdrop-blur-sm rounded-xl p-1 shadow-sm border border-gray-100">
-                  <button
-                    onClick={() => setViewMode('tree')}
-                    className={`flex-1 flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                      viewMode === 'tree'
-                        ? 'bg-white text-gray-900 shadow-md scale-105'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                    }`}
-                  >
-                    <Squares2X2Icon className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Tree View</span>
-                    <span className="sm:hidden">Tree</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode('search')}
-                    className={`flex-1 flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                      viewMode === 'search'
-                        ? 'bg-white text-gray-900 shadow-md scale-105'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                    }`}
-                  >
-                    <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Search</span>
-                    <span className="sm:hidden">Search</span>
-                  </button>
-                </div>
-              </div> */}
+  
             </div>
 
             {/* Notes View - Scrollable content area */}
@@ -673,9 +654,59 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
         onCreateNote={() => handleCreateNote()}
         onOpenSearch={() => setIsSearchModalOpen(true)}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        onToggleNoteLinking={handleToggleNoteLinking}
         selectedNote={selectedNote}
         isSidebarOpen={isSidebarOpen}
+        showNoteLinking={showNoteLinking}
       />
+
+      {/* Mobile Note Linking Bottom Sheet */}
+      {showNoteLinking && selectedNote && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40 mobile-note-linking-fade-in"
+            onClick={() => setShowNoteLinking(false)}
+          />
+          
+          {/* Bottom Sheet */}
+          <div className={`mobile-note-linking-sheet ${showNoteLinking ? 'open' : ''} md:hidden`}>
+            {/* Handle */}
+            <div className="mobile-note-linking-handle"></div>
+            
+            {/* Header */}
+            <div className="mobile-note-linking-header">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Note Links</h3>
+                <button
+                  onClick={() => setShowNoteLinking(false)}
+                  className="p-2 text-gray-500 hover:text-gray-700 rounded-lg touch-target"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+              
+              {selectedNote && (
+                <div className="mt-2 text-sm text-gray-600">
+                  Links for: <span className="font-medium">{selectedNote.title || 'Untitled'}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Content */}
+            <div className="mobile-note-linking-content">
+              <NoteLinking
+                currentNote={selectedNote}
+                availableNotes={allNotes}
+                existingLinks={noteLinks}
+                onCreateLink={handleCreateLink}
+                onRemoveLink={handleRemoveLink}
+                onOpenLinkedNote={handleOpenLinkedNote}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Search Modal */}
       <SearchModal 

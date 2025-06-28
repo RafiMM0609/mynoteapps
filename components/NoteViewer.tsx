@@ -90,12 +90,12 @@ export default function NoteViewer({
             <h1 className="text-xl lg:text-2xl font-bold text-gray-900 truncate mb-2">
               {note.title || 'Untitled'}
             </h1>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
+            {/* <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                 <span className="font-medium">Last updated: {formatDate(note.updated_at)}</span>
               </div>
-            </div>
+            </div> */}
           </div>
           
           <div className="flex items-center gap-3">
@@ -244,13 +244,13 @@ export default function NoteViewer({
         </div>
       </div>
       
-      {/* Mobile Floating Action Button */}
+      {/* Mobile Floating Action Button
       <button
         onClick={toggleMobileSidebar}
         className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center z-40 transition-all duration-200"
       >
         <TagIcon className="w-6 h-6" />
-      </button>
+      </button> */}
 
       {/* Desktop Floating Action Button (when sidebar is hidden) */}
       {!showDesktopSidebar && (

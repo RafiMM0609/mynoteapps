@@ -322,25 +322,6 @@ export default function EnhancedNoteTree({
 
   return (
     <div className="h-full flex flex-col py-1">
-      {/* Header with view toggle */}
-      <div className="px-3 py-2 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-700">
-            {showLinkedNotes ? 'All Notes Tree' : 'Main Notes Tree'}
-          </h3>
-          <div className="flex items-center space-x-2">
-            <span className="text-xs text-gray-500">
-              {treeData.length} {treeData.length === 1 ? 'root' : 'roots'}
-            </span>
-            {!showLinkedNotes && (
-              <div className="flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                <EyeIcon className="w-3 h-3 mr-1" />
-                Unlinked only
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-0.5 pr-1">
         {treeData.map((node) => (
