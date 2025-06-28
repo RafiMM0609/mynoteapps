@@ -91,7 +91,13 @@ export default function FloatingActionButtons({
         className={`fab-save ${isSaving ? 'btn-loading' : ''} ${isMobile ? 'touch-target' : ''}`}
         aria-label={isSaving ? 'Saving...' : 'Save note'}
       >
-        <CheckIcon className="w-6 h-6" />
+        {isSaving ? (
+          <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full" />
+        ) : saveSuccess ? (
+          <CheckIcon className="w-6 h-6 animate-bounce" />
+        ) : (
+          <CheckIcon className="w-6 h-6" />
+        )}
         <span className="fab-tooltip">
           {isSaving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
         </span>

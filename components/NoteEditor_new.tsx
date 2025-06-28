@@ -872,7 +872,7 @@ export default function NoteEditor({
           <div className="flex items-center gap-2 lg:hidden">
             <button
               onClick={handleCancel}
-              className="inline-flex items-center gap-1.5 px-3 py-1 text-s font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-s font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50"
               disabled={isSaving}
               title="Cancel editing (Esc)"
             >
@@ -882,7 +882,7 @@ export default function NoteEditor({
             <button
               onClick={handleSave}
               disabled={!hasChanges || isSaving}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 text-s font-medium text-white rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 ${
+              className={`inline-flex items-center gap-1.5 px-4 py-2 text-s font-medium text-white rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 ${
                 !hasChanges 
                   ? 'bg-gray-400 cursor-not-allowed' 
                   : saveSuccess 
@@ -893,7 +893,13 @@ export default function NoteEditor({
               }`}
               title={hasChanges ? "Save changes (Ctrl+S)" : "No changes to save"}
             >
-              <CheckIcon className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : saveSuccess ? 'animate-bounce' : ''}`} />
+              {isSaving ? (
+                <div className="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full" />
+              ) : saveSuccess ? (
+                <CheckIcon className="w-3.5 h-3.5 animate-bounce" />
+              ) : (
+                <CheckIcon className="w-3.5 h-3.5" />
+              )}
             </button>
           </div>
 
@@ -923,8 +929,22 @@ export default function NoteEditor({
               }`}
               title={hasChanges ? "Save changes (Ctrl+S)" : "No changes to save"}
             >
-              <CheckIcon className={`w-4 h-4 ${isSaving ? 'animate-spin' : saveSuccess ? 'animate-bounce' : ''}`} />
-              {isSaving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
+              {isSaving ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  Saving...
+                </>
+              ) : saveSuccess ? (
+                <>
+                  <CheckIcon className="w-4 h-4 animate-bounce" />
+                  Saved!
+                </>
+              ) : (
+                <>
+                  <CheckIcon className="w-4 h-4" />
+                  Save
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -935,7 +955,7 @@ export default function NoteEditor({
         className="scrollable-editor-content custom-scrollbar overflow-y-auto" 
         style={{ 
           paddingTop: '0.5rem', // Add small padding to prevent content overlap
-          paddingBottom: '6rem' // Extra padding for mobile footer
+          paddingBottom: '2rem' // Extra padding for mobile footer
         }}
       >
         {/* Performance Monitor */}
@@ -1010,14 +1030,14 @@ export default function NoteEditor({
         )}
 
         {/* Status Bar */}
-        <div className={`editor-status-bar ${isStatusBarFloating ? 'floating' : ''} ${showStatusBar ? '' : 'hidden'}`}>
+        {/* <div className={`editor-status-bar ${isStatusBarFloating ? 'floating' : ''} ${showStatusBar ? '' : 'hidden'}`}>
           <div className="flex items-center justify-between px-4 py-2 text-xs text-gray-600">
             <div className="flex items-center space-x-4">
               {hasChanges && !isSaving && <span className="text-orange-600">• Unsaved changes</span>}
               <span className="text-xs opacity-60">Ctrl+S to save</span>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Mobile List Hint */}

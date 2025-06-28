@@ -509,7 +509,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
         </div>
 
         {/* Main content - Balanced height */}
-        <div className="flex-1 p-2 lg:p-4 main-content-mobile">
+        <div className="flex-1 pt-8 p-2 lg:p-4 main-content-mobile">
           <div className="h-full glass rounded-2xl overflow-hidden shadow-2xl note-viewer-container">{selectedNote ? (
               isEditing ? (
                 <div className="h-full">
