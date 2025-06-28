@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { TrashIcon, DocumentTextIcon, ExclamationTriangleIcon, EyeIcon, LinkIcon } from '@heroicons/react/24/outline'
 import type { Note } from '../lib/supabase'
 import { getUnlinkedNotes, getUserNotes } from '../lib/notes'
+import MobileNoteCard from './MobileNoteCard'
 
 interface EnhancedNoteListProps {
   userId?: string
@@ -217,12 +218,12 @@ export default function EnhancedNoteList({
 
   if (filteredNotes.length === 0) {
     return (
-      <div className="p-4 text-center">
-        <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-500">
+      <div className="p-6 md:p-4 text-center">
+        <DocumentTextIcon className="h-16 w-16 md:h-12 md:w-12 text-gray-400 mx-auto mb-6 md:mb-4" />
+        <p className="text-base md:text-gray-500 text-gray-600 font-medium">
           {searchQuery ? 'No notes found' : (showLinkedNotes ? 'No notes yet' : 'No unlinked notes')}
         </p>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-gray-400 mt-2 md:mt-1 leading-relaxed max-w-sm mx-auto">
           {searchQuery 
             ? 'Try different search terms' 
             : (showLinkedNotes 
@@ -239,18 +240,18 @@ export default function EnhancedNoteList({
     <>
       <div className="h-full flex flex-col">
         {/* Header with view toggle */}
-        <div className="p-3 border-b border-gray-200 bg-gray-50">
+        <div className="p-4 md:p-3 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-700">
+            <h3 className="text-base md:text-sm font-semibold md:font-medium text-gray-700">
               {showLinkedNotes ? 'All Notes' : 'Main Notes'}
             </h3>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-500">
+            <div className="flex items-center space-x-3 md:space-x-2">
+              <span className="text-sm md:text-xs text-gray-500 font-medium">
                 {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
               </span>
               {!showLinkedNotes && (
-                <div className="flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                  <EyeIcon className="w-3 h-3 mr-1" />
+                <div className="flex items-center text-xs text-blue-600 bg-blue-50 px-3 py-1.5 md:px-2 md:py-1 rounded-full">
+                  <EyeIcon className="w-4 h-4 md:w-3 md:h-3 mr-1" />
                   Unlinked only
                 </div>
               )}
@@ -260,12 +261,27 @@ export default function EnhancedNoteList({
 
         {/* Notes list */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <div className="p-2">
+          <div className="p-4 md:p-2">
+            {filteredNotes.map((note) => (
+              /* Mobile-optimized card on small screens, compact list on desktop */
+              <div key={note.id} className="md:hidden">
+                <MobileNoteCard
+                  note={note}
+                  isSelected={selectedNote?.id === note.id}
+                  searchQuery={searchQuery}
+                  onSelect={() => onSelectNote(note)}
+                  onDelete={(e) => handleDeleteClick(note, e)}
+                  highlightMatches={highlightMatches}
+                />
+              </div>
+            ))}
+            
+            {/* Desktop/tablet compact list */}
             {filteredNotes.map((note) => (
               <div
-                key={note.id}
+                key={`desktop-${note.id}`}
                 className={`
-                  group relative p-3 mb-2 rounded-lg cursor-pointer transition-all duration-150
+                  hidden md:block group relative p-3 mb-2 rounded-lg cursor-pointer transition-all duration-150
                   ${selectedNote?.id === note.id 
                     ? 'bg-blue-50 border border-blue-200 shadow-sm' 
                     : 'bg-gray-50 hover:bg-gray-100 border border-transparent hover:shadow-sm'
@@ -295,7 +311,7 @@ export default function EnhancedNoteList({
                       <div 
                         className="text-xs text-gray-600 mt-2 leading-relaxed"
                         dangerouslySetInnerHTML={{
-                          __html: highlightText(truncateContent(note.content), searchQuery)
+                          __html: highlightText(truncateContent(note.content, 60), searchQuery)
                         }}
                       />
                     )}

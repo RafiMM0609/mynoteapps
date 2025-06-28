@@ -410,6 +410,53 @@ export default function NoteEditor({
       return text
     }
   }
+  // Helper function to scroll cursor into view with enhanced desktop experience
+  const scrollCursorIntoView = () => {
+    const selection = window.getSelection()
+    if (!selection || !selection.rangeCount) return
+
+    const range = selection.getRangeAt(0)
+    const rect = range.getBoundingClientRect()
+    const scrollableContent = document.querySelector('.scrollable-editor-content') as HTMLElement
+    
+    if (!scrollableContent) return
+
+    const containerRect = scrollableContent.getBoundingClientRect()
+    const scrollTop = scrollableContent.scrollTop
+    
+    // Calculate if cursor is out of view
+    const cursorTopRelativeToContainer = rect.top - containerRect.top
+    const cursorBottomRelativeToContainer = rect.bottom - containerRect.top
+    
+    // Enhanced buffer space - optimized for desktop viewing
+    const isMobile = isMobileDevice()
+    const topBuffer = isMobile ? 60 : 80  // Reduced buffer for more visible content
+    const bottomBuffer = isMobile ? 120 : 160  // Balanced bottom buffer on desktop
+    
+    // Enhanced logic for better positioning
+    const needsScroll = cursorTopRelativeToContainer < topBuffer || 
+                       cursorBottomRelativeToContainer > containerRect.height - bottomBuffer
+
+    if (needsScroll) {
+      let newScrollTop
+
+      if (cursorTopRelativeToContainer < topBuffer) {
+        // Scrolling up - position cursor comfortably from top
+        newScrollTop = scrollTop + cursorTopRelativeToContainer - topBuffer
+      } else {
+        // Scrolling down - position cursor in optimal viewing zone
+        const idealPosition = isMobile ? containerRect.height * 0.7 : containerRect.height * 0.5
+        newScrollTop = scrollTop + cursorBottomRelativeToContainer - idealPosition
+      }
+
+      scrollableContent.scrollTo({
+        top: Math.max(0, newScrollTop),
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  // Enhanced handleInput - auto-scroll disabled on desktop, enabled on mobile
   const handleInput = () => {
     if (!hasChanges) {
       setHasChanges(true)
@@ -417,6 +464,14 @@ export default function NoteEditor({
 
     // Update content and cursor position for note linking
     updateContentFromEditor()
+
+    // Auto-scroll only for mobile - desktop users prefer manual control
+    if (isMobileDevice()) {
+      const scrollDelay = 8 // Mobile gets auto-scroll for better UX
+      setTimeout(() => {
+        scrollCursorIntoView()
+      }, scrollDelay)
+    }
 
     const selection = window.getSelection()
     if (!selection || selection.rangeCount === 0) {
@@ -540,6 +595,39 @@ export default function NoteEditor({
       return;
     }
 
+    // Auto-scroll for navigation keys - only on mobile
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      if (isMobileDevice()) {
+        const scrollDelay = 5 // Mobile navigation auto-scroll
+        setTimeout(() => {
+          scrollCursorIntoView()
+        }, scrollDelay)
+      }
+      // Desktop: no auto-scroll for navigation keys - users prefer manual control
+    }
+    
+    // Special handling for Enter key - auto-scroll only on mobile
+    if (e.key === 'Enter') {
+      if (isMobileDevice()) {
+        const scrollDelay = 15 // Mobile gets Enter auto-scroll for better UX
+        setTimeout(() => {
+          scrollCursorIntoView()
+        }, scrollDelay)
+      }
+      // Desktop: no auto-scroll for Enter key - users prefer manual control
+    }
+    
+    // Auto-scroll for editing keys - only on mobile
+    if (['Backspace', 'Delete'].includes(e.key)) {
+      if (isMobileDevice()) {
+        const scrollDelay = 8 // Mobile editing auto-scroll
+        setTimeout(() => {
+          scrollCursorIntoView()
+        }, scrollDelay)
+      }
+      // Desktop: no auto-scroll for backspace/delete - users prefer manual control
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       const selection = window.getSelection();
       if (!selection || !selection.rangeCount) return;
@@ -594,6 +682,15 @@ export default function NoteEditor({
           sel?.removeAllRanges();
           sel?.addRange(range);
           
+          // Auto-scroll after list exit - only on mobile
+          if (isMobileDevice()) {
+            const scrollDelay = 20 // Mobile list exit auto-scroll
+            setTimeout(() => {
+              scrollCursorIntoView()
+            }, scrollDelay)
+          }
+          // Desktop: no auto-scroll after list exit - users prefer manual control
+          
           return;
         } else if (isMobileDevice()) {
           // Enhanced mobile behavior: Double-tap detection for exiting lists
@@ -636,12 +733,37 @@ export default function NoteEditor({
         return;
       }
 
-      // Otherwise, prevent default to avoid inheriting styles (like bold)
-      // and insert a new paragraph for the new line.
-      e.preventDefault();
-      // Using insertHTML is often more reliable for creating a new, clean block.
-      // The browser will typically handle closing the current block and starting a new one.
-      document.execCommand('insertHTML', false, '<p><br></p>');
+      // Enhanced desktop Enter behavior for better editing experience
+      if (!isMobileDevice()) {
+        // On desktop, use improved behavior for better cursor positioning
+        e.preventDefault();
+        
+        // Get current selection
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          
+          // Create a paragraph element for better structure
+          const newParagraph = document.createElement('p');
+          newParagraph.innerHTML = '<br>';
+          
+          // Insert the new paragraph
+          range.deleteContents();
+          range.insertNode(newParagraph);
+          
+          // Position cursor at the start of the new paragraph
+          range.setStart(newParagraph, 0);
+          range.setEnd(newParagraph, 0);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          
+          // Desktop: no auto-scroll after Enter - users prefer manual control
+        }
+      } else {
+        // Mobile behavior - use insertHTML for consistency
+        e.preventDefault();
+        document.execCommand('insertHTML', false, '<div><br></div>');
+      }
     }
   };
   
@@ -692,78 +814,130 @@ export default function NoteEditor({
         />
       )}
 
-      {/* Enhanced Header - Better UX and Visual Hierarchy */}
+      {/* Enhanced Header - Compact and Efficient Design */}
       <div 
         ref={headerRef}
-        className="fixed-header-alternative px-4 lg:px-6 py-4 lg:py-5 bg-white/95 backdrop-blur-sm border-b border-gray-200/60"
+        className="fixed-header-alternative px-3 lg:px-4 py-2 lg:py-3 bg-white/95 backdrop-blur-sm border-b border-gray-200/60"
       >
-        <div className="flex items-start justify-between gap-4">
-          {/* Title Section - More prominent and informative */}
-          <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-3">
+          {/* Title Section - Mobile layout (original) */}
+          <div className="flex-1 min-w-0 lg:hidden">
             <input
               type="text"
               value={title}
               onChange={handleTitleChange}
-              className="w-full text-xl lg:text-2xl font-bold text-gray-900 border-none focus:outline-none bg-transparent placeholder-gray-400 mb-2"
+              className="w-full text-lg font-semibold text-gray-900 border-none focus:outline-none bg-transparent placeholder-gray-400 mb-1"
               placeholder="Enter note title..."
             />
-            {/* Status indicators - Better visual feedback */}
+            {/* Mobile status indicators */}
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
+                  hasChanges ? 'bg-orange-400 animate-pulse' : 'bg-green-400'
+                }`}></div>
+                <span className="text-xs">
+                  {hasChanges ? 'Unsaved' : 'Saved'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop layout - Title and status in same row */}
+          <div className="hidden lg:flex flex-1 items-center gap-4">
+            <input
+              type="text"
+              value={title}
+              onChange={handleTitleChange}
+              className="flex-1 text-xl font-semibold text-gray-900 border-none focus:outline-none bg-transparent placeholder-gray-400"
+              placeholder="Enter note title..."
+            />
+            
+            {/* Desktop status indicators */}
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${
                   hasChanges ? 'bg-orange-400 animate-pulse' : 'bg-green-400'
                 }`}></div>
-                <span className="font-medium">
+                <span className="text-sm">
                   {hasChanges ? 'Unsaved changes' : 'All changes saved'}
                 </span>
               </div>
-              <div className="hidden sm:flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
-                <kbd className="font-mono font-semibold">Ctrl+S</kbd>
-                <span>to save</span>
+              <div className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
+                <kbd className="font-mono text-xs">Ctrl+S</kbd>
               </div>
             </div>
           </div>
           
-          {/* Action Buttons - Cleaner, more accessible design */}
-          <div className="flex items-center gap-3">
+          {/* Action Buttons - Mobile only (desktop buttons moved below) */}
+          <div className="flex items-center gap-2 lg:hidden">
             <button
               onClick={handleCancel}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-s font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50"
               disabled={isSaving}
               title="Cancel editing (Esc)"
             >
-              <XMarkIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">Cancel</span>
+              <XMarkIcon className="w-3.5 h-3.5" />
             </button>
             
             <button
               onClick={handleSave}
               disabled={!hasChanges || isSaving}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 shadow-sm ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1 text-s font-medium text-white rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 ${
                 !hasChanges 
                   ? 'bg-gray-400 cursor-not-allowed' 
                   : saveSuccess 
-                    ? 'bg-green-500 focus:ring-green-500 shadow-green-200' 
+                    ? 'bg-green-500 focus:ring-green-500' 
                     : isSaving 
                       ? 'bg-blue-400 cursor-wait' 
-                      : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 shadow-blue-200'
+                      : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+              }`}
+              title={hasChanges ? "Save changes (Ctrl+S)" : "No changes to save"}
+            >
+              <CheckIcon className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : saveSuccess ? 'animate-bounce' : ''}`} />
+            </button>
+          </div>
+
+          {/* Desktop Action Buttons */}
+          <div className="hidden lg:flex items-center gap-3">
+            <button
+              onClick={handleCancel}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50"
+              disabled={isSaving}
+              title="Cancel editing (Esc)"
+            >
+              <XMarkIcon className="w-4 h-4" />
+              Cancel
+            </button>
+            
+            <button
+              onClick={handleSave}
+              disabled={!hasChanges || isSaving}
+              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-1 transition-all duration-200 ${
+                !hasChanges 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : saveSuccess 
+                    ? 'bg-green-500 focus:ring-green-500' 
+                    : isSaving 
+                      ? 'bg-blue-400 cursor-wait' 
+                      : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
               }`}
               title={hasChanges ? "Save changes (Ctrl+S)" : "No changes to save"}
             >
               <CheckIcon className={`w-4 h-4 ${isSaving ? 'animate-spin' : saveSuccess ? 'animate-bounce' : ''}`} />
-              <span className="hidden sm:inline font-medium">
-                {isSaving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Note'}
-              </span>
+              {isSaving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Scrollable Content Area */}
-      <div className="scrollable-editor-content custom-scrollbar overflow-y-auto" style={{ 
-        maxHeight: 'calc(100vh - 130px)',
-        height: 'auto',
-      }}>
+      {/* Scrollable Content Area - Optimized space with very compact header */}
+      <div 
+        className="scrollable-editor-content custom-scrollbar overflow-y-auto" 
+        style={{ 
+          paddingTop: '0.5rem', // Add small padding to prevent content overlap
+          paddingBottom: '6rem' // Extra padding for mobile footer
+        }}
+      >
         {/* Performance Monitor */}
         <TypingPerformanceMonitor 
           onLagDetected={(isLagging) => {
@@ -794,58 +968,56 @@ export default function NoteEditor({
             incrementSize={10000}
             renderPlaceholder={(remainingChunks) => (
               <div className="text-center p-4 text-gray-500">
-                Loading more content... ({remainingChunks} chunks remaining)
+                Loading more content... ({remainingChunks})
               </div>
             )}
           />
         ) : (
           <div
             ref={editorRef}
+            contentEditable
             onInput={handleInput}
             onKeyDown={handleKeyDown}
-            contentEditable={true}
-            suppressContentEditableWarning={true}
-            className="prose max-w-none focus:outline-none p-6"
-            style={{
-              minHeight: 'calc(100vh - 200px)',
-              overflowWrap: 'break-word',
-              wordBreak: 'break-word'
+            onClick={() => {
+              // Click auto-scroll only on mobile
+              if (isMobileDevice()) {
+                setTimeout(() => {
+                  scrollCursorIntoView()
+                }, 10)
+              }
+              // Desktop: no auto-scroll on click - users prefer manual control
             }}
+            onPaste={() => {
+              // Handle paste events with auto-scroll only on mobile
+              setTimeout(() => {
+                updateContentFromEditor()
+                if (isMobileDevice()) {
+                  scrollCursorIntoView()
+                }
+              }, 50)
+            }}
+            onFocus={() => {
+              // Focus auto-scroll only on mobile
+              if (isMobileDevice()) {
+                setTimeout(() => {
+                  scrollCursorIntoView()
+                }, 50)
+              }
+              // Desktop: no auto-scroll on focus - users prefer manual control
+            }}
+            className="prose max-w-none p-6 focus:outline-none min-h-96"
           />
         )}
-        
-        {/* Status bar - Smart visibility with better UX */}
-        {showStatusBar && (
-          <div className={`editor-status-bar auto-hide ${isStatusBarFloating ? 'floating' : ''} ${
-            !showStatusBar ? 'mobile-hidden' : ''
-          } flex items-center justify-between p-2 text-xs text-gray-600`}>
-            <div className="flex items-center space-x-3">
-              {/* Optional: Word count */}
-              {content.length > 0 && (
-                <span className="text-gray-500">
-                  {content.split(' ').filter(word => word.length > 0).length} words
-                </span>
-              )}
-              
-              {/* Performance indicators */}
-              {isLargeDocument && (
-                <span className={`text-xs ${optimizationsApplied ? 'text-green-600' : 'text-yellow-600'}`}>
-                  {optimizationsApplied ? 'Optimized' : 'Large document'}
-                </span>
-              )}
-              
-              {isRenderingMarkdown && (
-                <span className="text-blue-600 animate-pulse">Rendering...</span>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              {isSaving && <span className="text-blue-600 animate-pulse">• Saving...</span>}
-              {saveSuccess && <span className="text-green-600">• Saved</span>}
+
+        {/* Status Bar */}
+        <div className={`editor-status-bar ${isStatusBarFloating ? 'floating' : ''} ${showStatusBar ? '' : 'hidden'}`}>
+          <div className="flex items-center justify-between px-4 py-2 text-xs text-gray-600">
+            <div className="flex items-center space-x-4">
               {hasChanges && !isSaving && <span className="text-orange-600">• Unsaved changes</span>}
               <span className="text-xs opacity-60">Ctrl+S to save</span>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Mobile List Hint */}

@@ -181,7 +181,7 @@ export default function MarkdownPreview({
   return (
     <div 
       ref={containerRef}
-      className={`prose prose-sm max-w-none dark:prose-invert markdown-content ${className}`}
+      className={`prose prose-sm lg:prose-base max-w-none dark:prose-invert markdown-content mobile-reading-optimized ${className}`}
       onClick={handleClick}
       dangerouslySetInnerHTML={{ 
         __html: renderedContent

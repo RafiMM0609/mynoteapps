@@ -16,6 +16,77 @@
 @import '../styles/components/mobile-editor.css';
 @import '../styles/components/floating-action-buttons.css';
 @import '../styles/components/innovative-linking.css';
+@import '../styles/components/mobile-optimization.css';
+@import '../styles/components/reading-experience.css';
 @import '../styles/layout/layout.css';
 @import '../styles/utils/animations.css';
 @import '../styles/utils/utilities.css';
+
+/* Mobile-optimized note list styles */
+@media (max-width: 768px) {
+  .custom-scrollbar {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Better touch targets for mobile */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improved readability for mobile */
+  .mobile-text-base {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  .mobile-text-sm {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  /* Enhanced note viewer for mobile */
+  .note-viewer-mobile {
+    padding-bottom: 6rem; /* Extra space for mobile navigation */
+  }
+  
+  /* Better content spacing on mobile */
+  .mobile-content-spacing {
+    padding: 1.5rem 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  /* Enhanced typography for mobile reading */
+  .mobile-reading-optimized {
+    font-size: 16px !important;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    word-spacing: 0.02em;
+  }
+  
+  /* Enhanced spacing for mobile */
+  .mobile-spacing-lg {
+    padding: 1rem;
+  }
+  
+  .mobile-spacing-md {
+    padding: 0.75rem;
+  }
+  
+  /* Better contrast for mobile reading */
+  .mobile-text-primary {
+    color: #1f2937;
+    font-weight: 500;
+  }
+  
+  .mobile-text-secondary {
+    color: #6b7280;
+    font-weight: 400;
+  }
+}

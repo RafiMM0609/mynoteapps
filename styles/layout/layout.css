@@ -23,7 +23,7 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-/* Sticky Header with Fallbacks */
+/* Sticky Header with Fallbacks - Compact Design */
 .sticky-header {
   position: sticky;
   position: -webkit-sticky; /* Safari support */
@@ -32,6 +32,7 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  height: 60px; /* Compact height */
 }
 
 /* Fallback for browsers that don't support sticky properly */
@@ -45,6 +46,49 @@
   background: rgba(249, 250, 251, 0.95);
   border-bottom: 1px solid rgba(229, 231, 235, 0.8);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 60px; /* Compact height */
+}
+
+/* Scrollable editor content responsive height */
+.scrollable-editor-content {
+  max-height: calc(100vh - 50px); /* Mobile default */
+  height: calc(100vh - 50px);
+}
+
+@media (min-width: 769px) {
+  .scrollable-editor-content {
+    max-height: calc(100vh - 40px) !important; /* Desktop - smaller header */
+    height: calc(100vh - 40px) !important;
+  }
+}
+
+/* Fixed header alternative - more compact for desktop */
+.fixed-header-alternative {
+  height: 50px; /* Even more compact header height on desktop */
+  min-height: 50px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+/* Desktop-specific header optimization */
+@media (min-width: 769px) {
+  .fixed-header-alternative {
+    height: 40px; /* Very compact header on desktop */
+    min-height: 40px;
+    padding: 0.25rem 1rem !important; /* Override padding for compact look */
+  }
+  
+  /* Compact title input on desktop */
+  .fixed-header-alternative input[type="text"] {
+    font-size: 1rem !important; /* Smaller title font on desktop */
+    margin-bottom: 0.125rem !important;
+  }
+  
+  /* Compact status indicators on desktop */
+  .fixed-header-alternative .text-xs {
+    font-size: 0.65rem !important;
+  }
 }
 
 @supports not (position: sticky) {
@@ -66,6 +110,39 @@
   position: relative;
 }
 
+/* Enhanced contentEditable styling for better desktop editing */
+[contenteditable="true"] {
+  /* Better cursor appearance */
+  caret-color: #3b82f6; /* Blue caret for better visibility */
+}
+
+[contenteditable="true"]:focus {
+  /* Improved focus state without outline */
+  outline: none;
+  /* Subtle glow effect for better visual feedback */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  border-radius: 4px;
+}
+
+/* Better text selection appearance */
+[contenteditable="true"]::selection {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: inherit;
+}
+
+[contenteditable="true"] *::selection {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: inherit;
+}
+
+/* Ensure proper height calculation for different screen sizes */
+@media (max-width: 768px) {
+  .editor-container-with-fixed-header {
+    height: calc(100vh - 5rem); /* Account for mobile navigation */
+    height: calc(-webkit-fill-available - 5rem); /* Safari mobile fix */
+  }
+}
+
 /* Improved scrollable content - Better spacing and padding */
 .scrollable-editor-content {
   flex: 1;
@@ -78,22 +155,29 @@
   scroll-behavior: smooth;
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-  /* Add padding bottom to prevent content overlap with status bar */
-  padding-bottom: 4rem;
+  /* Add minimal padding bottom to prevent content overlap with status bar */
+  padding-bottom: 1.5rem;
   /* Ensure proper scroll behavior on desktop */
   overscroll-behavior: contain;
+  /* Improved position for auto-scroll functionality */
+  position: relative;
 }
 
 .scrollable-editor-content .prose {
   flex: 1;
-  min-height: calc(100vh - 250px); /* Better calculation for content height */
+  min-height: calc(100vh - 150px); /* Optimized calculation for content height */
   overflow-wrap: break-word;
   word-wrap: break-word;
-  /* Ensure content doesn't touch the bottom */
-  margin-bottom: 2rem;
-  /* Fix desktop editing scroll */
+  /* Balanced content spacing */
+  margin-bottom: 1.5rem;
+  /* Desktop editing optimizations */
   min-height: auto;
   height: auto;
+  /* Ensure smooth cursor tracking */
+  position: relative;
+  /* Balanced content padding */
+  padding: 1rem;
+  padding-bottom: 6rem; /* Reasonable space for comfortable desktop editing */
 }
 
 /* Status bar should be subtle and non-intrusive */
@@ -131,20 +215,37 @@
 /* Mobile-Optimized Editor Layout */
 @media (max-width: 768px) {
   .editor-container-with-fixed-header {
-    height: 100vh;
-    height: -webkit-fill-available; /* Safari mobile fix */
+    height: calc(100vh - 5rem); /* Account for mobile navigation */
+    height: calc(-webkit-fill-available - 5rem); /* Safari mobile fix */
   }
   
   .scrollable-editor-content {
-    /* More padding on mobile to prevent keyboard overlap */
-    padding-bottom: 6rem;
+    /* Account for compact header + mobile navigation footer */
+    max-height: calc(100vh - 120px - 5rem) !important; /* Reduced from 180px */
+    height: calc(100vh - 120px - 5rem) !important;
+    /* Reduced padding on mobile to prevent excessive bottom spacing */
+    padding-bottom: 8rem;
+    /* Enhanced scroll behavior for mobile auto-scroll */
+    scroll-padding-top: 80px; /* Reduced buffer */
+    scroll-padding-bottom: 150px;
   }
   
   .scrollable-editor-content .prose {
-    /* Better mobile content spacing */
-    min-height: calc(100vh - 300px);
-    margin-bottom: 3rem;
+    /* Better mobile content spacing with compact header */
+    min-height: calc(100vh - 300px); /* Reduced due to compact header */
+    margin-bottom: 1rem;
     padding: 1rem;
+    padding-bottom: 6rem; /* Extra space for comfortable editing */
+    /* Better mobile cursor tracking */
+    scroll-margin-top: 80px; /* Reduced buffer */
+    scroll-margin-bottom: 150px;
+  }
+  
+  /* Compact header on mobile */
+  .fixed-header-alternative {
+    height: 50px; /* Standard mobile height */
+    min-height: 50px;
+    padding: 0.5rem 0.75rem; /* Reduced padding */
   }
   
   /* Mobile status bar improvements */
@@ -157,7 +258,7 @@
   
   .editor-status-bar.floating {
     /* Better floating behavior on mobile */
-    bottom: 0.5rem;
+    bottom: 6rem; /* Above mobile navigation */
     left: 0.5rem;
     right: 0.5rem;
     border-radius: 0.5rem;
@@ -171,7 +272,7 @@
   }
 }
 
-/* Desktop Scrolling Fixes */
+/* Desktop Scrolling Fixes - Enhanced with more compact header */
 @media (min-width: 769px) {
   .editor-container-with-fixed-header {
     overflow: hidden;
@@ -181,44 +282,164 @@
   .scrollable-editor-content {
     overflow-y: auto;
     overflow-x: hidden;
-    height: calc(100vh - 120px);
+    height: calc(100vh - 45px); /* More space with very compact header */
     scroll-behavior: smooth;
+    /* Enhanced desktop scroll padding for better auto-scroll */
+    scroll-padding-top: 80px; /* Reduced buffer for more editing space */
+    scroll-padding-bottom: 160px; /* Reasonable bottom buffer */
+    /* Better scrollbar appearance */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  }
+  
+  /* Webkit scrollbar styling for better desktop experience */
+  .scrollable-editor-content::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .scrollable-editor-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollable-editor-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+  
+  .scrollable-editor-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
   }
   
   .scrollable-editor-content .prose {
     min-height: auto;
     height: auto;
     overflow: visible;
+    /* Optimized desktop cursor tracking margins */
+    scroll-margin-top: 80px; /* Balanced top margin */
+    scroll-margin-bottom: 160px; /* Reasonable bottom margin */
+    /* Comfortable padding for desktop editing without being excessive */
+    padding: 1rem 1.5rem; /* More compact padding */
+    padding-bottom: 8rem; /* Reasonable space for comfortable editing */
   }
   
-  /* Ensure contentEditable can scroll properly */
+  /* Ensure contentEditable can scroll properly with optimized margins */
   .scrollable-editor-content [contenteditable="true"] {
-    min-height: calc(100vh - 200px);
+    min-height: calc(100vh - 80px); /* More space for content with compact header */
     overflow-wrap: break-word;
     word-wrap: break-word;
     white-space: pre-wrap;
     outline: none;
+    /* Optimized scroll margin for better cursor tracking */
+    scroll-margin-top: 80px; /* Balanced top margin */
+    scroll-margin-bottom: 160px; /* Reasonable bottom margin */
+    /* Better line height for comfortable reading/editing */
+    line-height: 1.6;
+    /* Ensure smooth cursor visibility */
+    caret-color: #3b82f6; /* Blue caret for better visibility */
   }
 }
 
-/* Mobile Optimizations */
+/* Mobile Optimizations - Comprehensive (UNCHANGED) */
 @media (max-width: 768px) {
+  /* Override desktop optimizations for mobile */
+  .fixed-header-alternative {
+    height: 60px !important; /* Keep mobile header size */
+    min-height: 60px !important;
+    padding: 0.5rem 0.75rem !important; /* Keep mobile padding */
+  }
+  
+  .scrollable-editor-content {
+    /* Account for compact header + mobile navigation footer */
+    max-height: calc(100vh - 120px - 5rem) !important; /* Keep mobile calculation */
+    height: calc(100vh - 120px - 5rem) !important;
+    /* Reduced padding on mobile to prevent excessive bottom spacing */
+    padding-bottom: 8rem;
+    /* Enhanced scroll behavior for mobile auto-scroll */
+    scroll-padding-top: 80px; /* Reduced buffer */
+    scroll-padding-bottom: 150px;
+  }
+  
+  .scrollable-editor-content .prose {
+    /* Better mobile content spacing with compact header */
+    min-height: calc(100vh - 300px); /* Keep mobile calculation */
+    margin-bottom: 1rem;
+    padding: 1rem;
+    padding-bottom: 6rem; /* Extra space for comfortable editing */
+    /* Better mobile cursor tracking */
+    scroll-margin-top: 80px; /* Reduced buffer */
+    scroll-margin-bottom: 150px;
+  }
+  
   /* Hide floating save button when header save button is visible */
   .fab-save-container {
     display: none;
   }
   
-  /* Better spacing for mobile editor */
-  .scrollable-editor-content {
-    padding-bottom: 8rem; /* Extra space for mobile keyboard */
+  /* Main content height accounting for mobile navigation */
+  .main-content-mobile {
+    height: calc(100vh - 4rem - 5rem); /* Subtract header and mobile nav height */
+    min-height: 0;
   }
   
-  .scrollable-editor-content .prose {
-    padding: 1rem;
-    min-height: calc(100vh - 250px);
+  /* Ensure note viewer content is scrollable */
+  .note-viewer-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  
+  .note-viewer-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+    padding-bottom: 6rem; /* Space above mobile nav */
+  }
+  
+  /* Better mobile user menu positioning */
+  .glass {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  
+  /* User menu positioning fix for mobile */
+  .user-dropdown {
+    position: fixed !important;
+    top: 4rem !important;
+    right: 0.5rem !important;
+    left: auto !important;
+    width: calc(100vw - 1rem) !important;
+    max-width: 280px !important;
+  }
+  
+  /* Editor specific mobile adjustments */
+  .balanced-layout {
+    height: calc(100vh - 6rem - 5rem); /* Account for mobile nav */
   }
 }
+  
+  .balanced-sidebar {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .scrollable-editor-content {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.6);
+    border-radius: 2px;
+  }
 
+/* Enhanced scrollbar styling for main content */
+/* Enhanced scrollbar styling for main content */
 .scrollable-editor-content::-webkit-scrollbar {
   width: 8px;
 }
@@ -353,12 +574,19 @@
 /* Floating Action Button Styles */
 .fab-save-container {
   position: fixed;
-  bottom: 6rem;
+  bottom: 8rem; /* Above mobile navigation */
   right: 1rem;
   z-index: 40;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .fab-save-container {
+    bottom: 8rem; /* Ensure it's above mobile navigation footer */
+    right: 0.75rem;
+  }
 }
 
 .fab-save {
@@ -466,56 +694,6 @@
   .mobile-sidebar {
     width: 90vw !important;
     max-width: 400px !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .balanced-layout {
-    height: calc(100vh - 6rem);
-  }
-  
-  .balanced-sidebar {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-  
-  .scrollable-editor-content {
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .editor-container-with-fixed-header {
-    height: 100vh;
-    height: -webkit-fill-available; /* Safari mobile fix */
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.6);
-    border-radius: 2px;
-  }
-  
-  /* Fix main content height for mobile */
-  .main-content-mobile {
-    height: calc(100vh - 4rem - 5rem); /* Subtract header and mobile nav height */
-    min-height: 0;
-  }
-  
-  /* Ensure note viewer content is scrollable */
-  .note-viewer-container {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-  
-  .note-viewer-content {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
   }
 }
 

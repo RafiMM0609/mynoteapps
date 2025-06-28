@@ -201,7 +201,7 @@
   }
   
   .note-editor-mobile {
-    padding-bottom: 60px; /* Extra space for mobile keyboards */
+    padding-bottom: 30px; /* Reduced excessive padding for mobile keyboards */
   }
   
   .mobile-action-buttons {

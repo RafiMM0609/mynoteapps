@@ -1,0 +1,375 @@
+/**
+ * Enhanced Reading Experience Styles
+ * Optimized typography and spacing for better content consumption
+ */
+
+/* Enhanced prose styling for better readability */
+.prose-enhanced-reading {
+  /* Base typography improvements */
+  font-size: 18px;
+  line-height: 1.6;
+  color: #374151;
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  font-weight: 400;
+  max-width: 70ch;
+  margin: 0 auto;
+}
+
+.prose-enhanced-reading h1 {
+  font-size: 2.25rem;
+  line-height: 1.2;
+  margin-bottom: 2rem;
+  margin-top: 0;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.025em;
+}
+
+.prose-enhanced-reading h2 {
+  font-size: 1.875rem;
+  line-height: 1.3;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  letter-spacing: -0.025em;
+}
+
+.prose-enhanced-reading h3 {
+  font-size: 1.5rem;
+  line-height: 1.4;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.prose-enhanced-reading h4 {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.prose-enhanced-reading p {
+  margin-bottom: 1.75rem;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.prose-enhanced-reading p:last-child {
+  margin-bottom: 0;
+}
+
+/* Better list styling */
+.prose-enhanced-reading ul, 
+.prose-enhanced-reading ol {
+  margin-bottom: 1.75rem;
+  padding-left: 1.5rem;
+}
+
+.prose-enhanced-reading li {
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}
+
+.prose-enhanced-reading li:last-child {
+  margin-bottom: 0;
+}
+
+/* Enhanced blockquote styling */
+.prose-enhanced-reading blockquote {
+  border-left: 4px solid #3b82f6;
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: #6b7280;
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+}
+
+/* Better code styling */
+.prose-enhanced-reading code {
+  background: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875em;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.prose-enhanced-reading pre {
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 2rem 0;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.prose-enhanced-reading pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* Enhanced table styling */
+.prose-enhanced-reading table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.prose-enhanced-reading th,
+.prose-enhanced-reading td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.prose-enhanced-reading th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+.prose-enhanced-reading tr:last-child td {
+  border-bottom: none;
+}
+
+/* Enhanced link styling */
+.prose-enhanced-reading a {
+  color: #3b82f6;
+  text-decoration: underline;
+  text-decoration-color: rgba(59, 130, 246, 0.3);
+  text-underline-offset: 0.2em;
+  transition: all 0.2s ease;
+}
+
+.prose-enhanced-reading a:hover {
+  color: #1d4ed8;
+  text-decoration-color: rgba(29, 78, 216, 0.6);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .prose-enhanced-reading {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  
+  .prose-enhanced-reading h1 {
+    font-size: 1.875rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .prose-enhanced-reading h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .prose-enhanced-reading h3 {
+    font-size: 1.25rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .prose-enhanced-reading p {
+    margin-bottom: 1.5rem;
+    text-align: left;
+  }
+  
+  .prose-enhanced-reading blockquote {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    padding-left: 1.25rem;
+  }
+  
+  .prose-enhanced-reading pre {
+    padding: 1rem;
+    margin: 1.5rem 0;
+    font-size: 0.8125rem;
+  }
+  
+  .prose-enhanced-reading table {
+    font-size: 0.875rem;
+  }
+  
+  .prose-enhanced-reading th,
+  .prose-enhanced-reading td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+/* Mobile-specific note viewer optimizations */
+@media (max-width: 768px) {
+  /* Full-width content on mobile for better reading */
+  .note-viewer-mobile .prose-enhanced-reading {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Better spacing for mobile content */
+  .mobile-content-container {
+    padding: 1.5rem 1rem 6rem 1rem;
+    margin: 0;
+  }
+  
+  /* Optimized typography for mobile screens */
+  .mobile-reading-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #374151;
+    letter-spacing: 0.01em;
+  }
+  
+  /* Improved touch targets for mobile */
+  .mobile-touch-link {
+    min-height: 44px;
+    padding: 0.75rem;
+    margin: 0.25rem 0;
+  }
+  
+  /* Better contrast for outdoor reading */
+  .mobile-high-contrast-text {
+    color: #111827;
+    font-weight: 500;
+    text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Floating action button positioning */
+  .mobile-fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 50;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Mobile sidebar overlay */
+  .mobile-sidebar-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  
+  /* Better mobile list formatting */
+  .prose-enhanced-reading ul,
+  .prose-enhanced-reading ol {
+    padding-left: 1.25rem;
+  }
+  
+  .prose-enhanced-reading li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .prose-enhanced-reading {
+    max-width: 65ch;
+    margin: 0 auto;
+  }
+}
+
+/* Better focus states for accessibility */
+.prose-enhanced-reading a:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Print styles */
+@media print {
+  .prose-enhanced-reading {
+    font-size: 12pt;
+    line-height: 1.5;
+    color: black;
+  }
+  
+  .prose-enhanced-reading h1,
+  .prose-enhanced-reading h2,
+  .prose-enhanced-reading h3,
+  .prose-enhanced-reading h4 {
+    color: black;
+    page-break-after: avoid;
+  }
+  
+  .prose-enhanced-reading p,
+  .prose-enhanced-reading li {
+    orphans: 3;
+    widows: 3;
+  }
+  
+  .prose-enhanced-reading blockquote {
+    border-left: 2px solid black;
+    background: transparent;
+  }
+}
+
+/* Enhanced readability for longer content */
+.prose-enhanced-reading {
+  /* Improved character spacing for better readability */
+  letter-spacing: 0.01em;
+  
+  /* Better word spacing */
+  word-spacing: 0.03em;
+  
+  /* Subtle text shadow for better contrast */
+  text-shadow: none;
+}
+
+/* Special styling for content width optimization */
+@media (min-width: 1024px) {
+  .prose-enhanced-reading {
+    max-width: 70ch; /* Optimal reading width */
+    margin: 0 auto;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+  
+  .prose-enhanced-reading p {
+    line-height: 1.65;
+    margin-bottom: 1.5rem;
+    text-align: left;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .prose-enhanced-reading {
+    color: #000000;
+    text-shadow: none;
+  }
+  
+  .prose-enhanced-reading h1,
+  .prose-enhanced-reading h2,
+  .prose-enhanced-reading h3,
+  .prose-enhanced-reading h4 {
+    color: #000000;
+  }
+  
+  .prose-enhanced-reading code {
+    background: #ffffff;
+    color: #000000;
+    border: 1px solid #000000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .prose-enhanced-reading a {
+    transition: none;
+  }
+}

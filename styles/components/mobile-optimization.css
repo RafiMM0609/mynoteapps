@@ -1,0 +1,164 @@
+/* Mobile-first responsive design utilities */
+.mobile-optimized {
+  /* Ensure proper touch scrolling */
+  -webkit-overflow-scrolling: touch;
+  
+  /* Hide scrollbars on mobile for cleaner look */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mobile-optimized::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile typography improvements */
+@media (max-width: 768px) {
+  /* Ensure minimum font sizes for better readability */
+  .mobile-text-readable {
+    font-size: 16px !important;
+    line-height: 1.5;
+  }
+  
+  .mobile-text-small {
+    font-size: 14px !important;
+    line-height: 1.4;
+  }
+  
+  /* Better spacing for touch interfaces */
+  .mobile-touch-spacing {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem;
+  }
+  
+  /* Enhanced contrast for outdoor/bright screen reading */
+  .mobile-high-contrast {
+    color: #1f2937;
+    font-weight: 500;
+  }
+  
+  .mobile-secondary-text {
+    color: #6b7280;
+    font-weight: 400;
+  }
+  
+  /* Smooth animations for mobile */
+  .mobile-smooth-transition {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Better focus states for accessibility */
+  .mobile-focus-ring:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+  
+  /* Improved button styling for mobile */
+  .mobile-button {
+    font-size: 16px;
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-height: 48px;
+  }
+  
+  .mobile-button:active {
+    transform: scale(0.97);
+  }
+  
+  /* Card styling improvements */
+  .mobile-card {
+    border-radius: 1rem;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+    background: white;
+  }
+  
+  .mobile-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-color: #d1d5db;
+  }
+  
+  .mobile-card:active {
+    transform: scale(0.98);
+  }
+  
+  /* Line clamping utilities for content preview */
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  
+  .line-clamp-6 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 6;
+  }
+}
+
+/* Safe area adjustments for notched devices */
+@supports (padding: max(0px)) {
+  .mobile-safe-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .mobile-safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .mobile-safe-left {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+  
+  .mobile-safe-right {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Dark mode adjustments for mobile */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+  .mobile-dark-card {
+    background: #1f2937;
+    border-color: #374151;
+    color: #f9fafb;
+  }
+  
+  .mobile-dark-text-primary {
+    color: #f9fafb;
+  }
+  
+  .mobile-dark-text-secondary {
+    color: #9ca3af;
+  }
+}
+
+/* Performance optimizations for mobile */
+.mobile-gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-smooth-transition {
+    transition: none;
+  }
+  
+  .mobile-card:active,
+  .mobile-button:active {
+    transform: none;
+  }
+}

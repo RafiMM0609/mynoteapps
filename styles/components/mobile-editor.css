@@ -22,7 +22,7 @@
   .note-editor-mobile .prose {
     min-height: auto !important;
     height: auto !important;
-    padding-bottom: 120px; /* Extra padding at the bottom for better UX */
+    padding-bottom: 60px; /* Reduced padding for better UX */
   }
 
   /* Override any potential conflicting styles */
