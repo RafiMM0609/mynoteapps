@@ -531,13 +531,14 @@ export default function NoteEditor({
     // This will replace the selected command text with the formatted style.
     switch (command.id) {
       case 'heading1':
-        document.execCommand('formatBlock', false, '<h1>')
+        // Use insertHTML for better heading support
+        document.execCommand('insertHTML', false, '<h1 style="font-size: 2rem; font-weight: 700; color: #111827; margin-top: 2rem; margin-bottom: 1.5rem;">Heading 1</h1>')
         break
       case 'heading2':
-        document.execCommand('formatBlock', false, '<h2>')
+        document.execCommand('insertHTML', false, '<h2 style="font-size: 1.75rem; font-weight: 600; color: #1f2937; margin-top: 1.75rem; margin-bottom: 1.25rem;">Heading 2</h2>')
         break
       case 'heading3':
-        document.execCommand('formatBlock', false, '<h3>')
+        document.execCommand('insertHTML', false, '<h3 style="font-size: 1.5rem; font-weight: 600; color: #374151; margin-top: 1.5rem; margin-bottom: 1rem;">Heading 3</h3>')
         break
       case 'bold':
         document.execCommand('bold', false)
@@ -764,31 +765,88 @@ export default function NoteEditor({
         // On desktop, use improved behavior for better cursor positioning
         e.preventDefault();
         
+        console.log('Enter key pressed on desktop');
+        
         // Get current selection
         const selection = window.getSelection();
         if (selection && selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           
-          // Create a paragraph element for better structure
-          const newParagraph = document.createElement('p');
-          newParagraph.innerHTML = '<br>';
+          // Check if we're in a heading or other block element that should not continue
+          let currentElement: any = range.startContainer;
+          if (currentElement.nodeType === Node.TEXT_NODE) {
+            currentElement = currentElement.parentElement;
+          }
           
-          // Insert the new paragraph
-          range.deleteContents();
-          range.insertNode(newParagraph);
+          // Find the closest block-level element
+          while (currentElement && !['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'P', 'DIV'].includes(currentElement.nodeName)) {
+            currentElement = currentElement.parentElement;
+          }
           
-          // Position cursor at the start of the new paragraph
-          range.setStart(newParagraph, 0);
-          range.setEnd(newParagraph, 0);
-          selection.removeAllRanges();
-          selection.addRange(range);
+          console.log('Current element:', currentElement?.nodeName);
+          
+          // If we're in a heading or blockquote, create a normal paragraph
+          if (currentElement && ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE'].includes(currentElement.nodeName)) {
+            console.log('In heading/blockquote, creating new paragraph');
+            const newParagraph = document.createElement('p');
+            newParagraph.innerHTML = '<br>';
+            
+            // Insert after the current element
+            if (currentElement.nextSibling) {
+              currentElement.parentNode?.insertBefore(newParagraph, currentElement.nextSibling);
+            } else {
+              currentElement.parentNode?.appendChild(newParagraph);
+            }
+            
+            // Position cursor in the new paragraph
+            range.setStart(newParagraph, 0);
+            range.setEnd(newParagraph, 0);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          } else {
+            console.log('In normal element, creating new paragraph');
+            // For normal paragraphs, create a new paragraph
+            const newParagraph = document.createElement('p');
+            newParagraph.innerHTML = '<br>';
+            
+            // Insert the new paragraph
+            range.deleteContents();
+            range.insertNode(newParagraph);
+            
+            // Position cursor at the start of the new paragraph
+            range.setStart(newParagraph, 0);
+            range.setEnd(newParagraph, 0);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
           
           // Desktop: no auto-scroll after Enter - users prefer manual control
         }
       } else {
-        // Mobile behavior - use insertHTML for consistency
+        // Mobile behavior - use insertHTML for consistency but handle headings properly
         e.preventDefault();
-        document.execCommand('insertHTML', false, '<div><br></div>');
+        
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          let currentElement: any = range.startContainer;
+          
+          if (currentElement.nodeType === Node.TEXT_NODE) {
+            currentElement = currentElement.parentElement;
+          }
+          
+          // Find the closest block-level element
+          while (currentElement && !['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'P', 'DIV'].includes(currentElement.nodeName)) {
+            currentElement = currentElement.parentElement;
+          }
+          
+          // If we're in a heading or blockquote, exit to normal paragraph
+          if (currentElement && ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE'].includes(currentElement.nodeName)) {
+            document.execCommand('insertHTML', false, '<p><br></p>');
+          } else {
+            document.execCommand('insertHTML', false, '<div><br></div>');
+          }
+        }
       }
     }
   };

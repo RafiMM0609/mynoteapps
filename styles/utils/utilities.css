@@ -243,6 +243,105 @@
   }
 }
 
+/* Enhanced Global Prose Styling */
+.prose {
+  max-width: none;
+  color: #374151;
+}
+
+/* Force headings styling - important for contentEditable */
+.prose h1,
+.prose-heading h1,
+[contenteditable="true"] h1 {
+  font-size: 2rem !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1.5rem !important;
+  border-bottom: 2px solid #e5e7eb !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.prose h2,
+.prose-heading h2,
+[contenteditable="true"] h2 {
+  font-size: 1.75rem !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  margin-top: 1.75rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.prose h3,
+.prose-heading h3,
+[contenteditable="true"] h3 {
+  font-size: 1.5rem !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.prose h4,
+[contenteditable="true"] h4 {
+  font-size: 1.25rem !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  color: #4b5563 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.prose h5,
+[contenteditable="true"] h5 {
+  font-size: 1.125rem !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  color: #6b7280 !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.prose h6,
+[contenteditable="true"] h6 {
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  color: #9ca3af !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.prose p {
+  margin-bottom: 1.25rem;
+  line-height: 1.7;
+}
+
+/* Ensure headings in contentEditable are properly styled */
+.prose [contenteditable="true"] h1,
+.prose [contenteditable="true"] h2,
+.prose [contenteditable="true"] h3,
+.prose [contenteditable="true"] h4,
+.prose [contenteditable="true"] h5,
+.prose [contenteditable="true"] h6 {
+  outline: none;
+}
+
+.prose [contenteditable="true"] h1:focus,
+.prose [contenteditable="true"] h2:focus,
+.prose [contenteditable="true"] h3:focus,
+.prose [contenteditable="true"] h4:focus,
+.prose [contenteditable="true"] h5:focus,
+.prose [contenteditable="true"] h6:focus {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 4px;
+  padding: 0.25rem;
+  margin: -0.25rem;
+}
+
 /* Container Fixes for Mobile */
 @media (max-width: 768px) {
   .prose {
