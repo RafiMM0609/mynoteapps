@@ -36,8 +36,20 @@ export default function MobileOptimizedEditor({
   const [slashPosition, setSlashPosition] = useState({ top: 0, left: 0 })
   const [slashQuery, setSlashQuery] = useState('')
   
+  // Mobile list hint state
+  const [showMobileListHint, setShowMobileListHint] = useState(false)
+  const [lastEnterTime, setLastEnterTime] = useState(0)
+  
   const editorRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  // Helper function to show mobile hint
+  const showMobileHint = (message: string) => {
+    if (isMobile) {
+      setShowMobileListHint(true)
+      setTimeout(() => setShowMobileListHint(false), 2000)
+    }
+  }
   
   // Mobile optimization hook
   const { 
@@ -105,13 +117,119 @@ export default function MobileOptimizedEditor({
     }
   }, [])
   
-  // Handle slash commands
+  // Handle list enter behavior and slash commands
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === '/') {
-      // Get cursor position and calculate dropdown position
-      const textarea = editorRef.current
-      if (!textarea) return
+    const textarea = editorRef.current
+    if (!textarea) return
+
+    // Handle Enter key for list exit behavior (matching desktop behavior)
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const cursorPos = textarea.selectionStart
+      const textBeforeCursor = content.substring(0, cursorPos)
+      const lines = textBeforeCursor.split('\n')
+      const currentLine = lines[lines.length - 1]
       
+      // Check if current line is an empty list item
+      const listItemRegex = /^(\s*)([-*+]|\d+\.)\s*$/
+      const listMatch = currentLine.match(listItemRegex)
+      
+      if (listMatch) {
+        // Empty list item - exit the list immediately (consistent with desktop)
+        e.preventDefault()
+        
+        const lineStart = textBeforeCursor.lastIndexOf('\n') + 1
+        const lineEnd = cursorPos
+        const textAfterCursor = content.substring(cursorPos)
+        
+        // Remove the empty list marker and create new line
+        const newContent = 
+          content.substring(0, lineStart) + 
+          '\n' + 
+          textAfterCursor
+        
+        onChange(newContent)
+        
+        // Position cursor at the new empty line
+        setTimeout(() => {
+          textarea.focus()
+          textarea.setSelectionRange(lineStart + 1, lineStart + 1)
+        }, 10)
+        
+        return
+      }
+      
+      // Check if current line is a list item (but not empty)
+      const listContinueRegex = /^(\s*)([-*+]|\d+\.)\s+/
+      const continueMatch = currentLine.match(listContinueRegex)
+      
+      if (continueMatch) {
+        // For mobile: Enhanced double-tap detection for exiting lists
+        if (isMobile) {
+          const currentTime = Date.now()
+          
+          // If double Enter within 500ms on mobile, exit list
+          if (currentTime - lastEnterTime < 500) {
+            e.preventDefault()
+            
+            // Exit the list - add empty line after current list item
+            const textAfterCursor = content.substring(cursorPos)
+            const newContent = 
+              content.substring(0, cursorPos) + 
+              '\n\n' + 
+              textAfterCursor
+            
+            onChange(newContent)
+            
+            // Position cursor at the new empty line
+            setTimeout(() => {
+              textarea.focus()
+              textarea.setSelectionRange(cursorPos + 2, cursorPos + 2)
+            }, 10)
+            
+            // Reset timestamp
+            setLastEnterTime(0)
+            return
+          } else {
+            // Store timestamp for double-tap detection and show hint
+            setLastEnterTime(currentTime)
+            showMobileHint("Press Enter again to exit list")
+          }
+        }
+        
+        // Normal list continuation behavior
+        e.preventDefault()
+        
+        const indent = continueMatch[1]
+        let marker = continueMatch[2]
+        
+        // For numbered lists, increment the number
+        if (/^\d+\.$/.test(marker)) {
+          const num = parseInt(marker) + 1
+          marker = `${num}.`
+        }
+        
+        const newListItem = `\n${indent}${marker} `
+        const textAfterCursor = content.substring(cursorPos)
+        
+        const newContent = 
+          content.substring(0, cursorPos) + 
+          newListItem + 
+          textAfterCursor
+        
+        onChange(newContent)
+        
+        // Position cursor after the new list marker
+        setTimeout(() => {
+          textarea.focus()
+          textarea.setSelectionRange(cursorPos + newListItem.length, cursorPos + newListItem.length)
+        }, 10)
+        
+        return
+      }
+    }
+
+    // Handle slash commands
+    if (e.key === '/') {
       const cursorPos = textarea.selectionStart
       setCursorPosition(cursorPos)
       
@@ -335,6 +453,13 @@ export default function MobileOptimizedEditor({
         isSaving={isSaving}
         saveSuccess={saveSuccess}
       />
+      
+      {/* Mobile list hint */}
+      {showMobileListHint && (
+        <div className="mobile-list-hint show">
+          Press Enter again to exit list
+        </div>
+      )}
     </div>
   )
 }
