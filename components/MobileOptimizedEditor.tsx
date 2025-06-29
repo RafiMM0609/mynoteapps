@@ -158,8 +158,8 @@ export default function MobileOptimizedEditor({
         return
       }
       
-      // Check if current line is a list item (but not empty)
-      const listContinueRegex = /^(\s*)([-*+]|\d+\.)\s+/
+      // Check if current line is a list item (but not empty) or cursor is inside a list item
+      const listContinueRegex = /^(\s*)([-*+]|\d+\.)\s*/
       const continueMatch = currentLine.match(listContinueRegex)
       
       if (continueMatch) {
@@ -202,10 +202,43 @@ export default function MobileOptimizedEditor({
         const indent = continueMatch[1]
         let marker = continueMatch[2]
         
-        // For numbered lists, increment the number
+        // For numbered lists, find the correct next number by scanning previous lines
         if (/^\d+\.$/.test(marker)) {
-          const num = parseInt(marker) + 1
-          marker = `${num}.`
+          // Find the next number by looking at the current list context
+          let nextNumber = 1
+          
+          // Look for the highest number in the current list level
+          const currentIndent = indent.length
+          for (let i = lines.length - 1; i >= 0; i--) {
+            const line = lines[i]
+            const lineMatch = line.match(/^(\s*)(\d+)\.\s*/)
+            if (lineMatch) {
+              const lineIndent = lineMatch[1].length
+              const lineNumber = parseInt(lineMatch[2])
+              
+              // If this is the same indent level, use the next number
+              if (lineIndent === currentIndent) {
+                nextNumber = lineNumber + 1
+                break
+              }
+              // If we hit a higher level (less indent), we're starting a new sub-list
+              if (lineIndent < currentIndent) {
+                nextNumber = 1
+                break
+              }
+            }
+            // If we hit a non-numbered line at same or higher level, stop
+            const nonNumberMatch = line.match(/^(\s*)([-*+])\s*/)
+            if (nonNumberMatch && nonNumberMatch[1].length <= currentIndent) {
+              break
+            }
+            // If we hit an empty line or start of content, stop
+            if (line.trim() === '' || i === 0) {
+              break
+            }
+          }
+          
+          marker = `${nextNumber}.`
         }
         
         const newListItem = `\n${indent}${marker} `
