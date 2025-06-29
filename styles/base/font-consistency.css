@@ -1,0 +1,90 @@
+/**
+ * Font Consistency Rules
+ * Ensures consistent font usage across all components
+ */
+
+/* Global font consistency enforcement */
+*,
+*::before,
+*::after {
+  font-family: inherit;
+}
+
+/* Base UI elements should use Inter consistently */
+body,
+input,
+textarea,
+button,
+select,
+.ui-element,
+.note-editor,
+.note-list,
+.header,
+.sidebar,
+.dropdown,
+.modal {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Reading content now uses same font as editing for consistency */
+.prose-enhanced-reading,
+.reading-mode,
+.note-viewer-content {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Code elements always use monospace */
+code,
+pre,
+kbd,
+samp,
+.code-block,
+.editor-textarea,
+.syntax-highlight,
+[class*="hljs"],
+[class*="language-"],
+.token {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+/* Fallback for components that might override fonts */
+.slash-dropdown,
+.note-linking-sidebar,
+.search-modal,
+.mobile-editor,
+.floating-action-buttons {
+  font-family: inherit;
+}
+
+/* Prevent font inheritance conflicts */
+.no-font-override {
+  font-family: inherit !important;
+}
+
+/* Utility classes for explicit font control */
+.font-ui {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.font-reading {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* Now same as UI font */
+}
+
+.font-code {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+/* Mobile font size consistency */
+@media (max-width: 768px) {
+  /* Ensure consistent text sizing on mobile */
+  input,
+  textarea,
+  button {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .mobile-text {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+}

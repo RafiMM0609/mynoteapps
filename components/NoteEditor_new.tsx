@@ -575,6 +575,32 @@ export default function NoteEditor({
           newSelection.addRange(newRange)
         }
         break
+      case 'checklist':
+      case 'checkbox':
+        // Insert checkbox list item with better formatting
+        document.execCommand('insertHTML', false, '☐ ')
+        break
+      case 'quote':
+        // Insert blockquote
+        document.execCommand('formatBlock', false, '<blockquote>')
+        break
+      case 'link':
+        // Insert link format
+        document.execCommand('insertHTML', false, '<a href="url">link text</a>')
+        break
+      case 'table':
+        // Insert basic table
+        document.execCommand('insertHTML', false, 
+          '<table border="1" style="border-collapse: collapse; width: 100%; margin: 1rem 0;"><tr><th>Column 1</th><th>Column 2</th></tr><tr><td>Cell 1</td><td>Cell 2</td></tr></table>')
+        break
+      case 'image':
+        // Insert image placeholder
+        document.execCommand('insertHTML', false, '<img src="image-url" alt="alt text" style="max-width: 100%; height: auto;">')
+        break
+      case 'divider':
+        // Insert horizontal rule
+        document.execCommand('insertHTML', false, '<hr style="margin: 2rem 0; border: none; border-top: 1px solid #e5e7eb;">')
+        break
       default:
         // If the command is not recognized, just delete the trigger text.
         document.execCommand('delete', false)

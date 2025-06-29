@@ -9,6 +9,7 @@
 
 /* Import modular CSS files */
 @import '../styles/base/fonts.css';
+@import '../styles/base/font-consistency.css'; /* New: Font consistency rules */
 @import '../styles/components/buttons.css';
 @import '../styles/components/code-blocks.css';
 @import '../styles/components/lists.css';

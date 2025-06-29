@@ -88,13 +88,6 @@ const allCommands: SlashCommand[] = [
       action: () => ({ before: '1. ', after: '' })
     },
     {
-      id: 'checklist',
-      label: 'Task List',
-      description: 'Create an interactive checklist',
-      icon: CheckIcon,
-      action: () => ({ before: '- [ ] ', after: '' })
-    },
-    {
       id: 'code',
       label: 'Inline Code',
       description: 'Inline code formatting',
@@ -107,13 +100,15 @@ const allCommands: SlashCommand[] = [
       description: 'Multi-line code block',
       icon: CodeBracketIcon,
       action: () => ({ before: '```\n', after: '\n```' })
-    },    {
+    },
+    {
       id: 'quote',
       label: 'Quote',
       description: 'Create a blockquote',
       icon: ChatBubbleLeftIcon,
       action: () => ({ before: '> ', after: '' })
-    },    {
+    },
+    {
       id: 'link',
       label: 'Link',
       description: 'Insert a link',
@@ -136,13 +131,6 @@ const allCommands: SlashCommand[] = [
         before: '| Column 1 | Column 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |\n', 
         after: '' 
       })
-    },
-    {
-      id: 'checkbox',
-      label: 'Checkbox',
-      description: 'Create a task list item',
-      icon: CheckIcon,
-      action: () => ({ before: '- [ ] ', after: '' })
     },
     {
       id: 'image',

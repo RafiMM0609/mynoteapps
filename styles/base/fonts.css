@@ -3,14 +3,35 @@
  * Centralized font configuration for better maintainability
  */
 
-/* Import Google Fonts */
+/* Import Google Fonts with better fallbacks */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/* Base Typography */
+/* Base Typography with consistent font stack */
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
+}
+
+/* Ensure consistent font loading across all components */
+* {
+  font-family: inherit;
+}
+
+/* Override any conflicting font declarations */
+.prose, .prose * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Reading mode now uses same font as editing for consistency */
+.prose-enhanced-reading, .prose-enhanced-reading * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Exception for code elements - use monospace */
+code, pre, .editor-textarea, 
+[class*="code"], [class*="mono"] {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace !important;
 }
 
 /* Typography Hierarchy */
