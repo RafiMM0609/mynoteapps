@@ -85,6 +85,11 @@ export default function NoteEditor({
     return window.innerWidth <= 768 || 'ontouchstart' in window || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   }
 
+  // Helper function to detect iOS specifically
+  const isiOSDevice = () => {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  }
+
   // Helper function to show mobile hint
   const showMobileHint = (message: string) => {
     if (isMobileDevice()) {
@@ -756,7 +761,45 @@ export default function NoteEditor({
           }
         }
         
-        // Normal list behavior - let browser handle new list item creation
+        // Enhanced mobile numbered list handling for iOS compatibility
+        if ((isMobileDevice() || isiOSDevice()) && parentList.nodeName === 'OL') {
+          e.preventDefault();
+          
+          // iOS-specific handling for numbered lists
+          console.log('iOS numbered list handling triggered');
+          
+          // Get all list items and find current position
+          const listItems = Array.from(parentList.children) as HTMLLIElement[];
+          const currentIndex = listItems.indexOf(parentListItem as HTMLLIElement);
+          
+          // Create new list item
+          const newListItem = document.createElement('li');
+          newListItem.innerHTML = '<br>';
+          
+          // Insert after current item
+          if (parentListItem.nextSibling) {
+            parentList.insertBefore(newListItem, parentListItem.nextSibling);
+          } else {
+            parentList.appendChild(newListItem);
+          }
+          
+          // Set cursor in new list item
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.setStart(newListItem, 0);
+          range.setEnd(newListItem, 0);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+          
+          // Auto-scroll for mobile with longer delay for iOS
+          setTimeout(() => {
+            scrollCursorIntoView();
+          }, isiOSDevice() ? 50 : 20);
+          
+          return;
+        }
+        
+        // Normal list behavior - let browser handle new list item creation for non-mobile or UL
         return;
       }
 

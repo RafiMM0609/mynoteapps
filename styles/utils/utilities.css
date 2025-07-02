@@ -442,3 +442,69 @@
     border: 2px solid #000;
   }
 }
+
+/* iOS Safari specific fixes for numbered lists */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari numbered list improvements */
+  .prose ol {
+    counter-reset: list-counter;
+  }
+  
+  .prose ol li {
+    counter-increment: list-counter;
+    position: relative;
+  }
+  
+  .prose ol li::before {
+    content: counter(list-counter) ".";
+    position: absolute;
+    left: -2rem;
+    font-weight: 600;
+    color: #3b82f6;
+  }
+  
+  /* Ensure proper spacing for iOS */
+  .prose ol li {
+    padding-left: 0.5rem;
+    margin-left: 2rem;
+  }
+  
+  /* Fix for contentEditable numbered lists on iOS */
+  .prose [contenteditable="true"] ol li {
+    min-height: 1.5rem;
+    line-height: 1.5;
+  }
+  
+  /* iOS keyboard input fixes */
+  .prose [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+}
+
+/* Enhanced mobile-specific list behavior */
+@media (max-width: 768px) {
+  /* iOS Safari numbered list fixes */
+  .prose ol {
+    list-style: none;
+    counter-reset: list-counter;
+    padding-left: 0;
+  }
+  
+  .prose ol li {
+    counter-increment: list-counter;
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .prose ol li::before {
+    content: counter(list-counter) ".";
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-weight: 600;
+    color: #374151;
+  }
+}
