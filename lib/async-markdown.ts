@@ -51,8 +51,8 @@ class AsyncMarkdownProcessor {
     try {
       // Create a worker from an inline blob
       const workerCode = `
-        importScripts('https://cdn.jsdelivr.net/npm/marked/marked.min.js');
-        importScripts('https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js');
+        importScripts('/vendor/marked.min.js');
+        importScripts('/vendor/purify.min.js');
         
         self.onmessage = function(e) {
           if (e.data.type === 'parse') {
