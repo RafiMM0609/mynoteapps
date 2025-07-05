@@ -249,6 +249,18 @@
   color: #374151;
 }
 
+/* Remove top margin from first element to eliminate excessive padding */
+.prose > *:first-child,
+[contenteditable="true"] > *:first-child {
+  margin-top: 0 !important;
+}
+
+/* Reduce margin for better spacing in editor */
+.prose > *:last-child,
+[contenteditable="true"] > *:last-child {
+  margin-bottom: 0.5rem !important;
+}
+
 /* Force headings styling - important for contentEditable */
 .prose h1,
 .prose-heading h1,
@@ -259,7 +271,8 @@
   color: #111827 !important;
   margin-top: 2rem !important;
   margin-bottom: 1.5rem !important;
-  border-bottom: 2px solid #e5e7eb !important;
+  /* Remove border that could cause visual separation */
+  border-bottom: none !important;
   padding-bottom: 0.5rem !important;
 }
 

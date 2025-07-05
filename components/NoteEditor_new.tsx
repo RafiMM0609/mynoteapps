@@ -54,7 +54,34 @@ export default function NoteEditor({
   const editorRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const turndownService = useRef(new TurndownService())
+  const turndownService = useRef<TurndownService | null>(null)
+
+  // Setup Turndown rules to prevent extra newlines between lines
+  useEffect(() => {
+    if (!turndownService.current) {
+      turndownService.current = new TurndownService();
+      // Make <div> and <p> only add a single line break
+      turndownService.current.addRule('div', {
+        filter: 'div',
+        replacement: function(content) {
+          return content + '\n';
+        }
+      });
+      turndownService.current.addRule('p', {
+        filter: 'p',
+        replacement: function(content) {
+          return content + '\n';
+        }
+      });
+      // Optionally, handle <br> as a single line break
+      turndownService.current.addRule('br', {
+        filter: 'br',
+        replacement: function() {
+          return '\n';
+        }
+      });
+    }
+  }, []);
   
   // Helper to detect mobile devices
   const isMobileDevice = () => typeof window !== 'undefined' && window.innerWidth <= 768
@@ -113,7 +140,7 @@ export default function NoteEditor({
       setIsSaving(true)
       try {
         const html = editorRef.current.innerHTML
-        const markdown = turndownService.current.turndown(html)
+        const markdown = turndownService.current?.turndown(html) ?? ''
         await onSave(note.id, title, markdown)
         
         setHasChanges(false)
@@ -218,7 +245,7 @@ export default function NoteEditor({
   const updateContentFromEditor = () => {
     if (editorRef.current) {
       const html = editorRef.current.innerHTML
-      const markdown = turndownService.current.turndown(html)
+      const markdown = turndownService.current?.turndown(html) ?? ''
       setContent(markdown)
       
       // Update cursor position
@@ -719,7 +746,7 @@ export default function NoteEditor({
       {/* Enhanced Header - Compact and Efficient Design */}
       <div 
         ref={headerRef}
-        className="fixed-header-alternative px-3 lg:px-4 py-2 lg:py-3 bg-white/95 backdrop-blur-sm border-b border-gray-200/60"
+        className="fixed-header-alternative px-3 lg:px-4 py-2 lg:py-3 bg-white/95 backdrop-blur-sm"
       >
         <div className="flex items-center justify-between gap-3">
           {/* Title Section - Mobile layout (original) */}
@@ -857,7 +884,7 @@ export default function NoteEditor({
         ref={containerRef}
         className="scrollable-editor-content custom-scrollbar overflow-y-auto" 
         style={{ 
-          paddingTop: 'calc(60px + 0.5rem)', // Adjust based on header height
+          paddingTop: isMobileDevice() ? '0.75rem' : '0.5rem', // Reduced padding for better spacing
           paddingBottom: '2rem' 
         }}
       >

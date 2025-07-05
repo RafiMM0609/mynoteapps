@@ -16,13 +16,13 @@
     flex: 1;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
-    max-height: calc(100vh - 130px) !important;
+    max-height: calc(100vh - 80px) !important; /* Reduced height for better spacing */
   }
 
   .note-editor-mobile .prose {
     min-height: auto !important;
     height: auto !important;
-    padding-bottom: 60px; /* Reduced padding for better UX */
+    padding-bottom: 30px; /* Further reduced padding for better UX */
   }
 
   /* Override any potential conflicting styles */

@@ -119,8 +119,8 @@
 [contenteditable="true"]:focus {
   /* Improved focus state without outline */
   outline: none;
-  /* Subtle glow effect for better visual feedback */
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  /* Remove the box-shadow that was causing the visual border */
+  box-shadow: none;
   border-radius: 4px;
 }
 
@@ -165,19 +165,19 @@
 
 .scrollable-editor-content .prose {
   flex: 1;
-  min-height: calc(100vh - 150px); /* Optimized calculation for content height */
+  min-height: calc(100vh - 120px); /* Reduced calculation for better spacing */
   overflow-wrap: break-word;
   word-wrap: break-word;
-  /* Balanced content spacing */
-  margin-bottom: 1.5rem;
+  /* Reduced content spacing */
+  margin-bottom: 1rem;
   /* Desktop editing optimizations */
   min-height: auto;
   height: auto;
   /* Ensure smooth cursor tracking */
   position: relative;
-  /* Balanced content padding */
+  /* Reduced content padding for better use of space */
   padding: 1rem;
-  padding-bottom: 6rem; /* Reasonable space for comfortable desktop editing */
+  padding-bottom: 3rem; /* Reduced bottom padding */
 }
 
 /* Status bar should be subtle and non-intrusive */
@@ -221,24 +221,24 @@
   
   .scrollable-editor-content {
     /* Account for compact header + mobile navigation footer */
-    max-height: calc(100vh - 120px - 5rem) !important; /* Reduced from 180px */
-    height: calc(100vh - 120px - 5rem) !important;
+    max-height: calc(100vh - 80px - 5rem) !important; /* Further reduced */
+    height: calc(100vh - 80px - 5rem) !important;
     /* Reduced padding on mobile to prevent excessive bottom spacing */
-    padding-bottom: 8rem;
+    padding-bottom: 4rem; /* Reduced from 8rem */
     /* Enhanced scroll behavior for mobile auto-scroll */
-    scroll-padding-top: 80px; /* Reduced buffer */
-    scroll-padding-bottom: 150px;
+    scroll-padding-top: 40px; /* Further reduced buffer */
+    scroll-padding-bottom: 100px; /* Reduced */
   }
   
   .scrollable-editor-content .prose {
     /* Better mobile content spacing with compact header */
-    min-height: calc(100vh - 300px); /* Reduced due to compact header */
-    margin-bottom: 1rem;
-    padding: 1rem;
-    padding-bottom: 6rem; /* Extra space for comfortable editing */
+    min-height: calc(100vh - 200px); /* Further reduced due to compact changes */
+    margin-bottom: 0.5rem; /* Reduced */
+    padding: 0.75rem; /* Reduced padding */
+    padding-bottom: 3rem; /* Reduced extra space */
     /* Better mobile cursor tracking */
-    scroll-margin-top: 80px; /* Reduced buffer */
-    scroll-margin-bottom: 150px;
+    scroll-margin-top: 40px; /* Reduced buffer */
+    scroll-margin-bottom: 100px; /* Reduced */
   }
   
   /* Compact header on mobile */
@@ -282,11 +282,11 @@
   .scrollable-editor-content {
     overflow-y: auto;
     overflow-x: hidden;
-    height: calc(100vh - 45px); /* More space with very compact header */
+    height: calc(100vh - 40px); /* More space with very compact header */
     scroll-behavior: smooth;
     /* Enhanced desktop scroll padding for better auto-scroll */
-    scroll-padding-top: 80px; /* Reduced buffer for more editing space */
-    scroll-padding-bottom: 160px; /* Reasonable bottom buffer */
+    scroll-padding-top: 60px; /* Further reduced buffer for more editing space */
+    scroll-padding-bottom: 120px; /* Reduced bottom buffer */
     /* Better scrollbar appearance */
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
