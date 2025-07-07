@@ -202,3 +202,118 @@
     box-shadow: inset 0 0 0 2px rgba(79, 70, 229, 0.1);
   }
 }
+
+/* Advanced Block Editor Mobile Enhancements */
+.advanced-block-editor {
+  /* Ensure proper mobile viewport */
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .advanced-block-editor {
+    /* Better mobile scrolling */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Block controls visibility on mobile */
+  .block-editor-item .opacity-0 {
+    opacity: 1; /* Always show controls on mobile for better accessibility */
+  }
+
+  /* Better mobile touch response */
+  .block-editor-item {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .block-editor-item:active {
+    transform: scale(0.98);
+  }
+
+  /* Mobile-optimized drag handle */
+  .block-editor-item [aria-label="Drag to reorder"] {
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 6px;
+    margin: 0 4px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+
+  .block-editor-item [aria-label="Drag to reorder"]:active {
+    background: rgba(59, 130, 246, 0.2);
+    transform: scale(0.95);
+  }
+
+  .block-editor-item [aria-label="Delete block"] {
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+
+  .block-editor-item [aria-label="Delete block"]:active {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(0.95);
+  }
+
+  /* Improved mobile button spacing */
+  .advanced-block-editor button {
+    margin: 0 2px;
+    border-radius: 6px;
+  }
+
+  /* Better mobile typography in blocks */
+  .block-editor-item .ProseMirror p {
+    margin-bottom: 0.75rem;
+  }
+
+  .block-editor-item .ProseMirror h1,
+  .block-editor-item .ProseMirror h2,
+  .block-editor-item .ProseMirror h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Ensure content doesn't get hidden behind floating elements */
+  .advanced-block-editor .flex-1 {
+    padding-bottom: 120px; /* Extra space for floating info panel */
+  }
+
+  /* Better mobile keyboard handling */
+  .advanced-block-editor .ProseMirror:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Improved mobile table responsiveness */
+  .advanced-block-editor .ProseMirror table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+
+  .advanced-block-editor .ProseMirror table td,
+  .advanced-block-editor .ProseMirror table th {
+    white-space: nowrap;
+    min-width: 100px;
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .block-editor-item:hover {
+    /* Remove hover effects on touch devices */
+    background: inherit;
+  }
+
+  .block-editor-item .group-hover\:opacity-100 {
+    opacity: 1; /* Always show controls on touch devices */
+  }
+}

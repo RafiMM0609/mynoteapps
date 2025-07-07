@@ -81,20 +81,6 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     loadUserData()
   }, [])
 
-  // Global keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + K to open search modal
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setIsSearchModalOpen(true)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
-
   // Load note details when selected note ID changes
   useEffect(() => {
     console.log('useEffect triggered - selectedNote?.id:', selectedNote?.id, 'loadingNoteId.current:', loadingNoteId.current)
@@ -170,7 +156,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
   const handleCreateNote = async (parentId?: string) => {
     try {
       const newNote = await createNote(user.id, {
-        title: 'Untitled Note',
+        title: 'New Note',
         content: '',
         parent_id: parentId || null,
         is_folder: false
@@ -297,21 +283,6 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
     setShowNoteLinking(false) // Close note linking when switching notes
   }
 
-  // Wrapper for Enhanced components that work with different note types
-  const handleSelectNoteFromEnhanced = (note: Note) => {
-    setSelectedNote(note)
-    setIsEditing(false)
-    setIsSidebarOpen(false) // Close sidebar on mobile after selecting
-    setShowNoteLinking(false) // Close note linking when switching notes
-  }
-
-  // Wrapper for SearchableNoteList which expects regular Note type
-  const handleSelectNoteFromSearch = (note: Note) => {
-    setSelectedNote(note)
-    setIsEditing(false)
-    setIsSidebarOpen(false) // Close sidebar on mobile after selecting
-    setShowNoteLinking(false) // Close note linking when switching notes
-  }
   // Linking functions
   const handleCreateLink = async (targetNoteId: string, linkType: 'reference' | 'embed') => {
     if (!selectedNote) return
@@ -498,7 +469,6 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                     selectedNoteId={selectedNote?.id}
                     onNoteSelect={handleSelectNote}
                     onCreateNote={handleCreateNote}
-                    onCreateFolder={handleCreateFolder}
                     onDeleteNote={handleDeleteNote}
                     showLinkedNotes={showLinkedNotes}
                   />

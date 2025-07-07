@@ -21,7 +21,6 @@ interface EnhancedNoteTreeProps {
   userId: string
   onNoteSelect: (note: NoteWithHierarchy) => void
   onCreateNote: (parentId?: string) => void
-  onCreateFolder: (parentId?: string) => void
   onDeleteNote?: (noteId: string) => void
   onMoveNote?: (noteId: string, newParentId: string | null) => void
   selectedNoteId?: string
@@ -33,13 +32,12 @@ interface TreeNodeProps {
   level: number
   onNoteSelect: (note: NoteWithHierarchy) => void
   onCreateNote: (parentId?: string) => void
-  onCreateFolder: (parentId?: string) => void
   onDeleteNote?: (noteId: string) => void
   selectedNoteId?: string
   children: NoteWithHierarchy[]
 }
 
-const TreeNode = memo(function TreeNode({ note, level, onNoteSelect, onCreateNote, onCreateFolder, onDeleteNote, selectedNoteId, children }: TreeNodeProps) {
+const TreeNode = memo(function TreeNode({ note, level, onNoteSelect, onCreateNote, onDeleteNote, selectedNoteId, children }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(level < 2) // Auto-expand first 2 levels
   const [showActions, setShowActions] = useState(false)
 
@@ -62,10 +60,6 @@ const TreeNode = memo(function TreeNode({ note, level, onNoteSelect, onCreateNot
     onCreateNote(note.id)
   }, [onCreateNote, note.id])
 
-  const handleCreateFolder = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    onCreateFolder(note.id)
-  }, [onCreateFolder, note.id])
 
   const handleDeleteNote = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
@@ -152,15 +146,6 @@ const TreeNode = memo(function TreeNode({ note, level, onNoteSelect, onCreateNot
             >
               <PlusIcon className="w-3 h-3" />
             </button>
-            {note.is_folder && (
-              <button
-                onClick={handleCreateFolder}
-                className="p-2 rounded-lg bg-gradient-to-r from-accent-400 to-accent-500 text-white hover:from-accent-500 hover:to-accent-600 transition-all duration-200 hover:scale-110 shadow-lg"
-                title="Add folder 📁"
-              >
-                <FolderIcon className="w-3 h-3" />
-              </button>
-            )}
             {onDeleteNote && (
               <button
                 onClick={handleDeleteNote}
@@ -184,7 +169,6 @@ const TreeNode = memo(function TreeNode({ note, level, onNoteSelect, onCreateNot
               level={level + 1}
               onNoteSelect={onNoteSelect}
               onCreateNote={onCreateNote}
-              onCreateFolder={onCreateFolder}
               onDeleteNote={onDeleteNote}
               selectedNoteId={selectedNoteId}
               children={[]} // We'll need to filter children for each node
@@ -200,7 +184,6 @@ export default function EnhancedNoteTree({
   userId,
   onNoteSelect, 
   onCreateNote, 
-  onCreateFolder, 
   onDeleteNote,
   selectedNoteId,
   showLinkedNotes = false
@@ -282,12 +265,6 @@ export default function EnhancedNoteTree({
     setTimeout(() => loadNotes(), 100)
   }, [onCreateNote])
 
-  const memoizedOnCreateFolder = useCallback((parentId?: string) => {
-    onCreateFolder(parentId)
-    // Reload notes after creation
-    setTimeout(() => loadNotes(), 100)
-  }, [onCreateFolder])
-
   const memoizedOnDeleteNote = useCallback((noteId: string) => {
     onDeleteNote?.(noteId)
     // Reload notes after deletion
@@ -331,7 +308,6 @@ export default function EnhancedNoteTree({
             level={0}
             onNoteSelect={memoizedOnNoteSelect}
             onCreateNote={memoizedOnCreateNote}
-            onCreateFolder={memoizedOnCreateFolder}
             onDeleteNote={memoizedOnDeleteNote}
             selectedNoteId={selectedNoteId}
             children={node.children || []}

@@ -400,7 +400,7 @@
 }
 
 .block-content .ProseMirror ul li {
-  list-style-type: disc;
+  list-style-type: none; /* Remove default bullet to avoid double bullets */
   margin: 0.25rem 0;
 }
 
@@ -483,6 +483,38 @@
   margin-top: 0.25rem;
 }
 
+/* Prevent double bullets in block editor */
+.block-content .prose ul li {
+  list-style-type: none !important;
+}
+
+.block-content .prose ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #3b82f6;
+  font-weight: bold;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  margin-left: -1.5rem;
+}
+
+.block-content .prose ul {
+  list-style: none !important;
+}
+
+/* Ensure proper positioning for nested lists */
+.block-content .prose ul ul li::before {
+  content: '◦';
+  color: #9ca3af;
+}
+
+.block-content .prose ul ul ul li::before {
+  content: '▪';
+  color: #6b7280;
+}
+
 /* Focus styles */
 .block-content .ProseMirror.has-focus {
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
@@ -503,17 +535,149 @@
   opacity: 0.5;
 }
 
-/* Focus styles */
-.block-content .ProseMirror.has-focus {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-  border-radius: 0.25rem;
+/* Mobile-specific optimizations for Advanced Block Editor */
+@media (max-width: 768px) {
+  .advanced-block-editor {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+
+  .advanced-block-editor .ProseMirror {
+    font-size: 16px;
+    line-height: 1.6;
+    padding: 12px;
+  }
+
+  .block-editor-item {
+    margin-bottom: 1rem;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #f3f4f6;
+    background: #fafafa;
+  }
+
+  .block-editor-item:focus-within {
+    border-color: #3b82f6;
+    background: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  }
+
+  .block-editor-item .ProseMirror {
+    padding: 8px;
+  }
+
+  /* Better touch targets for mobile drag handles */
+  .block-editor-item button {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Improved mobile table handling */
+  .ProseMirror table {
+    font-size: 14px;
+    min-width: 100%;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
+  .ProseMirror table td,
+  .ProseMirror table th {
+    padding: 8px 12px;
+    min-width: 80px;
+  }
+
+  /* Better mobile list handling */
+  .ProseMirror ul,
+  .ProseMirror ol {
+    padding-left: 1.5rem;
+  }
+
+  .ProseMirror li {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Mobile-friendly code blocks */
+  .ProseMirror pre {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 14px;
+    padding: 12px;
+    border-radius: 6px;
+  }
+
+  /* Better mobile heading sizes */
+  .ProseMirror h1 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+
+  .ProseMirror h2 {
+    font-size: 1.3rem;
+    line-height: 1.3;
+  }
+
+  .ProseMirror h3 {
+    font-size: 1.1rem;
+    line-height: 1.3;
+  }
 }
 
-/* Placeholder styles */
-.block-content .ProseMirror .is-empty::before {
-  color: #adb5bd;
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
+/* iOS-specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  .advanced-block-editor {
+    -webkit-touch-callout: none;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  .advanced-block-editor .ProseMirror {
+    -webkit-touch-callout: none;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+/* Fix for Advanced Block Editor - prevent double bullets */
+.block-editor-prose ul {
+  list-style: none !important;
+  margin-left: 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+.block-editor-prose ul li {
+  list-style-type: none !important;
+  position: relative;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+}
+
+.block-editor-prose ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #3b82f6;
+  font-weight: bold;
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+.block-editor-prose ul ul li::before {
+  content: '◦';
+  color: #9ca3af;
+}
+
+.block-editor-prose ul ul ul li::before {
+  content: '▪';
+  color: #6b7280;
+}
+
+/* Override any Tailwind prose defaults that might cause issues */
+.block-editor-prose ul > li::marker {
+  content: none !important;
+}
+
+.block-editor-prose ul > li {
+  list-style: none !important;
 }
