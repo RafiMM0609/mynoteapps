@@ -54,8 +54,6 @@ export default function NoteEditorWithMarkdownPreview({
   const [showSlashDropdown, setShowSlashDropdown] = useState(false)
   const [slashPosition, setSlashPosition] = useState({ top: 0, left: 0 })
   const [slashQuery, setSlashQuery] = useState('')
-  const [slashStartPos, setSlashStartPos] = useState(0)
-  const [activeNode, setActiveNode] = useState<Node | null>(null)
   
   const wysiwygEditorRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -255,7 +253,6 @@ export default function NoteEditorWithMarkdownPreview({
       return
     }
     
-    setActiveNode(node)
     const textContent = node.textContent || ''
     const textBeforeCursor = textContent.substring(0, cursorPosition)
     const lastSlashIndex = textBeforeCursor.lastIndexOf('/')
@@ -280,7 +277,6 @@ export default function NoteEditorWithMarkdownPreview({
     }
     
     setSlashQuery(query)
-    setSlashStartPos(lastSlashIndex)
     
     const rect = range.getBoundingClientRect()
     setSlashPosition({ 
@@ -316,7 +312,6 @@ export default function NoteEditorWithMarkdownPreview({
             savedCursorInfo = {
               offset: caretOffset,
               totalLength: fullText.length,
-              // Store some context around cursor for verification
               beforeText: fullText.substring(Math.max(0, caretOffset - 10), caretOffset),
               afterText: fullText.substring(caretOffset, Math.min(fullText.length, caretOffset + 10))
             }

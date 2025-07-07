@@ -20,6 +20,7 @@ import EnhancedNoteTree from './EnhancedNoteTree'
 import EnhancedNoteList from './EnhancedNoteList'
 import ViewToggle from './ViewToggle'
 import NoteEditor from './NoteEditorWithMarkdownPreview'
+import AdvancedBlockEditor from './AdvancedBlockEditor'
 import NoteViewer from './NoteViewer'
 import NoteLinking from './NoteLinking'
 import NoteTags from './NoteTags'
@@ -483,10 +484,11 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
           <div className="h-full glass rounded-2xl overflow-hidden shadow-2xl note-viewer-container">{selectedNote ? (
               isEditing ? (
                 <div className="h-full">
-                  <NoteEditor
+                  <AdvancedBlockEditor
                     note={selectedNote}
                     onSave={handleSaveNote}
                     onCancel={() => setIsEditing(false)}
+                    className="min-h-full"
                   />
                 </div>
               ) : (
