@@ -70,6 +70,24 @@ export default function Header({ user, onLogout, onSidebarToggle, isSidebarOpen 
           </div>
         </div>
 
+        {/* Center - Demo Links */}
+        <div className="hidden lg:flex items-center space-x-3">
+          <a
+            href="/editor-demo"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+          >
+            <SparklesIcon className="h-4 w-4" />
+            Basic Editor
+          </a>
+          <a
+            href="/advanced-editor"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+          >
+            <Bars3Icon className="h-4 w-4" />
+            Block Editor
+          </a>
+        </div>
+
         {/* Right side - User Menu */}
         {user && (
           <div className="relative user-menu-container">
@@ -95,6 +113,23 @@ export default function Header({ user, onLogout, onSidebarToggle, isSidebarOpen 
                     <div className="font-medium">{user.email.split('@')[0]}</div>
                     <div className="text-xs text-gray-500 mt-1">{user.email}</div>
                   </div>
+                  
+                  {/* Demo Editor Links - Mobile */}
+                  <a
+                    href="/editor-demo"
+                    className="lg:hidden px-3 py-3 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200 touch-target flex items-center gap-2"
+                  >
+                    <SparklesIcon className="w-4 h-4" />
+                    Basic Editor
+                  </a>
+                  <a
+                    href="/advanced-editor"
+                    className="lg:hidden px-3 py-3 text-sm text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200 touch-target flex items-center gap-2"
+                  >
+                    <Bars3Icon className="w-4 h-4" />
+                    Block Editor
+                  </a>
+                  
                   <button
                     onClick={() => {
                       onLogout?.()

@@ -160,6 +160,46 @@
   text-decoration-color: rgba(29, 78, 216, 0.6);
 }
 
+/* Fix spacing between paragraphs and lists */
+.prose-tighter-spacing p + ul,
+.prose-tighter-spacing p + ol {
+  margin-top: 0.5rem !important;
+}
+
+.prose-tighter-spacing ul + p,
+.prose-tighter-spacing ol + p {
+  margin-top: 1rem !important;
+}
+
+.prose-tighter-spacing p {
+  margin-bottom: 1rem !important;
+}
+
+.prose-tighter-spacing ul,
+.prose-tighter-spacing ol {
+  margin-top: 0.5rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.prose-tighter-spacing li {
+  margin-bottom: 0.25rem !important;
+}
+
+.prose-tighter-spacing li:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Ensure proper spacing in markdown content */
+.markdown-content p + ul,
+.markdown-content p + ol {
+  margin-top: 0.5rem;
+}
+
+.markdown-content ul + p,
+.markdown-content ol + p {
+  margin-top: 1rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .prose-enhanced-reading {

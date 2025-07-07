@@ -48,9 +48,20 @@ export default function MarkdownPreview({
     try {
       const rawHtml = marked(processedContent, { 
         breaks: true, 
-        gfm: true
+        gfm: true,
+        // Reduce excessive spacing between elements
+        pedantic: false
       }) as string
-      return sanitizeHtml(rawHtml)
+      
+      // Clean up excessive spacing between p and ul/ol elements
+      const cleanedHtml = rawHtml
+        .replace(/<\/p>\s*<ul>/g, '</p><ul>')  // Remove extra spacing between p and ul
+        .replace(/<\/p>\s*<ol>/g, '</p><ol>')  // Remove extra spacing between p and ol
+        .replace(/<\/ul>\s*<p>/g, '</ul><p>')  // Remove extra spacing between ul and p
+        .replace(/<\/ol>\s*<p>/g, '</ol><p>')  // Remove extra spacing between ol and p
+        .replace(/\n\s*\n/g, '\n');           // Remove double newlines
+      
+      return sanitizeHtml(cleanedHtml)
     } catch (error) {
       console.error('Error rendering markdown:', error)
       return content
@@ -181,11 +192,17 @@ export default function MarkdownPreview({
   return (
     <div 
       ref={containerRef}
-      className={`prose prose-sm lg:prose-base max-w-none dark:prose-invert markdown-content mobile-reading-optimized ${className}`}
+      className={`prose prose-sm lg:prose-base max-w-none dark:prose-invert markdown-content mobile-reading-optimized prose-tighter-spacing ${className}`}
       onClick={handleClick}
       dangerouslySetInnerHTML={{ 
         __html: renderedContent
       }}
+      style={{
+        // Add inline styles to fix spacing issues
+        '--prose-p-margin-bottom': '1rem',
+        '--prose-ul-margin-top': '0.5rem',
+        '--prose-ol-margin-top': '0.5rem'
+      } as React.CSSProperties}
     />
   )
 }

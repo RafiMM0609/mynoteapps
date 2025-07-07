@@ -1,0 +1,486 @@
+/* 
+ * Split View Editor Styles
+ * Provides optimal layout for markdown editor with live preview
+ */
+
+.split-view-editor {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+.split-view-editor .edit-panel,
+.split-view-editor .preview-panel {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.split-view-editor .edit-panel {
+  border-right: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.split-view-editor .preview-panel {
+  background-color: #f9fafb;
+  position: relative;
+}
+
+/* Smooth scrolling for synchronized scroll */
+.split-view-editor .edit-panel textarea,
+.split-view-editor .preview-panel > div {
+  scroll-behavior: smooth;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .split-view-editor {
+    flex-direction: column;
+  }
+  
+  .split-view-editor .edit-panel {
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    max-height: 50%;
+  }
+  
+  .split-view-editor .preview-panel {
+    max-height: 50%;
+  }
+}
+
+/* Editor mode toggle buttons */
+.editor-mode-toggle {
+  display: flex;
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+.editor-mode-toggle button {
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.editor-mode-toggle button.active {
+  background-color: #3b82f6;
+  color: white;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.editor-mode-toggle button:hover:not(.active) {
+  background-color: #e5e7eb;
+  transform: translateY(-0.5px);
+}
+
+/* Enhanced textarea for markdown editing */
+.markdown-editor-textarea {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  tab-size: 2;
+  resize: none;
+  outline: none;
+  border: none;
+  background: transparent;
+  color: #374151;
+  transition: all 0.2s ease-in-out;
+}
+
+.markdown-editor-textarea:focus {
+  color: #111827;
+}
+
+.markdown-editor-textarea::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* WYSIWYG Editor Styles */
+.wysiwyg-editor {
+  background: transparent;
+  transition: all 0.2s ease-in-out;
+  cursor: text;
+  line-height: 1.75;
+  /* Ensure proper scrolling */
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  /* Better mobile scrolling */
+  -webkit-overflow-scrolling: touch;
+}
+
+.wysiwyg-editor:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.wysiwyg-editor:empty:before {
+  content: "Start writing your note...";
+  color: #9ca3af;
+  font-style: italic;
+  pointer-events: none;
+}
+
+/* Custom scrollbar for better UX */
+.wysiwyg-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.wysiwyg-editor::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.wysiwyg-editor::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background 0.2s ease-in-out;
+}
+
+.wysiwyg-editor::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Firefox scrollbar */
+.wysiwyg-editor {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Ensure WYSIWYG editor styling matches preview */
+.wysiwyg-editor h1,
+.wysiwyg-editor h2,
+.wysiwyg-editor h3,
+.wysiwyg-editor h4,
+.wysiwyg-editor h5,
+.wysiwyg-editor h6 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #111827;
+}
+
+.wysiwyg-editor h1:first-child,
+.wysiwyg-editor h2:first-child,
+.wysiwyg-editor h3:first-child {
+  margin-top: 0;
+}
+
+.wysiwyg-editor p {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.wysiwyg-editor ul,
+.wysiwyg-editor ol {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding-left: 1.625rem;
+}
+
+.wysiwyg-editor li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.wysiwyg-editor code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-weight: 600;
+  color: #e11d48;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.wysiwyg-editor pre {
+  background-color: #1f2937;
+  color: #f9fafb;
+  overflow-x: auto;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.wysiwyg-editor pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-weight: 400;
+}
+
+.wysiwyg-editor blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  font-style: italic;
+  color: #6b7280;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.wysiwyg-editor table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.wysiwyg-editor th,
+.wysiwyg-editor td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.wysiwyg-editor th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.wysiwyg-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  margin: 1rem 0;
+}
+
+.wysiwyg-editor a {
+  color: #3b82f6;
+  text-decoration: underline;
+  transition: color 0.2s ease-in-out;
+}
+
+.wysiwyg-editor a:hover {
+  color: #1d4ed8;
+}
+
+/* Selection styles for better editing experience */
+.wysiwyg-editor ::selection {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+/* Focus styles for interactive elements */
+.wysiwyg-editor:focus-within {
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.1);
+  border-radius: 0.375rem;
+}
+
+@media (min-width: 1024px) {
+  .markdown-editor-textarea {
+    font-size: 1rem;
+  }
+}
+
+/* Ensure consistent prose styling between preview and editor */
+.prose-enhanced-reading {
+  color: #374151;
+  line-height: 1.75;
+  transition: all 0.2s ease-in-out;
+}
+
+.prose-enhanced-reading h1,
+.prose-enhanced-reading h2,
+.prose-enhanced-reading h3,
+.prose-enhanced-reading h4,
+.prose-enhanced-reading h5,
+.prose-enhanced-reading h6 {
+  color: #111827;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  transition: color 0.2s ease-in-out;
+}
+
+.prose-enhanced-reading h1:first-child,
+.prose-enhanced-reading h2:first-child,
+.prose-enhanced-reading h3:first-child {
+  margin-top: 0;
+}
+
+.prose-enhanced-reading p {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.prose-enhanced-reading ul,
+.prose-enhanced-reading ol {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding-left: 1.625rem;
+}
+
+.prose-enhanced-reading li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-enhanced-reading code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-weight: 600;
+  color: #e11d48;
+  transition: all 0.2s ease-in-out;
+}
+
+.prose-enhanced-reading pre {
+  background-color: #1f2937;
+  color: #f9fafb;
+  overflow-x: auto;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.prose-enhanced-reading pre:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.prose-enhanced-reading pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-weight: 400;
+}
+
+.prose-enhanced-reading blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  font-style: italic;
+  color: #6b7280;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.prose-enhanced-reading blockquote:hover {
+  border-left-color: #3b82f6;
+  color: #4b5563;
+}
+
+.prose-enhanced-reading table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.prose-enhanced-reading th,
+.prose-enhanced-reading td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  transition: all 0.2s ease-in-out;
+}
+
+.prose-enhanced-reading th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.prose-enhanced-reading tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Sync scroll indicator */
+.sync-scroll-indicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: #3b82f6;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.sync-scroll-indicator.visible {
+  opacity: 1;
+}
+
+/* Mobile optimizations for split view */
+@media (max-width: 768px) {
+  .markdown-editor-textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
+    line-height: 1.5;
+    padding: 1rem;
+  }
+  
+  .wysiwyg-editor {
+    font-size: 16px; /* Prevent zoom on iOS */
+    line-height: 1.6;
+    padding: 1rem;
+    /* Better mobile scrolling */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  .prose-enhanced-reading {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .editor-mode-toggle {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .editor-mode-toggle button {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+
+  /* Ensure proper height on mobile */
+  .split-view-editor {
+    height: 100%;
+  }
+  
+  .split-view-editor .edit-panel,
+  .split-view-editor .preview-panel {
+    min-height: 0;
+    height: auto;
+  }
+}
+
+/* Loading states */
+.editor-loading {
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Focus states */
+.editor-container-with-fixed-header:focus-within .split-view-editor .edit-panel {
+  box-shadow: inset 2px 0 0 #3b82f6;
+}
+
+.editor-container-with-fixed-header:focus-within .split-view-editor .preview-panel {
+  box-shadow: inset -2px 0 0 #10b981;
+}

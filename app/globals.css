@@ -8,6 +8,7 @@
  */
 
 /* Import modular CSS files */
+@import '../styles/tiptap.css';
 @import '../styles/base/fonts.css';
 @import '../styles/base/font-consistency.css'; /* New: Font consistency rules */
 @import '../styles/components/buttons.css';
@@ -20,6 +21,7 @@
 @import '../styles/components/innovative-linking.css';
 @import '../styles/components/mobile-optimization.css';
 @import '../styles/components/reading-experience.css';
+@import '../styles/components/split-view-editor.css';
 @import '../styles/layout/layout.css';
 @import '../styles/utils/animations.css';
 @import '../styles/utils/utilities.css';

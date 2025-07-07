@@ -60,16 +60,57 @@ export default function NoteEditor({
   useEffect(() => {
     if (!turndownService.current) {
       turndownService.current = new TurndownService();
-      // Make <div> and <p> only add a single line break
+      // Custom rule for <li> to avoid extra newlines after list items
+      turndownService.current.addRule('li', {
+        filter: 'li',
+        replacement: function(content, node) {
+          // Remove all leading/trailing newlines in content
+          content = content.replace(/^\n+|\n+$/g, '').trim();
+          let prefix = '* ';
+          // Numbered list
+          if (node.parentNode && node.parentNode.nodeName === 'OL') {
+            const index = Array.prototype.indexOf.call(node.parentNode.children, node) + 1;
+            prefix = index + '. ';
+          }
+          // Always add newline after each list item, but handle the last item specially
+          return prefix + content + '\n';
+        }
+      });
+      
+      // Add rule for UL and OL to prevent extra spacing
+      turndownService.current.addRule('ul', {
+        filter: 'ul',
+        replacement: function(content, node) {
+          // Remove extra newlines between list items
+          content = content.replace(/\n\n+/g, '\n');
+          return '\n' + content + '\n';
+        }
+      });
+      
+      turndownService.current.addRule('ol', {
+        filter: 'ol',
+        replacement: function(content, node) {
+          // Remove extra newlines between list items
+          content = content.replace(/\n\n+/g, '\n');
+          return '\n' + content + '\n';
+        }
+      });
+      // Make <div> and <p> only add a single line break, except inside <li>
       turndownService.current.addRule('div', {
         filter: 'div',
-        replacement: function(content) {
+        replacement: function(content, node) {
+          if (node.parentNode && node.parentNode.nodeName === 'LI') {
+            return content;
+          }
           return content + '\n';
         }
       });
       turndownService.current.addRule('p', {
         filter: 'p',
-        replacement: function(content) {
+        replacement: function(content, node) {
+          if (node.parentNode && node.parentNode.nodeName === 'LI') {
+            return content;
+          }
           return content + '\n';
         }
       });
@@ -90,7 +131,18 @@ export default function NoteEditor({
   useEffect(() => {
     const setInitialContent = async () => {
         if (editorRef.current) {
-            const html = await Promise.resolve(marked(note.content || '', { breaks: true, gfm: true }));
+            // Clean up markdown content first to remove extra newlines in lists
+            const cleanedContent = (note.content || '')
+              .replace(/(\n\s*-\s)/g, '\n- ')  // Remove extra spaces before list items
+              .replace(/(\n\s*\d+\.\s)/g, '\n$1') // Clean numbered lists
+              .replace(/(\n){3,}/g, '\n\n'); // Replace multiple newlines with max 2
+            
+            const html = await Promise.resolve(marked(cleanedContent, { 
+              breaks: true, 
+              gfm: true,
+              // Configure marked to handle lists better
+              pedantic: false
+            }));
             editorRef.current.innerHTML = sanitizeHtml(html as string);
         }
     };
