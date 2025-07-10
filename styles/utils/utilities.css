@@ -473,7 +473,7 @@
     position: absolute;
     left: -2rem;
     font-weight: 600;
-    color: #3b82f6;
+    color: #f1f1f1;
   }
   
   /* Ensure proper spacing for iOS */
@@ -518,6 +518,6 @@
     left: 0;
     top: 0;
     font-weight: 600;
-    color: #374151;
+    color: #fefefe;
   }
 }

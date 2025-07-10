@@ -276,7 +276,7 @@
 
   /* Ensure content doesn't get hidden behind floating elements */
   .advanced-block-editor .flex-1 {
-    padding-bottom: 120px; /* Extra space for floating info panel */
+    padding-bottom: 8px; /* Extra space for floating info panel */
   }
 
   /* Better mobile keyboard handling */

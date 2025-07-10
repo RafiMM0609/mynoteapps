@@ -9,8 +9,8 @@
 
 /* Block focus styling */
 .has-focus {
-  border-radius: 4px;
-  box-shadow: 0 0 0 1px #3b82f6;
+  border-radius: 0px;
+  box-shadow: 0 0 0 o #3b82f6;
 }
 
 /* Placeholder styling */
