@@ -264,7 +264,7 @@
 
   /* Better mobile typography in blocks */
   .block-editor-item .ProseMirror p {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0rem;
   }
 
   .block-editor-item .ProseMirror h1,

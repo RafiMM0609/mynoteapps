@@ -549,7 +549,7 @@
 
   .block-editor-item {
     margin-bottom: 1rem;
-    padding: 12px;
+    padding: 1px;
     border-radius: 8px;
     border: 1px solid #f3f4f6;
     background: #fafafa;
@@ -562,7 +562,7 @@
   }
 
   .block-editor-item .ProseMirror {
-    padding: 8px;
+    padding: 0px;
   }
 
   /* Better touch targets for mobile drag handles */
@@ -642,7 +642,7 @@
 .block-editor-prose ul {
   list-style: none !important;
   margin-left: 0 !important;
-  padding-left: 1.5rem !important;
+  padding-left: 0rem !important;
 }
 
 .block-editor-prose ul li {

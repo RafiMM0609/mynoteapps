@@ -129,16 +129,36 @@ function SortableBlock({
     }
   })
 
+
+  useEffect(() => {
+  if (!editor) return
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (
+        e.key === 'Backspace' &&
+        editor.isFocused &&
+        (editor.getText().trim().length === 0 || editor.getHTML().replace(/<[^>]+>/g, '').trim().length === 0)
+      ) {
+        e.preventDefault()
+        onDelete(block.id)
+      }
+    }
+
+    const dom = editor.view.dom
+    dom.addEventListener('keydown', handleKeyDown)
+    return () => dom.removeEventListener('keydown', handleKeyDown)
+  }, [editor, block.id, onDelete])
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`block-editor-item group relative mb-4 ${
+      className={`block-editor-item group relative mb-0 ${
         isSelected ? 'ring-2 ring-blue-500' : ''
       } ${isDragging ? 'z-50' : ''}`}
     >
       {/* Mobile-friendly Block Header with Drag Handle */}
-      <div className={`flex items-center mb-2 transition-opacity ${
+      {/* <div className={`flex items-center mb-2 transition-opacity ${
         isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
       }`}>
         <button
@@ -162,7 +182,7 @@ function SortableBlock({
         >
           <span className="text-lg lg:text-base font-bold">×</span>
         </button>
-      </div>
+      </div> */}
 
       {/* Mobile-optimized Block Content */}
       <div className="block-content block-editor-prose prose-sm lg:prose max-w-none">
@@ -494,7 +514,7 @@ export default function AdvancedBlockEditor({
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-3 lg:space-y-4">
+            <div className="space-y-0 lg:space-y-0">
               {blocks.map((block) => (
                 <SortableBlock
                   key={block.id}

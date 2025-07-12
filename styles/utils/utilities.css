@@ -258,7 +258,7 @@
 /* Reduce margin for better spacing in editor */
 .prose > *:last-child,
 [contenteditable="true"] > *:last-child {
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0rem !important;
 }
 
 /* Force headings styling - important for contentEditable */
