@@ -351,7 +351,7 @@
 .block-editor-item {
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 0rem;
   background-color: white;
   transition: all 0.2s ease-in-out;
 }
