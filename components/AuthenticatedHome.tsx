@@ -430,7 +430,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
             {/* Quick Actions - Fixed header */}
             <div className="flex-shrink-0 p-4 lg:p-4 border-b border-white/20">
               <h2 className="text-base lg:text-lg font-semibold text-gray-800 flex items-center mb-4">
-                <StarIcon className="h-4 w-4 lg:h-5 lg:w-5 text-yellow-500 mr-2" />
+                <StarIcon className="h-4 w-4 lg:h-5 lg:w-5 text-yellow-500 mr-2 animate-pulse" />
                 Your Notes
               </h2>
               <div className="flex space-x-4 lg:space-x-2">
@@ -514,7 +514,6 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
                 <div className="text-center max-w-md">
                   <div className="mb-8">
                     <SparklesIcon className="h-24 w-24 text-primary-400 mx-auto mb-4 animate-float" />
-                    <HeartIcon className="h-8 w-8 text-pink-400 mx-auto animate-bounce-gentle" />
                   </div>
                   <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent mb-4">
                     Welcome to Your Creative Space! ✨

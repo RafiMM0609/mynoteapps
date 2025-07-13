@@ -95,7 +95,7 @@ export default function BlockBasedEditor({
     // Initialize markdown-it
     markdownParser.current = new MarkdownIt({
       html: true,
-      breaks: true,
+      breaks: false,
       linkify: true
     })
     

@@ -58,7 +58,6 @@ pre {
   cursor: pointer;
 }
 
-/* Code Block Hover Effect */
 .prose pre:hover,
 pre:hover {
   border-color: #3b82f6;
@@ -67,12 +66,6 @@ pre:hover {
     0 0 0 1px rgba(59, 130, 246, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
-}
-
-/* Code text color change on hover */
-.prose pre code,
-pre code {
-  color: #1e293b;
 }
 
 .prose pre::before,
@@ -89,7 +82,6 @@ pre::before {
   transition: all 0.3s ease-in-out;
 }
 
-/* Gradient line change on hover */
 .prose pre:hover::before,
 pre:hover::before {
   height: 3px;
@@ -97,28 +89,23 @@ pre:hover::before {
   box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
-.prose pre code,
-pre code {
-  background: transparent;
-  color: #1e293b;
-  display: block;
-  padding: 1.5rem;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #475569 #1e293b;
-}
-
-/* Force override any conflicting styles */
+/* Gabungan aturan code block agar tidak overlapping */
 .prose pre code,
 pre code,
 .code-block-container pre code {
-  background-color: transparent !important;
+  background-color: #0b0a0aeb !important;
   background-image: none !important;
+  background: transparent;
+  color: #1e293b;
+  display: block;
   padding: 1.5rem !important;
   margin: 0 !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #475569 #1e293b;
 }
 
 /* Custom scrollbar for code blocks */

@@ -58,34 +58,15 @@ export default function Header({ user, onLogout, onSidebarToggle, isSidebarOpen 
           
           <div className="flex items-center space-x-2 lg:space-x-3">
             <div className="relative">
-              <SparklesIcon className="h-6 w-6 lg:h-8 lg:w-8 text-primary-600 animate-glow" />
-              <HeartIcon className="h-3 w-3 lg:h-4 lg:w-4 text-pink-500 absolute -top-1 -right-1 animate-bounce-gentle" />
+              <SparklesIcon className="h-6 w-6 lg:h-8 lg:w-8 text-primary-600 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-lg lg:text-2xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent">
+              <h1 className="text-lg lg:text-2xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent animate-pulse">
                 Kagita Notes
               </h1>
               <p className="text-xs text-gray-600 font-medium hidden sm:block">Where Ideas Come to Life ✨</p>
             </div>
           </div>
-        </div>
-
-        {/* Center - Demo Links */}
-        <div className="hidden lg:flex items-center space-x-3">
-          <a
-            href="/editor-demo"
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-          >
-            <SparklesIcon className="h-4 w-4" />
-            Basic Editor
-          </a>
-          <a
-            href="/advanced-editor"
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
-          >
-            <Bars3Icon className="h-4 w-4" />
-            Block Editor
-          </a>
         </div>
 
         {/* Right side - User Menu */}

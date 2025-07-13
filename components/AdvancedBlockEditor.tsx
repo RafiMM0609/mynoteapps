@@ -244,7 +244,7 @@ export default function AdvancedBlockEditor({
   useEffect(() => {
     markdownParser.current = new MarkdownIt({
       html: true,
-      breaks: true,
+      breaks: false,
       linkify: true
     })
     
@@ -286,7 +286,7 @@ export default function AdvancedBlockEditor({
     }
 
     // Simple block parsing - split by double newlines
-    const sections = markdown.split('\n\n').filter(Boolean)
+    const sections = markdown.split('\n\n\n\n\n').filter(Boolean)
     
     return sections.map((section, index) => {
       const id = `block-${Date.now()}-${index}`
