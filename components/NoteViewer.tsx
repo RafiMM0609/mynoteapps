@@ -90,12 +90,6 @@ export default function NoteViewer({
             <h1 className="text-xl lg:text-2xl font-bold text-gray-900 truncate mb-2">
               {note.title || 'Untitled'}
             </h1>
-            {/* <div className="flex items-center gap-4 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                <span className="font-medium">Last updated: {formatDate(note.updated_at)}</span>
-              </div>
-            </div> */}
           </div>
           
           <div className="flex items-center gap-3">
@@ -183,20 +177,10 @@ export default function NoteViewer({
       </div>
 
       {/* Right Sidebar - Links and Tags */}
-      <div className={`hidden md:block md:border-l border-gray-200 bg-gray-50 overflow-y-auto md:max-h-full transition-all duration-300 ${
-        showDesktopSidebar ? 'md:w-80' : 'md:w-0'
+      <div className={`hidden md:block fixed left-0 right-0 bottom-0 bg-gray-50 border-t border-gray-200 overflow-y-auto transition-transform duration-300 z-30 ${
+        showDesktopSidebar ? 'md:translate-y-0 md:h-80' : 'md:translate-y-full md:h-80'
       }`}>
         <div className={`p-4 space-y-6 pb-4 ${showDesktopSidebar ? 'block' : 'hidden'}`}>
-          {/* Note Tags */}
-          <NoteTags
-            noteTags={noteTags}
-            availableTags={allTags}
-            onAddTag={onAddTag}
-            onRemoveTag={onRemoveTag}
-            onCreateTag={onCreateTag}
-          />
-          
-          {/* Note Linking */}
           <NoteLinking
             currentNote={note}
             availableNotes={allNotes}
