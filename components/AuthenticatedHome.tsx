@@ -410,7 +410,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
         isSidebarOpen={isSidebarOpen}
       />
 
-      <div className="flex h-[calc(100vh-6rem)] lg:h-[calc(100vh-7rem)]">
+      <div className="flex h-[calc(100vh-6rem)] lg:h-[calc(100vh-5rem)] items-stretch">
         {/* Mobile sidebar overlay */}
         {isSidebarOpen && (
           <div 
@@ -423,13 +423,13 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
 
         {/* Sidebar - Fixed height with proper scrolling */}
         <div className={`
-          fixed inset-y-0 left-0 top-16 z-50 w-full max-w-sm lg:w-80 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:top-0 mobile-sidebar
+          fixed inset-y-0 left-0 z-50 w-full max-w-sm lg:w-80 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:top-0 lg:h-full mobile-sidebar
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
-          <div className="h-full glass m-2 lg:m-4 flex flex-col shadow-2xl overflow-hidden">
+          <div className="h-full glass m-2 lg:m-2 flex flex-col shadow-2xl overflow-hidden">
             {/* Quick Actions - Fixed header */}
-            <div className="flex-shrink-0 p-4 lg:p-4 border-b border-white/20">
-              <h2 className="text-base lg:text-lg font-semibold text-gray-800 flex items-center mb-4">
+            <div className="flex-shrink-0 p-4 lg:p-2 border-b border-white/20">
+              <h2 className="text-base lg:text-lg font-semibold text-gray-800 flex items-center">
                 <StarIcon className="h-4 w-4 lg:h-5 lg:w-5 text-yellow-500 mr-2 animate-pulse" />
                 Your Notes
               </h2>
@@ -480,8 +480,8 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
         </div>
 
         {/* Main content - Balanced height */}
-        <div className="flex-1 pt-8 p-2 lg:p-4 main-content-mobile">
-          <div className="h-full glass rounded-2xl overflow-hidden note-viewer-container">{selectedNote ? (
+        <div className="flex-1 p-2 lg:p-2 main-content-mobile h-full">
+          <div className="h-full glass rounded-2xl overflow-hidden note-viewer-container flex flex-col">{selectedNote ? (
               isEditing ? (
                 <div className="h-full">
                   <AdvancedBlockEditor

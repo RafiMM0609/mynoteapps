@@ -224,13 +224,13 @@
   }
 
   /* Better mobile touch response */
-  .block-editor-item {
+  /* .block-editor-item {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
+  } */
 
-  .block-editor-item:active {
+  /* .block-editor-item:active {
     transform: scale(0.98);
-  }
+  } */
 
   /* Mobile-optimized drag handle */
   .block-editor-item [aria-label="Drag to reorder"] {
@@ -240,10 +240,10 @@
     border: 1px solid rgba(59, 130, 246, 0.2);
   }
 
-  .block-editor-item [aria-label="Drag to reorder"]:active {
+  /* .block-editor-item [aria-label="Drag to reorder"]:active {
     background: rgba(59, 130, 246, 0.2);
     transform: scale(0.95);
-  }
+  } */
 
   .block-editor-item [aria-label="Delete block"] {
     background: rgba(239, 68, 68, 0.1);

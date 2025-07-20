@@ -70,7 +70,7 @@ const TreeNode = memo(function TreeNode({ note, level, onNoteSelect, onCreateNot
     <div className="select-none">
       <div
         className={`
-          flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer group transition-all duration-200
+          flex items-center gap-3 px-1 rounded-xl cursor-pointer group transition-all duration-200
           ${isSelected 
             ? 'bg-gradient-to-r from-primary-100 to-secondary-100 shadow-md transform scale-105' 
             : 'hover:bg-white/50 hover:shadow-sm hover:transform hover:scale-102'
@@ -113,7 +113,7 @@ const TreeNode = memo(function TreeNode({ note, level, onNoteSelect, onCreateNot
             <div className="relative">
               <DocumentTextIcon className="w-5 h-5 text-primary-600" />
               {isSelected && (
-                <HeartIcon className="w-3 h-3 text-pink-500 absolute -top-1 -right-1 animate-bounce-gentle" />
+                <SparklesIcon className="w-3 h-3  text-yellow-400 absolute -top-1 -right-1 animate-bounce-gentle" />
               )}
             </div>
           )}
@@ -298,7 +298,7 @@ export default function EnhancedNoteTree({
   }
 
   return (
-    <div className="h-full flex flex-col py-1">
+    <div className="h-full flex flex-col">
 
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-0.5 pr-1">
         {treeData.map((node) => (

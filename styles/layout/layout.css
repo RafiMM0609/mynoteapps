@@ -23,6 +23,35 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
+/* Main layout container for equal height sidebar and content */
+.flex.items-stretch {
+  display: flex;
+  align-items: stretch;
+}
+
+.flex.items-stretch > * {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure equal height for sidebar and main content */
+.mobile-sidebar {
+  min-height: 100%;
+}
+
+.main-content-mobile {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-viewer-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 /* Sticky Header with Fallbacks - Compact Design */
 .sticky-header {
   position: sticky;
@@ -394,6 +423,9 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     padding-bottom: 1.5rem; /* Space above mobile nav */
   }
   

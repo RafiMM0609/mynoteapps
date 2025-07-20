@@ -38,7 +38,7 @@ export default function Header({ user, onLogout, onSidebarToggle, isSidebarOpen 
   }, [showUserMenu])
 
   return (
-    <header className="glass sticky top-0 z-50 px-3 lg:px-4 py-1.5 lg:py-3 mx-2 lg:mx-4 mt-1 lg:mt-4 lg:mb-1 shadow-lg">
+    <header className="glass sticky top-0 z-50 px-3 lg:px-4 py-1.5 lg:py-3 mx-2 lg:mb-1 shadow-lg">
       <div className="flex items-center justify-between">
         {/* Left side - Logo & Sidebar Toggle */}
         <div className="flex items-center space-x-2 lg:space-x-4">
