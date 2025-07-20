@@ -423,7 +423,7 @@ export default function AuthenticatedHome({ user, onLogout, showToast }: Authent
 
         {/* Sidebar - Fixed height with proper scrolling */}
         <div className={`
-          fixed inset-y-0 left-0 z-50 w-full max-w-sm lg:w-80 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:top-0 lg:h-full mobile-sidebar
+          fixed inset-y-0 left-0 z-50 w-full max-w-sm lg:w-64 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:top-0 lg:h-full mobile-sidebar
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
           <div className="h-full glass m-2 lg:m-2 flex flex-col shadow-2xl overflow-hidden">

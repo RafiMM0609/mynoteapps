@@ -74,7 +74,13 @@ module.exports = {
           800: '#1f2937',
           900: '#111827',
         },
-      },      animation: {
+      },
+      spacing: {
+        '120': '30rem', // 480px
+        '128': '32rem', // 512px
+        '144': '36rem', // 576px
+      },
+      animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-in': 'slideIn 0.3s ease-out',
         'bounce-gentle': 'bounceGentle 0.6s ease-in-out',
